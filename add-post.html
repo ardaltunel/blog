@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Add Post / Arda Altunel</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>document.documentElement.dataset.theme = localStorage.getItem('theme') || 'dark';</script>
+    <link rel="stylesheet" href="//unicons.iconscout.com/release/v4.0.0/css/line.css">
+    <link rel="stylesheet" href="//fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap">
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+<nav>
+    <div class="container nav__container">
+        <a href="./index.html" class="nav__logo">ARDALTUNEL</a>
+        <ul class="nav__items"></ul>
+        <button class="theme__toggle" type="button" aria-label="Tema degistir"><i class="uil uil-moon"></i></button>
+        <button id="open__nav-btn"><i class="uil uil-bars"></i></button>
+        <button id="close__nav-btn"><i class="uil uil-multiply"></i></button>
+    </div>
+</nav>
+<section class="form__section">
+    <div class="container form__section-container">
+        <h2>Add Post</h2>
+        <div class="alert__message error" id="auth-message" hidden></div>
+        <form id="add-post-form">
+            <input type="text" name="title" placeholder="Title" required>
+            <select name="category" id="category-select" required></select>
+            <textarea name="body" placeholder="Body" id="editor"></textarea>
+            <div class="form__control">
+                <label for="thumbnail">Add Thumbnail</label>
+                <input type="file" name="thumbnail" id="thumbnail" accept="image/png,image/jpeg,image/jpg" required>
+            </div>
+            <button type="submit" class="btn">Send for Review</button>
+        </form>
+    </div>
+</section>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="./js/supabase-config.js"></script>
+<script src="./js/auth.js"></script>
+<script src="./js/auth-pages.js?v=2"></script>
+<script src="./js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Post / Arda Altunel</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        document.documentElement.dataset.theme = localStorage.getItem('theme') || 'dark';
+    </script>
+    <link rel="apple-touch-icon" href="./favicon/apple-touch-icon.png">
+    <link rel="icon" href="./favicon/favicon.ico">
+    <link rel="stylesheet" href="//unicons.iconscout.com/release/v4.0.0/css/line.css">
+    <link rel="stylesheet" href="//fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap">
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body data-page="post">
+<nav>
+    <div class="container nav__container">
+        <a href="./index.html" class="nav__logo">ARDALTUNEL</a>
+        <ul class="nav__items"></ul>
+        <button class="theme__toggle" type="button" aria-label="Tema degistir">
+            <i class="uil uil-moon"></i>
+        </button>
+        <button id="open__nav-btn"><i class="uil uil-bars"></i></button>
+        <button id="close__nav-btn"><i class="uil uil-multiply"></i></button>
+    </div>
+</nav>
+
+<main id="app">
+    <section class="empty__page">
+        <h3>Loading...</h3>
+    </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="./js/supabase-config.js"></script>
+<script src="./data/blog-data.js"></script>
+<script src="./js/auth.js"></script>
+<script src="./js/app.js"></script>
+<script src="./js/main.js"></script>
+</body>
+</html>
