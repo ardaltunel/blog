@@ -216,3 +216,12 @@ create policy "Authenticated users can upload blog images"
 on storage.objects for insert
 to authenticated
 with check (bucket_id = 'blog-images');
+
+drop policy if exists "Anyone can upload signup avatars" on storage.objects;
+create policy "Anyone can upload signup avatars"
+on storage.objects for insert
+to anon
+with check (
+    bucket_id = 'blog-images'
+    and (storage.foldername(name))[1] = 'avatars'
+);

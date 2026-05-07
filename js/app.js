@@ -205,7 +205,7 @@ const renderPost = () => {
     const previousPost = state.posts[index + 1] || state.posts[0];
     const nextPost = state.posts[index - 1] || state.posts[state.posts.length - 1];
 
-    document.title = `${post.title} / Arda Altunel`;
+    document.title = `${post.title} | Arda Altunel`;
     app.innerHTML = `
         <section class="singlepost">
             <div class="container singlepost__container" style="padding-bottom: 2rem;">

@@ -100,13 +100,17 @@ const setupSignup = () => {
         submitButton.textContent = 'Creating...';
 
         try {
+            const avatar = avatarFile && avatarFile.name
+                ? await uploadSignupAvatar(avatarFile)
+                : null;
             const { data, error } = await authClient.auth.signUp({
                 email: formData.get('email'),
                 password: formData.get('password'),
                 options: {
                     data: {
                         firstname: formData.get('firstname'),
-                        lastname: formData.get('lastname')
+                        lastname: formData.get('lastname'),
+                        ...(avatar ? { avatar } : {})
                     }
                 }
             });
@@ -115,11 +119,10 @@ const setupSignup = () => {
                 throw error;
             }
 
-            if (avatarFile && avatarFile.name && data.user) {
+            if (avatar && data.user) {
                 const { data: sessionData } = await authClient.auth.getSession();
 
                 if (sessionData.session) {
-                    const avatar = await uploadAvatar(avatarFile);
                     const { error: profileError } = await authClient
                         .from('authors')
                         .update({ avatar })
@@ -187,6 +190,29 @@ const uploadThumbnail = async (file) => {
 const uploadAvatar = async (file) => {
     const extension = file.name.split('.').pop();
     const fileName = `avatars/${Date.now()}-${crypto.randomUUID()}.${extension}`;
+    const bucket = authConfig.storageBucket || 'blog-images';
+
+    const { error } = await authClient.storage
+        .from(bucket)
+        .upload(fileName, file, {
+            cacheControl: '3600',
+            upsert: false
+        });
+
+    if (error) {
+        throw error;
+    }
+
+    const { data } = authClient.storage
+        .from(bucket)
+        .getPublicUrl(fileName);
+
+    return data.publicUrl;
+};
+
+const uploadSignupAvatar = async (file) => {
+    const extension = file.name.split('.').pop();
+    const fileName = `avatars/signup-${Date.now()}-${crypto.randomUUID()}.${extension}`;
     const bucket = authConfig.storageBucket || 'blog-images';
 
     const { error } = await authClient.storage
@@ -642,8 +668,7 @@ const renderManageUsers = async (container, refresh) => {
                 .from('authors')
                 .update({ is_admin: nextValue })
                 .eq('id', Number(button.dataset.id))
-                .select('id')
-                .single();
+                .select('id');
 
             if (updateError) {
                 showMessage(updateError.message);
@@ -651,7 +676,7 @@ const renderManageUsers = async (container, refresh) => {
                 return;
             }
 
-            if (!updatedUser) {
+            if (!updatedUser?.length) {
                 showMessage('Profile could not be updated. Check Supabase admin policies.');
                 button.disabled = false;
                 return;
@@ -671,8 +696,7 @@ const renderManageUsers = async (container, refresh) => {
                 .from('authors')
                 .delete()
                 .eq('id', Number(button.dataset.id))
-                .select('id')
-                .single();
+                .select('id');
 
             if (deleteError) {
                 showMessage(deleteError.message);
@@ -680,7 +704,7 @@ const renderManageUsers = async (container, refresh) => {
                 return;
             }
 
-            if (!deletedUser) {
+            if (!deletedUser?.length) {
                 showMessage('Profile could not be deleted. Check Supabase admin policies.');
                 button.disabled = false;
                 return;
