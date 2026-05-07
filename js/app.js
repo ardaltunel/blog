@@ -31,11 +31,17 @@ const excerpt = (html = '', length = 150) => {
 };
 
 const imageUrl = (fileName = '') => {
-    if (String(fileName).startsWith('http')) {
-        return fileName;
+    const value = String(fileName || '');
+
+    if (/^(https?:|data:|blob:|\.\/|\.\.\/|\/)/.test(value)) {
+        return value;
     }
 
-    return `${imageBasePath}${fileName}`;
+    if (value.startsWith('images/')) {
+        return `./${value}`;
+    }
+
+    return `${imageBasePath}${value}`;
 };
 
 const formatDate = (dateValue) => new Intl.DateTimeFormat('en', {
@@ -62,7 +68,7 @@ const loadFromSupabase = async () => {
     const [categoriesResult, authorsResult, postsResult] = await Promise.all([
         client.from('categories').select('id,title,description').order('title', { ascending: true }),
         client.from('authors').select('id,firstname,lastname,avatar'),
-        client.from('posts').select('id,title,body,thumbnail,date_time,category_id,author_id,is_featured,is_verified').eq('is_verified', 1).order('date_time', { ascending: false })
+        client.from('posts').select('id,title,body,thumbnail,date_time,category_id,author_id,is_featured,is_verified').eq('is_verified', true).order('date_time', { ascending: false })
     ]);
 
     if (categoriesResult.error || authorsResult.error || postsResult.error) {
@@ -85,7 +91,7 @@ const loadData = async () => {
         Object.assign(state, window.BLOG_FALLBACK_DATA);
     }
 
-    state.posts = sortPosts(state.posts.filter(post => Number(post.is_verified) === 1));
+    state.posts = sortPosts(state.posts.filter(post => post.is_verified === true || Number(post.is_verified) === 1));
 };
 
 const renderAuthor = (post) => {
@@ -95,7 +101,7 @@ const renderAuthor = (post) => {
     return `
         <div class="post__author">
             <div class="post__author-avatar">
-                <img src="${imageUrl(author.avatar || 'images/1663704007ardaltunel-pp.png')}" alt="${escapeHtml(name)}">
+                <img src="${imageUrl(author.avatar || '1663704007ardaltunel-pp.png')}" alt="${escapeHtml(name)}">
             </div>
             <div class="post__author-info">
                 <h5>By: ${escapeHtml(name)}</h5>

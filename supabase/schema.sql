@@ -30,6 +30,43 @@ create index if not exists posts_category_id_idx on public.posts(category_id);
 create index if not exists posts_author_id_idx on public.posts(author_id);
 create index if not exists authors_user_id_idx on public.authors(user_id);
 
+create or replace function public.is_current_user_admin()
+returns boolean
+language sql
+security definer
+set search_path = public
+stable
+as $$
+    select exists (
+        select 1
+        from public.authors
+        where user_id = auth.uid()
+        and is_admin = true
+    );
+$$;
+
+create or replace function public.prevent_author_role_escalation()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+    if not public.is_current_user_admin()
+        and new.is_admin is distinct from old.is_admin
+    then
+        raise exception 'Only admins can change admin access.';
+    end if;
+
+    return new;
+end;
+$$;
+
+drop trigger if exists prevent_author_role_escalation on public.authors;
+create trigger prevent_author_role_escalation
+before update on public.authors
+for each row execute function public.prevent_author_role_escalation();
+
 do $$
 begin
     if exists (
@@ -76,39 +113,15 @@ drop policy if exists "Admins can manage authors" on public.authors;
 create policy "Admins can manage authors"
 on public.authors for all
 to authenticated
-using (
-    exists (
-        select 1 from public.authors admin_author
-        where admin_author.user_id = auth.uid()
-        and admin_author.is_admin = true
-    )
-)
-with check (
-    exists (
-        select 1 from public.authors admin_author
-        where admin_author.user_id = auth.uid()
-        and admin_author.is_admin = true
-    )
-);
+using (public.is_current_user_admin())
+with check (public.is_current_user_admin());
 
 drop policy if exists "Admins can manage categories" on public.categories;
 create policy "Admins can manage categories"
 on public.categories for all
 to authenticated
-using (
-    exists (
-        select 1 from public.authors
-        where authors.user_id = auth.uid()
-        and authors.is_admin = true
-    )
-)
-with check (
-    exists (
-        select 1 from public.authors
-        where authors.user_id = auth.uid()
-        and authors.is_admin = true
-    )
-);
+using (public.is_current_user_admin())
+with check (public.is_current_user_admin());
 
 drop policy if exists "Verified posts are readable" on public.posts;
 create policy "Verified posts are readable"
@@ -121,9 +134,8 @@ using (
         and authors.user_id = auth.uid()
     )
     or exists (
-        select 1 from public.authors
-        where authors.user_id = auth.uid()
-        and authors.is_admin = true
+        select 1
+        where public.is_current_user_admin()
     )
 );
 
@@ -165,20 +177,8 @@ drop policy if exists "Admins can manage posts" on public.posts;
 create policy "Admins can manage posts"
 on public.posts for all
 to authenticated
-using (
-    exists (
-        select 1 from public.authors
-        where authors.user_id = auth.uid()
-        and authors.is_admin = true
-    )
-)
-with check (
-    exists (
-        select 1 from public.authors
-        where authors.user_id = auth.uid()
-        and authors.is_admin = true
-    )
-);
+using (public.is_current_user_admin())
+with check (public.is_current_user_admin());
 
 create or replace function public.handle_new_user()
 returns trigger

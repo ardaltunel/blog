@@ -10,6 +10,36 @@ const showMessage = (message, type = 'error') => {
     messageBox.textContent = message;
 };
 
+const clearMessage = () => {
+    if (!messageBox) {
+        return;
+    }
+
+    messageBox.hidden = true;
+    messageBox.textContent = '';
+};
+
+const escapeHtml = (value = '') => String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+
+const imageUrl = (fileName = '') => {
+    const value = String(fileName || '1663704007ardaltunel-pp.png');
+
+    if (/^(https?:|data:|blob:|\.\/|\.\.\/|\/)/.test(value)) {
+        return value;
+    }
+
+    if (value.startsWith('images/')) {
+        return `./${value}`;
+    }
+
+    return `./images/${value}`;
+};
+
 const requireSupabase = () => {
     if (!authClient) {
         showMessage('Supabase URL ve anon key js/supabase-config.js dosyasına eklenmeli.');
@@ -127,7 +157,7 @@ const loadCategoriesIntoSelect = async () => {
     }
 
     select.innerHTML = (data || [])
-        .map(category => `<option value="${category.id}">${category.title}</option>`)
+        .map(category => `<option value="${category.id}">${escapeHtml(category.title)}</option>`)
         .join('');
 };
 
@@ -178,6 +208,40 @@ const uploadAvatar = async (file) => {
 };
 
 let activeEditor = null;
+let editPostEditor = null;
+let editorScriptPromise = null;
+
+const loadEditorScript = () => {
+    const script = document.createElement('script');
+
+    if (window.ClassicEditor) {
+        return Promise.resolve();
+    }
+
+    if (!editorScriptPromise) {
+        editorScriptPromise = new Promise((resolve, reject) => {
+            script.src = 'https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js';
+            script.onload = resolve;
+            script.onerror = () => reject(new Error('Editor could not be loaded.'));
+            document.head.appendChild(script);
+        });
+    }
+
+    return editorScriptPromise;
+};
+
+const createClassicEditor = async (editorElement) => {
+    await loadEditorScript();
+
+    return ClassicEditor.create(editorElement, {
+        toolbar: [
+            'undo', 'redo', '|',
+            'heading', '|',
+            'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|',
+            'blockQuote'
+        ]
+    });
+};
 
 const setupEditor = () => {
     const editorElement = document.querySelector('#editor');
@@ -186,24 +250,14 @@ const setupEditor = () => {
         return;
     }
 
-    const script = document.createElement('script');
-    script.src = 'https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js';
-    script.onload = () => {
-        ClassicEditor
-            .create(editorElement, {
-                toolbar: [
-                    'undo', 'redo', '|',
-                    'heading', '|',
-                    'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|',
-                    'blockQuote'
-                ]
-            })
-            .then(editor => {
-                activeEditor = editor;
-            })
-            .catch(error => console.error(error));
-    };
-    document.head.appendChild(script);
+    createClassicEditor(editorElement)
+        .then(editor => {
+            activeEditor = editor;
+        })
+        .catch(error => {
+            console.error(error);
+            showMessage(error.message);
+        });
 };
 
 const setupAddPost = async () => {
@@ -375,11 +429,11 @@ const renderPostsTable = async (container, profile, view, refresh) => {
             <tbody>
                 ${(data || []).map(post => `
                     <tr>
-                        <td>${post.title}</td>
-                        <td>${post.categories?.title || ''}</td>
+                        <td>${escapeHtml(post.title)}</td>
+                        <td>${escapeHtml(post.categories?.title || '')}</td>
                         <td>${post.is_verified ? 'Published' : 'Waiting'}</td>
                         ${profile.is_admin && view === 'all-posts' ? `
-                            <td>${post.authors ? `${post.authors.firstname} ${post.authors.lastname}` : ''}</td>
+                            <td>${escapeHtml(post.authors ? `${post.authors.firstname} ${post.authors.lastname}` : '')}</td>
                         ` : ''}
                         <td><button class="btn sm edit-post" data-id="${post.id}">Edit</button></td>
                         ${profile.is_admin ? `
@@ -399,6 +453,8 @@ const renderPostsTable = async (container, profile, view, refresh) => {
 
     document.querySelectorAll('.toggle-post').forEach(button => {
         button.addEventListener('click', async () => {
+            clearMessage();
+            button.disabled = true;
             const nextValue = button.dataset.verified !== 'true';
             const { error } = await authClient
                 .from('posts')
@@ -407,6 +463,7 @@ const renderPostsTable = async (container, profile, view, refresh) => {
 
             if (error) {
                 showMessage(error.message);
+                button.disabled = false;
                 return;
             }
             await refresh();
@@ -416,9 +473,12 @@ const renderPostsTable = async (container, profile, view, refresh) => {
     document.querySelectorAll('.delete-post').forEach(button => {
         button.addEventListener('click', async () => {
             if (!confirm('Delete this post?')) return;
+            clearMessage();
+            button.disabled = true;
             const { error } = await authClient.from('posts').delete().eq('id', Number(button.dataset.id));
             if (error) {
                 showMessage(error.message);
+                button.disabled = false;
                 return;
             }
             await refresh();
@@ -434,6 +494,12 @@ const renderPostsTable = async (container, profile, view, refresh) => {
 
 const renderEditPostPanel = async (postId, refresh) => {
     const panel = document.querySelector('#edit-post-panel');
+
+    if (editPostEditor) {
+        await editPostEditor.destroy().catch(error => console.error(error));
+        editPostEditor = null;
+    }
+
     const [{ data: post, error: postError }, { data: categories, error: categoriesError }] = await Promise.all([
         authClient.from('posts').select('id,title,body,category_id,is_verified').eq('id', postId).single(),
         authClient.from('categories').select('id,title').order('title')
@@ -448,29 +514,50 @@ const renderEditPostPanel = async (postId, refresh) => {
         <div class="form__section-container dashboard__editor">
             <h3>Edit Post</h3>
             <form id="edit-post-form">
-                <input type="text" name="title" value="${post.title}" required>
+                <input type="text" name="title" value="${escapeHtml(post.title)}" required>
                 <select name="category">
                     ${(categories || []).map(category => `
-                        <option value="${category.id}" ${Number(category.id) === Number(post.category_id) ? 'selected' : ''}>${category.title}</option>
+                        <option value="${category.id}" ${Number(category.id) === Number(post.category_id) ? 'selected' : ''}>${escapeHtml(category.title)}</option>
                     `).join('')}
                 </select>
-                <textarea name="body" rows="10" required>${post.body}</textarea>
+                <textarea name="body" id="edit-editor" rows="10" required>${escapeHtml(post.body)}</textarea>
                 <button type="submit" class="btn">Save</button>
             </form>
         </div>
     `;
 
+    try {
+        editPostEditor = await createClassicEditor(document.querySelector('#edit-editor'));
+    } catch (error) {
+        console.error(error);
+        showMessage(error.message);
+    }
+
     document.querySelector('#edit-post-form').addEventListener('submit', async event => {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
+        const submitButton = event.currentTarget.querySelector('button[type="submit"]');
+        const body = editPostEditor ? editPostEditor.getData().trim() : String(formData.get('body') || '').trim();
+
+        if (!body) {
+            showMessage('Please enter post body.');
+            return;
+        }
+
+        clearMessage();
+        submitButton.disabled = true;
+        submitButton.textContent = 'Saving...';
+
         const { error } = await authClient.from('posts').update({
             title: formData.get('title'),
-            body: formData.get('body'),
+            body,
             category_id: Number(formData.get('category'))
         }).eq('id', postId);
 
         if (error) {
             showMessage(error.message);
+            submitButton.disabled = false;
+            submitButton.textContent = 'Save';
             return;
         }
 
@@ -535,8 +622,8 @@ const renderManageUsers = async (container, refresh) => {
             <tbody>
                 ${(data || []).map(user => `
                     <tr>
-                        <td><div class="post__author-avatar"><img src="images/${user.avatar || 'images/1663704007ardaltunel-pp.png'}"></div></td>
-                        <td>${user.firstname} ${user.lastname}</td>
+                        <td><div class="post__author-avatar"><img src="${imageUrl(user.avatar)}" alt="${escapeHtml(`${user.firstname} ${user.lastname}`)}"></div></td>
+                        <td>${escapeHtml(`${user.firstname} ${user.lastname}`)}</td>
                         <td>${user.is_admin ? 'Yes' : 'No'}</td>
                         <td><button class="btn sm toggle-admin" data-id="${user.id}" data-admin="${user.is_admin}">${user.is_admin ? 'Remove Admin' : 'Make Admin'}</button></td>
                         <td><button class="btn sm danger delete-author" data-id="${user.id}">Delete</button></td>
@@ -548,11 +635,29 @@ const renderManageUsers = async (container, refresh) => {
 
     document.querySelectorAll('.toggle-admin').forEach(button => {
         button.addEventListener('click', async () => {
-            const { error: updateError } = await authClient.from('authors').update({ is_admin: button.dataset.admin !== 'true' }).eq('id', Number(button.dataset.id));
+            clearMessage();
+            button.disabled = true;
+            const nextValue = button.dataset.admin !== 'true';
+            const { data: updatedUser, error: updateError } = await authClient
+                .from('authors')
+                .update({ is_admin: nextValue })
+                .eq('id', Number(button.dataset.id))
+                .select('id')
+                .single();
+
             if (updateError) {
                 showMessage(updateError.message);
+                button.disabled = false;
                 return;
             }
+
+            if (!updatedUser) {
+                showMessage('Profile could not be updated. Check Supabase admin policies.');
+                button.disabled = false;
+                return;
+            }
+
+            showMessage(nextValue ? 'User is now an admin.' : 'Admin access removed.', 'success');
             await refresh();
         });
     });
@@ -560,11 +665,28 @@ const renderManageUsers = async (container, refresh) => {
     document.querySelectorAll('.delete-author').forEach(button => {
         button.addEventListener('click', async () => {
             if (!confirm('Delete this profile? Auth user may still remain in Supabase Authentication.')) return;
-            const { error: deleteError } = await authClient.from('authors').delete().eq('id', Number(button.dataset.id));
+            clearMessage();
+            button.disabled = true;
+            const { data: deletedUser, error: deleteError } = await authClient
+                .from('authors')
+                .delete()
+                .eq('id', Number(button.dataset.id))
+                .select('id')
+                .single();
+
             if (deleteError) {
                 showMessage(deleteError.message);
+                button.disabled = false;
                 return;
             }
+
+            if (!deletedUser) {
+                showMessage('Profile could not be deleted. Check Supabase admin policies.');
+                button.disabled = false;
+                return;
+            }
+
+            showMessage('Profile deleted.', 'success');
             await refresh();
         });
     });
@@ -609,7 +731,7 @@ const renderManageCategories = async (container, refresh) => {
             <tbody>
                 ${(data || []).map(category => `
                     <tr>
-                        <td><input class="category-title" data-id="${category.id}" value="${category.title}"></td>
+                        <td><input class="category-title" data-id="${category.id}" value="${escapeHtml(category.title)}"></td>
                         <td><button class="btn sm save-category" data-id="${category.id}">Save</button></td>
                         <td><button class="btn sm danger delete-category" data-id="${category.id}">Delete</button></td>
                     </tr>
