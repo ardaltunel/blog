@@ -1,47 +1,157 @@
-# GitHub Pages + Supabase Kurulum
+# Blog
 
-Bu klasor GitHub Pages icin hazirlanmis statik blog surumudur. PHP calistirmaz; verileri Supabase'den JavaScript ile okur.
+Supabase destekli, GitHub Pages üzerinde çalışan modern statik blog sistemi.
 
-## 1. Supabase projesi olustur
+Bu proje; kullanıcı sistemi, blog yönetimi, kategori yapısı ve admin onay sistemi bulunan modern bir blog altyapısı sunmaktadır.
 
-1. https://supabase.com adresinden yeni proje olustur.
-2. Proje olusturma ekraninda `Enable Data API`, `Automatically expose new tables` ve `Enable automatic RLS` acik kalsin.
-3. Proje acilinca sol menuden `SQL Editor` ekranina gir.
-4. Once `supabase/schema.sql` icerigini calistir.
-5. Ardindan `supabase/seed.sql` icerigini calistir.
+## 🌍 Özellikler
 
-`seed.sql`, eski `blog.sql` dosyasindaki dogrulanmis blog yazilarini, kategorileri ve gorunen yazar bilgilerini aktarir. Eski kullanici e-posta/sifre alanlari bilerek aktarilmadi.
+- GitHub Pages desteği
+- Supabase veritabanı entegrasyonu
+- Kullanıcı kayıt & giriş sistemi
+- Admin paneli
+- Blog yazı yönetimi
+- Kategori sistemi
+- Thumbnail yükleme sistemi
+- Supabase Storage desteği
+- Responsive tasarım
+- Tamamen statik frontend yapısı
+- PHP gerektirmez
 
-## 2. Auth ayarlari
+---
 
-Supabase panelinde `Authentication > Providers` ekraninda `Email` provider acik olmali.
+# 🚀 Kullanılan Teknolojiler
 
-Gelisme sirasinda hizli test icin email confirmation kapatilabilir. Canlida acik birakmak daha guvenlidir.
+<p align="left">
+  <img src="https://img.shields.io/badge/HTML-E34F26?style=for-the-badge&logo=html5&logoColor=white">
+  <img src="https://img.shields.io/badge/CSS-1572B6?style=for-the-badge&logo=css3&logoColor=white">
+  <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black">
+  <img src="https://img.shields.io/badge/Supabase-3FCF8E?style=for-the-badge&logo=supabase&logoColor=white">
+  <img src="https://img.shields.io/badge/GitHub_Pages-121013?style=for-the-badge&logo=github&logoColor=white">
+</p>
 
-Ilk admin hesabi icin:
+---
 
-1. Sitedeki `Signup` ekranindan kendi hesabini olustur.
-2. Supabase `SQL Editor` ekraninda su sorguyu kendi email adresinle calistir:
+# 📂 Proje Yapısı
+
+```text
+.
+├── css/
+├── js/
+├── images/
+├── supabase/
+│   ├── schema.sql
+│   └── seed.sql
+├── index.html
+└── dashboard.html
+```
+
+---
+
+# ⚙️ Supabase Kurulumu
+
+## 1. Supabase Projesi Oluştur
+
+🔗 https://supabase.com
+
+Yeni bir Supabase projesi oluşturun.
+
+Proje oluştururken:
+
+- Enable Data API
+- Automatically expose new tables
+- Enable automatic RLS
+
+ayarlarını açık bırakın.
+
+---
+
+## 2. SQL Dosyalarını Çalıştır
+
+Supabase panelinde:
+
+```text
+SQL Editor
+```
+
+ekranına girin.
+
+Sırasıyla:
+
+```text
+supabase/schema.sql
+```
+
+ve ardından:
+
+```text
+supabase/seed.sql
+```
+
+dosyalarını çalıştırın.
+
+---
+
+# 🔐 Authentication Ayarları
+
+Supabase panelinde:
+
+```text
+Authentication > Providers
+```
+
+ekranından:
+
+```text
+Email Provider
+```
+
+aktif olmalıdır.
+
+Geliştirme sürecinde email doğrulama kapatılabilir, ancak canlı ortamda açık bırakılması önerilir.
+
+---
+
+# 👑 Admin Yetkisi Verme
+
+İlk admin hesabı için:
+
+1. Site üzerinden hesap oluşturun.
+2. Supabase SQL Editor ekranında aşağıdaki sorguyu çalıştırın:
 
 ```sql
 update public.authors
 set is_admin = true
 where user_id = (
     select id from auth.users
-    where email = 'SENIN_EMAIL_ADRESIN'
+    where email = 'YOUR_EMAIL_ADDRESS'
 );
 ```
 
-Bundan sonra o hesap dashboard uzerinden bekleyen yazilari onaylayabilir.
+---
 
-## 3. Supabase API bilgilerini ekle
+# 🔑 Supabase API Ayarları
 
 Supabase panelinde:
 
-1. `Project Settings > API` ekranina gir.
-2. `Project URL` degerini kopyala.
-3. `Project API keys` altindaki `anon public` key degerini kopyala.
-4. `js/supabase-config.js` dosyasini duzenle:
+```text
+Project Settings > API
+```
+
+ekranına girin.
+
+Aşağıdaki bilgileri alın:
+
+- Project URL
+- anon public key
+
+Daha sonra:
+
+```text
+js/supabase-config.js
+```
+
+dosyasını düzenleyin.
 
 ```js
 window.SUPABASE_CONFIG = {
@@ -52,32 +162,84 @@ window.SUPABASE_CONFIG = {
 };
 ```
 
-`service_role` key kullanma. GitHub Pages herkese acik oldugu icin sadece `anon public` key kullanilir.
+⚠️ Güvenlik nedeniyle `service_role` key kullanmayın.
 
-## 4. Storage
+---
 
-`schema.sql`, `blog-images` adinda public bir Storage bucket olusturur. Yeni blog yazisi yuklenirken thumbnail bu bucket'a gider ve post icine public URL olarak kaydedilir.
+# 🖼️ Storage Sistemi
 
-Eski gorseller repo icindeki `images/` klasorunden gelir. Yeni yuklenen gorseller Supabase Storage public URL'siyle kaydedilir.
+Proje;
 
-## 5. GitHub Pages'e yukle
+```text
+blog-images
+```
 
-1. Bu klasorun icindeki dosyalari GitHub reposuna yukle.
-2. GitHub'da `Settings > Pages` ekranina gir.
-3. `Deploy from a branch` sec.
-4. Branch olarak `main`, klasor olarak `/root` sec.
-5. Kaydet ve verilen GitHub Pages URL'sini ac.
+isimli public storage bucket kullanır.
 
-## Local test
+- Yeni yüklenen görseller Supabase Storage'a gider.
+- Eski görseller `images/` klasöründen okunur.
+- Thumbnail URL'leri otomatik oluşturulur.
 
-Bu klasorde local server calistirmak icin:
+---
+
+# 🚀 GitHub Pages Yayına Alma
+
+1. Dosyaları GitHub repository içerisine yükleyin.
+2. Repository ayarlarından:
+
+```text
+Settings > Pages
+```
+
+ekranına girin.
+
+3. Şunları seçin:
+
+```text
+Deploy from a branch
+Branch: main
+Folder: /root
+```
+
+4. Kaydedin ve GitHub Pages linkini açın.
+
+---
+
+# 💻 Local Test
+
+Local server başlatmak için:
 
 ```powershell
 C:\xampp\php\php.exe -S 127.0.0.1:4173 -t .
 ```
 
-Sonra su adresi ac:
+Ardından:
 
 ```text
 http://127.0.0.1:4173/
 ```
+
+adresini açın.
+
+---
+
+# 🎯 Proje Amacı
+
+Bu proje;
+
+- Modern blog sistemi geliştirmek
+- Supabase pratiği yapmak
+- Authentication sistemleri geliştirmek
+- Static frontend mimarisi oluşturmak
+- GitHub Pages üzerinde backend benzeri yapı kurmak
+
+amacıyla geliştirilmiştir.
+
+---
+
+# 📄 License
+
+This project is licensed under the MIT License.
+
+For more details:
+<a href="LICENSE">LICENSE</a>
