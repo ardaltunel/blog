@@ -1,0 +1,59 @@
+name: Supabase Keep Alive
+
+on:
+  schedule:
+    # Query Supabase every 3 days so the free project does not become idle.
+    - cron: "17 6 */3 * *"
+    # Make one small repository activity commit each month so GitHub does not
+    # disable scheduled workflows after a long period without repo activity.
+    - cron: "37 6 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: supabase-keep-alive
+  cancel-in-progress: false
+
+jobs:
+  ping-supabase:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Read Supabase configuration
+        id: config
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          SUPABASE_URL=$(sed -n "s/.*url: '\([^']*\)'.*/\1/p" js/supabase-config.js | head -n 1)
+          SUPABASE_ANON_KEY=$(sed -n "s/.*anonKey: '\([^']*\)'.*/\1/p" js/supabase-config.js | head -n 1)
+
+          if [[ -z "$SUPABASE_URL" || -z "$SUPABASE_ANON_KEY" ]]; then
+            echo "Supabase URL or anon key could not be read from js/supabase-config.js" >&2
+            exit 1
+          fi
+
+          echo "url=$SUPABASE_URL" >> "$GITHUB_OUTPUT"
+          echo "anon_key=$SUPABASE_ANON_KEY" >> "$GITHUB_OUTPUT"
+
+      - name: Query Supabase
+        shell: bash
+        env:
+          SUPABASE_URL: ${{ steps.config.outputs.url }}
+          SUPABASE_ANON_KEY: ${{ steps.config.outputs.anon_key }}
+        run: |
+          set -euo pipefail
+
+          curl --fail-with-body --silent --show-error \
+            --retry 3 \
+            --retry-delay 5 \
+            "$SUPABASE_URL/rest/v1/categories?select=id&limit=1" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY"
+
+          echo "Supabase keep-alive query
