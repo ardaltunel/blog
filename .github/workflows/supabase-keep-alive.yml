@@ -3,10 +3,10 @@ name: Supabase Keep Alive
 on:
   schedule:
     # Query Supabase every 3 days so the free project does not become idle.
-    - cron: "17 6 */3 * *"
+    - cron: "0 21 */3 * *"
     # Make one small repository activity commit each month so GitHub does not
     # disable scheduled workflows after a long period without repo activity.
-    - cron: "37 6 1 * *"
+    - cron: "0 21 1 * *"
   workflow_dispatch:
 
 permissions:
