@@ -4,7 +4,7 @@ const pageName = document.body.dataset.page || 'home';
 const params = new URLSearchParams(window.location.search);
 
 const config = window.SUPABASE_CONFIG || {};
-const imageBasePath = config.imageBasePath || './images/';
+const imageBasePath = config.imageBasePath || './assets/images/';
 
 const state = {
     categories: [],
@@ -38,7 +38,7 @@ const imageUrl = (fileName = '') => {
     }
 
     if (value.startsWith('images/')) {
-        return `./${value}`;
+        return `./assets/${value}`;
     }
 
     return `${imageBasePath}${value}`;

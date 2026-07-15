@@ -36,14 +36,22 @@ Bu proje; kullanıcı sistemi, blog yönetimi, kategori yapısı ve admin onay s
 
 ```text
 .
-├── css/
-├── js/
-├── images/
-├── supabase/
-│   ├── schema.sql
-│   └── seed.sql
+├── assets/
+│   ├── css/
+│   ├── data/
+│   ├── favicon/
+│   ├── images/
+│   ├── js/
+│   └── logo/
+├── database/
+│   └── supabase/
+│       ├── schema.sql
+│       └── seed.sql
 ├── index.html
-└── dashboard.html
+├── admin.html
+├── add-post.html
+├── signin.html
+└── signup.html
 ```
 
 ---
@@ -79,13 +87,13 @@ ekranına girin.
 Sırasıyla:
 
 ```text
-supabase/schema.sql
+database/supabase/schema.sql
 ```
 
 ve ardından:
 
 ```text
-supabase/seed.sql
+database/supabase/seed.sql
 ```
 
 dosyalarını çalıştırın.
@@ -148,7 +156,7 @@ Aşağıdaki bilgileri alın:
 Daha sonra:
 
 ```text
-js/supabase-config.js
+assets/js/supabase-config.js
 ```
 
 dosyasını düzenleyin.
@@ -157,7 +165,7 @@ dosyasını düzenleyin.
 window.SUPABASE_CONFIG = {
     url: 'https://PROJECT_ID.supabase.co',
     anonKey: 'SUPABASE_ANON_KEY',
-    imageBasePath: './images/',
+    imageBasePath: './assets/images/',
     storageBucket: 'blog-images'
 };
 ```
@@ -177,7 +185,7 @@ blog-images
 isimli public storage bucket kullanır.
 
 - Yeni yüklenen görseller Supabase Storage'a gider.
-- Eski görseller `images/` klasöründen okunur.
+- Eski görseller `assets/images/` klasöründen okunur.
 - Thumbnail URL'leri otomatik oluşturulur.
 
 ---

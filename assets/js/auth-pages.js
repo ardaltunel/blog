@@ -34,15 +34,15 @@ const imageUrl = (fileName = '') => {
     }
 
     if (value.startsWith('images/')) {
-        return `./${value}`;
+        return `./assets/${value}`;
     }
 
-    return `./images/${value}`;
+    return `./assets/images/${value}`;
 };
 
 const requireSupabase = () => {
     if (!authClient) {
-        showMessage('Supabase URL ve anon key js/supabase-config.js dosyasına eklenmeli.');
+        showMessage('Supabase URL ve anon key assets/js/supabase-config.js dosyasına eklenmeli.');
         return false;
     }
 
