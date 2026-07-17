@@ -4,13 +4,10 @@ on:
   schedule:
     # Query Supabase every 3 days so the free project does not become idle.
     - cron: "0 21 */3 * *"
-    # Make one small repository activity commit each month so GitHub does not
-    # disable scheduled workflows after a long period without repo activity.
-    - cron: "0 21 1 * *"
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: supabase-keep-alive
@@ -19,10 +16,13 @@ concurrency:
 jobs:
   ping-supabase:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
 
       - name: Read Supabase configuration
         id: config
@@ -51,7 +51,10 @@ jobs:
 
           curl --fail-with-body --silent --show-error \
             --retry 3 \
+            --retry-all-errors \
             --retry-delay 5 \
+            --max-time 20 \
+            --output /dev/null \
             "$SUPABASE_URL/rest/v1/categories?select=id&limit=1" \
             -H "apikey: $SUPABASE_ANON_KEY" \
             -H "Authorization: Bearer $SUPABASE_ANON_KEY"

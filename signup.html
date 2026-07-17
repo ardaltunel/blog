@@ -3,20 +3,23 @@
 <head>
     <title>Signup | Arda Altunel</title>
     <meta charset="utf-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; frame-src 'none'; form-action 'self'; script-src 'self'; style-src 'self'; img-src 'self' https://bdadbqlkmdwzzkrwetrf.supabase.co; font-src 'self'; connect-src 'self' https://bdadbqlkmdwzzkrwetrf.supabase.co; media-src 'none'; worker-src 'none'; manifest-src 'self'; upgrade-insecure-requests">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script>document.documentElement.dataset.theme = localStorage.getItem('theme') || 'dark';</script>
-    <link rel="stylesheet" href="//unicons.iconscout.com/release/v4.0.0/css/line.css">
-    <link rel="stylesheet" href="//fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap">
-    <link rel="stylesheet" href="./assets/css/style.css">
+    <script src="./assets/js/theme-bootstrap.js?v=8"></script>
+    <link rel="apple-touch-icon" href="./assets/favicon/apple-touch-icon.png">
+    <link rel="icon" href="./assets/favicon/favicon.ico">
+    <link rel="stylesheet" href="./assets/vendor/montserrat/montserrat.css">
+    <link rel="stylesheet" href="./assets/css/style.css?v=8">
 </head>
 <body>
 <nav>
     <div class="container nav__container">
         <a href="./index.html" class="nav__logo">ARDALTUNEL</a>
         <ul class="nav__items"></ul>
-        <button class="theme__toggle" type="button" aria-label="Tema degistir"><i class="uil uil-moon"></i></button>
-        <button id="open__nav-btn"><i class="uil uil-bars"></i></button>
-        <button id="close__nav-btn"><i class="uil uil-multiply"></i></button>
+        <button class="theme__toggle" type="button" aria-label="Change theme"><img class="ui-icon" src="./assets/vendor/lucide/icons/moon.svg" alt="" aria-hidden="true"></button>
+        <button id="open__nav-btn" type="button" aria-label="Open menu"><img class="ui-icon" src="./assets/vendor/lucide/icons/menu.svg" alt="" aria-hidden="true"></button>
+        <button id="close__nav-btn" type="button" aria-label="Close menu" hidden><img class="ui-icon" src="./assets/vendor/lucide/icons/x.svg" alt="" aria-hidden="true"></button>
     </div>
 </nav>
 <section class="form__section">
@@ -24,22 +27,24 @@
         <h2>Signup</h2>
         <div class="alert__message error" id="auth-message" hidden></div>
         <form id="signup-form">
-            <input type="text" name="firstname" placeholder="Firstname" required>
-            <input type="text" name="lastname" placeholder="Lastname" required>
-            <input type="email" name="email" placeholder="Email" required>
-            <input type="password" name="password" placeholder="Password" required>
+            <input type="text" name="firstname" maxlength="80" autocomplete="given-name" placeholder="Firstname" required>
+            <input type="text" name="lastname" maxlength="80" autocomplete="family-name" placeholder="Lastname" required>
+            <input type="email" name="email" maxlength="254" autocomplete="email" placeholder="Email" required>
+            <input type="password" name="password" minlength="8" maxlength="128" autocomplete="new-password" placeholder="Password" required>
             <div class="form__control">
-                <input type="file" name="avatar" id="avatar" accept="image/png,image/jpeg,image/jpg">
+                <input type="file" name="avatar" id="avatar" accept="image/png,image/jpeg,image/webp">
             </div>
             <button type="submit" class="btn">Signup</button>
             <small>Already have an account? <a href="./signin.html">Signin</a></small>
         </form>
     </div>
 </section>
-<script src="https://cdn.jsdelivr.net/npm/@database/supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="./assets/js/supabase-config.js"></script>
-<script src="./assets/js/auth.js"></script>
-<script src="./assets/js/auth-pages.js?v=4"></script>
-<script src="./assets/js/main.js"></script>
+<script src="./assets/vendor/dompurify/purify.min.js"></script>
+<script src="./assets/js/security.js?v=9"></script>
+<script src="./assets/vendor/supabase/supabase.js"></script>
+<script src="./assets/js/supabase-config.js?v=8"></script>
+<script src="./assets/js/auth.js?v=8"></script>
+<script src="./assets/js/auth-pages.js?v=10"></script>
+<script src="./assets/js/main.js?v=8"></script>
 </body>
 </html>

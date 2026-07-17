@@ -1,275 +1,316 @@
-const POSTS_PER_PAGE = 9;
-const app = document.querySelector('#app');
-const pageName = document.body.dataset.page || 'home';
-const params = new URLSearchParams(window.location.search);
+(function initializeBlog() {
+    'use strict';
 
-const config = window.SUPABASE_CONFIG || {};
-const imageBasePath = config.imageBasePath || './assets/images/';
-
-const state = {
-    categories: [],
-    authors: [],
-    posts: []
-};
-
-const escapeHtml = (value = '') => String(value)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-
-const stripHtml = (html = '') => {
-    const div = document.createElement('div');
-    div.innerHTML = html;
-    return div.textContent || div.innerText || '';
-};
-
-const excerpt = (html = '', length = 150) => {
-    const text = stripHtml(html).replace(/\s+/g, ' ').trim();
-    return text.length > length ? `${text.slice(0, length)}...` : text;
-};
-
-const imageUrl = (fileName = '') => {
-    const value = String(fileName || '');
-
-    if (/^(https?:|data:|blob:|\.\/|\.\.\/|\/)/.test(value)) {
-        return value;
-    }
-
-    if (value.startsWith('images/')) {
-        return `./assets/${value}`;
-    }
-
-    return `${imageBasePath}${value}`;
-};
-
-const formatDate = (dateValue) => new Intl.DateTimeFormat('en', {
-    month: 'short',
-    day: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false
-}).format(new Date(dateValue));
-
-const categoryById = (id) => state.categories.find(category => Number(category.id) === Number(id));
-const authorById = (id) => state.authors.find(author => Number(author.id) === Number(id));
-
-const sortPosts = (posts) => [...posts].sort((a, b) => new Date(b.date_time) - new Date(a.date_time));
-
-const loadFromSupabase = async () => {
-    if (!config.url || !config.anonKey || !window.supabase) {
-        return null;
-    }
-
-    const client = window.supabase.createClient(config.url, config.anonKey);
-
-    const [categoriesResult, authorsResult, postsResult] = await Promise.all([
-        client.from('categories').select('id,title,description').order('title', { ascending: true }),
-        client.from('authors').select('id,firstname,lastname,avatar'),
-        client.from('posts').select('id,title,body,thumbnail,date_time,category_id,author_id,is_featured,is_verified').eq('is_verified', true).order('date_time', { ascending: false })
-    ]);
-
-    if (categoriesResult.error || authorsResult.error || postsResult.error) {
-        throw categoriesResult.error || authorsResult.error || postsResult.error;
-    }
-
-    return {
-        categories: categoriesResult.data || [],
-        authors: authorsResult.data || [],
-        posts: postsResult.data || []
+    const POSTS_PER_PAGE = 9;
+    const MAX_CATEGORIES = 500;
+    const MAX_AUTHORS = 2000;
+    const MAX_POSTS = 2000;
+    const app = document.querySelector('#app');
+    const pageName = document.body.dataset.page || 'home';
+    const security = window.SecurityUtils;
+    const config = security?.getSafeSupabaseConfig();
+    const state = {
+        categories: [],
+        authors: [],
+        posts: []
     };
-};
 
-const loadData = async () => {
-    try {
-        const supabaseData = await loadFromSupabase();
-        Object.assign(state, supabaseData || window.BLOG_FALLBACK_DATA);
-    } catch (error) {
-        console.warn('Supabase data could not be loaded, using local fallback data.', error);
-        Object.assign(state, window.BLOG_FALLBACK_DATA);
-    }
+    const normalizeBoolean = value => value === true || value === 1;
+    const normalizeDate = value => {
+        const date = new Date(value);
+        return Number.isFinite(date.getTime()) ? date.toISOString() : null;
+    };
+    const normalizeCategory = category => {
+        const id = security.toSafeId(category?.id);
+        const title = security.validateText(category?.title, { min: 1, max: 100 });
+        const description = security.validateText(category?.description || '', { max: 1000 });
+        return id && title !== null && description !== null ? { id, title, description } : null;
+    };
+    const normalizeAuthor = author => {
+        const id = security.toSafeId(author?.id);
+        const firstname = security.validateText(author?.firstname, { min: 1, max: 80 });
+        const lastname = security.validateText(author?.lastname || '', { max: 80 });
+        const avatar = security.safeImageUrl(author?.avatar);
+        return id && firstname !== null && lastname !== null && avatar ? { id, firstname, lastname, avatar } : null;
+    };
+    const normalizePost = post => {
+        const id = security.toSafeId(post?.id);
+        const title = security.validateText(post?.title, { min: 1, max: 160 });
+        const body = typeof post?.body === 'string' && post.body.length <= 200000 ? post.body : null;
+        const thumbnail = security.safeImageUrl(post?.thumbnail, security.DEFAULT_AVATAR);
+        const dateTime = normalizeDate(post?.date_time);
+        const categoryId = security.toSafeId(post?.category_id);
+        const authorId = security.toSafeId(post?.author_id);
 
-    state.posts = sortPosts(state.posts.filter(post => post.is_verified === true || Number(post.is_verified) === 1));
-};
+        if (!id || title === null || body === null || !thumbnail || !dateTime || !authorId) {
+            return null;
+        }
 
-const renderAuthor = (post) => {
-    const author = authorById(post.author_id) || {};
-    const name = `${author.firstname || 'Arda'} ${author.lastname || 'Altunel'}`.trim();
+        return {
+            id,
+            title,
+            body,
+            thumbnail,
+            date_time: dateTime,
+            category_id: categoryId,
+            author_id: authorId,
+            is_featured: normalizeBoolean(post.is_featured),
+            is_verified: normalizeBoolean(post.is_verified)
+        };
+    };
+    const normalizeList = (value, limit, normalizer) => Array.isArray(value)
+        ? value.slice(0, limit).map(normalizer).filter(Boolean)
+        : [];
+    const applyData = source => {
+        const safeSource = source && typeof source === 'object' && !Array.isArray(source) ? source : {};
+        state.categories = normalizeList(safeSource.categories, MAX_CATEGORIES, normalizeCategory);
+        state.authors = normalizeList(safeSource.authors, MAX_AUTHORS, normalizeAuthor);
+        state.posts = normalizeList(safeSource.posts, MAX_POSTS, normalizePost)
+            .filter(post => post.is_verified)
+            .sort((a, b) => new Date(b.date_time) - new Date(a.date_time));
+    };
 
-    return `
-        <div class="post__author">
-            <div class="post__author-avatar">
-                <img src="${imageUrl(author.avatar || '1663704007ardaltunel-pp.png')}" alt="${escapeHtml(name)}">
-            </div>
-            <div class="post__author-info">
-                <h5>By: ${escapeHtml(name)}</h5>
-                <small>${formatDate(post.date_time)}</small>
-            </div>
-        </div>
-    `;
-};
+    const loadFromSupabase = async () => {
+        if (!config || !window.authClient) {
+            return null;
+        }
 
-const renderPostCard = (post) => {
-    const category = categoryById(post.category_id) || { title: 'Uncategorized', id: 99 };
+        const client = window.authClient;
+        const [categoriesResult, authorsResult, postsResult] = await Promise.all([
+            client.from('categories').select('id,title,description').order('title', { ascending: true }).limit(MAX_CATEGORIES),
+            client.from('authors').select('id,firstname,lastname,avatar').limit(MAX_AUTHORS),
+            client.from('posts')
+                .select('id,title,body,thumbnail,date_time,category_id,author_id,is_featured,is_verified')
+                .eq('is_verified', true)
+                .order('date_time', { ascending: false })
+                .limit(MAX_POSTS)
+        ]);
 
-    return `
-        <article class="post">
-            <a href="./post.html?id=${post.id}">
-                <div class="post__thumbnail">
-                    <img src="${imageUrl(post.thumbnail)}" alt="${escapeHtml(post.title)}">
+        if (categoriesResult.error || authorsResult.error || postsResult.error) {
+            throw new Error('Remote content could not be loaded.');
+        }
+
+        return {
+            categories: categoriesResult.data,
+            authors: authorsResult.data,
+            posts: postsResult.data
+        };
+    };
+
+    const loadData = async () => {
+        try {
+            const remoteData = await loadFromSupabase();
+            applyData(remoteData || window.BLOG_FALLBACK_DATA);
+        } catch {
+            applyData(window.BLOG_FALLBACK_DATA);
+        }
+    };
+
+    const categoryById = id => state.categories.find(category => category.id === id);
+    const authorById = id => state.authors.find(author => author.id === id);
+    const formatDate = dateValue => {
+        try {
+            return new Intl.DateTimeFormat('en', {
+                month: 'short',
+                day: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            }).format(new Date(dateValue));
+        } catch {
+            return '';
+        }
+    };
+    const excerpt = (html = '', length = 150) => {
+        const text = security.stripHtml(html).replace(/\s+/g, ' ').trim();
+        return text.length > length ? `${text.slice(0, length)}...` : text;
+    };
+
+    const renderAuthor = (post) => {
+        const author = authorById(post.author_id) || {};
+        const name = `${author.firstname || 'Arda'} ${author.lastname || 'Altunel'}`.trim();
+        const avatar = security.safeImageUrl(author.avatar);
+        return `
+            <div class="post__author">
+                <div class="post__author-avatar">
+                    <img src="${security.escapeHtml(avatar)}" alt="${security.escapeHtml(name)}">
                 </div>
-            </a>
-            <div class="post__info">
-                <a href="./category.html?id=${category.id}" class="category__button">${escapeHtml(category.title)}</a>
-                <h3 class="post__title">
-                    <a href="./post.html?id=${post.id}">${escapeHtml(post.title)}</a>
-                </h3>
-                <p class="post__body">${escapeHtml(excerpt(post.body))}</p>
-                ${renderAuthor(post)}
+                <div class="post__author-info">
+                    <h5>By: ${security.escapeHtml(name)}</h5>
+                    <small>${security.escapeHtml(formatDate(post.date_time))}</small>
+                </div>
             </div>
-        </article>
+        `;
+    };
+
+    const renderPostCard = (post) => {
+        const category = categoryById(post.category_id) || { title: 'Uncategorized', id: null };
+        const postHref = security.buildRoute('post', { id: post.id });
+        const categoryHref = category.id ? security.buildRoute('category', { id: category.id }) : security.buildRoute('home');
+        return `
+            <article class="post">
+                <a href="${postHref}">
+                    <div class="post__thumbnail">
+                        <img src="${security.escapeHtml(post.thumbnail)}" alt="${security.escapeHtml(post.title)}">
+                    </div>
+                </a>
+                <div class="post__info">
+                    <a href="${categoryHref}" class="category__button">${security.escapeHtml(category.title)}</a>
+                    <h3 class="post__title"><a href="${postHref}">${security.escapeHtml(post.title)}</a></h3>
+                    <p class="post__body">${security.escapeHtml(excerpt(post.body))}</p>
+                    ${renderAuthor(post)}
+                </div>
+            </article>
+        `;
+    };
+
+    const renderCategoryButtons = () => `
+        <section class="category__buttons">
+            <div class="container category__buttons-container">
+                ${state.categories.map(category => `
+                    <a href="${security.buildRoute('category', { id: category.id })}" class="category__button">${security.escapeHtml(category.title)}</a>
+                `).join('')}
+            </div>
+        </section>
     `;
-};
 
-const renderCategoryButtons = () => `
-    <section class="category__buttons">
-        <div class="container category__buttons-container">
-            ${state.categories.map(category => `
-                <a href="./category.html?id=${category.id}" class="category__button">${escapeHtml(category.title)}</a>
-            `).join('')}
-        </div>
-    </section>
-`;
+    const renderPagination = (currentPage, totalPages) => {
+        if (totalPages <= 1) {
+            return '';
+        }
 
-const renderPagination = (currentPage, totalPages) => {
-    if (totalPages <= 1) {
-        return '';
-    }
+        const previous = security.buildRoute('home', { page: currentPage - 1 });
+        const next = security.buildRoute('home', { page: currentPage + 1 });
+        return `
+            <div class="container pagination__container">
+                ${currentPage > 1 ? `<a href="${previous}#posts" class="pagination__button">Onceki Sayfa</a>` : ''}
+                <span class="pagination__status">${currentPage} / ${totalPages}</span>
+                ${currentPage < totalPages ? `<a href="${next}#posts" class="pagination__button">Sonraki Sayfa</a>` : ''}
+            </div>
+        `;
+    };
 
-    return `
-        <div class="container pagination__container">
-            ${currentPage > 1 ? `<a href="./index.html?page=${currentPage - 1}#posts" class="pagination__button">Önceki Sayfa</a>` : ''}
-            <span class="pagination__status">${currentPage} / ${totalPages}</span>
-            ${currentPage < totalPages ? `<a href="./index.html?page=${currentPage + 1}#posts" class="pagination__button">Sonraki Sayfa</a>` : ''}
-        </div>
-    `;
-};
+    const renderHome = () => {
+        const featured = state.posts.find(post => post.is_featured);
+        const requestedPage = security.getQueryParam('page');
+        const currentPage = requestedPage || 1;
+        const totalPages = Math.max(1, Math.ceil(state.posts.length / POSTS_PER_PAGE));
+        const safePage = Math.min(currentPage, totalPages);
+        const pagePosts = state.posts.slice((safePage - 1) * POSTS_PER_PAGE, safePage * POSTS_PER_PAGE);
 
-const renderHome = () => {
-    const featured = state.posts.find(post => Number(post.is_featured) === 1);
-    const currentPage = Math.max(1, Number(params.get('page')) || 1);
-    const totalPages = Math.max(1, Math.ceil(state.posts.length / POSTS_PER_PAGE));
-    const safePage = Math.min(currentPage, totalPages);
-    const pagePosts = state.posts.slice((safePage - 1) * POSTS_PER_PAGE, safePage * POSTS_PER_PAGE);
-
-    app.innerHTML = `
-        ${featured ? `
-            <section class="featured">
-                <div class="container featured__container">
-                    <a href="./post.html?id=${featured.id}">
-                        <div class="post__thumbnail">
-                            <img src="${imageUrl(featured.thumbnail)}" alt="${escapeHtml(featured.title)}">
+        security.renderUi(app, `
+            ${featured ? `
+                <section class="featured">
+                    <div class="container featured__container">
+                        <a href="${security.buildRoute('post', { id: featured.id })}">
+                            <div class="post__thumbnail">
+                                <img src="${security.escapeHtml(featured.thumbnail)}" alt="${security.escapeHtml(featured.title)}">
+                            </div>
+                        </a>
+                        <div class="post__info">
+                            <a href="${security.buildRoute('category', { id: featured.category_id })}" class="category__button">${security.escapeHtml(categoryById(featured.category_id)?.title || 'Uncategorized')}</a>
+                            <h2 class="post__title"><a href="${security.buildRoute('post', { id: featured.id })}">${security.escapeHtml(featured.title)}</a></h2>
+                            <p class="post__body">${security.escapeHtml(excerpt(featured.body, 300))}</p>
+                            ${renderAuthor(featured)}
                         </div>
-                    </a>
-                    <div class="post__info">
-                        <a href="./category.html?id=${featured.category_id}" class="category__button">${escapeHtml((categoryById(featured.category_id) || {}).title || 'Uncategorized')}</a>
-                        <h2 class="post__title"><a href="./post.html?id=${featured.id}">${escapeHtml(featured.title)}</a></h2>
-                        <p class="post__body">${escapeHtml(excerpt(featured.body, 300))}</p>
-                        ${renderAuthor(featured)}
+                    </div>
+                </section>
+            ` : ''}
+            <section class="posts ${featured ? '' : 'section__extra-margin'}" id="posts">
+                <div class="container posts__container">${pagePosts.map(renderPostCard).join('')}</div>
+                ${renderPagination(safePage, totalPages)}
+            </section>
+            ${renderCategoryButtons()}
+        `);
+    };
+
+    const renderSafeError = (message) => {
+        security.renderUi(app, '<section class="empty__page"><h3></h3></section>');
+        const heading = app.querySelector('h3');
+        if (heading) {
+            heading.textContent = message;
+        }
+    };
+
+    const renderPost = () => {
+        const id = security.getQueryParam('id');
+        const post = id ? state.posts.find(item => item.id === id) : null;
+        if (!post) {
+            renderSafeError('Yazı bulunamadı.');
+            return;
+        }
+
+        const index = state.posts.findIndex(item => item.id === id);
+        const previousPost = state.posts[index + 1] || state.posts[0];
+        const nextPost = state.posts[index - 1] || state.posts[state.posts.length - 1];
+        document.title = `${post.title} | Arda Altunel`;
+        security.renderUi(app, `
+            <section class="singlepost">
+                <div class="container singlepost__container singlepost__content">
+                    <h2>${security.escapeHtml(post.title)}</h2>
+                    ${renderAuthor(post)}
+                    <div class="singlepost__thumbnail">
+                        <img src="${security.escapeHtml(post.thumbnail)}" alt="${security.escapeHtml(post.title)}">
+                    </div>
+                    <div id="mlinks"></div>
+                    <br>
+                    <div class="singlepost__buttons">
+                        <a href="${security.buildRoute('post', { id: previousPost.id })}" class="singlepost__previous">
+                            <div class="singlepost__button-label">PREVIOUS POST</div>
+                            <div>${security.escapeHtml(previousPost.title)}</div>
+                        </a>
+                        <a href="${security.buildRoute('post', { id: nextPost.id })}" class="singlepost__next">
+                            <div class="singlepost__button-label">NEXT POST</div>
+                            <div>${security.escapeHtml(nextPost.title)}</div>
+                        </a>
                     </div>
                 </div>
             </section>
-        ` : ''}
-        <section class="posts ${featured ? '' : 'section__extra-margin'}" id="posts">
-            <div class="container posts__container">
-                ${pagePosts.map(renderPostCard).join('')}
-            </div>
-            ${renderPagination(safePage, totalPages)}
-        </section>
-        ${renderCategoryButtons()}
-    `;
-};
+        `);
+        app.querySelector('#mlinks')?.append(security.sanitizeBlogFragment(post.body));
+    };
 
-const renderPost = () => {
-    const id = Number(params.get('id'));
-    const post = state.posts.find(item => Number(item.id) === id);
+    const renderCategory = () => {
+        const id = security.getQueryParam('id');
+        const category = id ? categoryById(id) : null;
+        if (!category) {
+            renderSafeError('Kategori bulunamadı.');
+            return;
+        }
 
-    if (!post) {
-        app.innerHTML = '<section class="empty__page"><h3>Post not found.</h3></section>';
-        return;
-    }
+        const posts = state.posts.filter(post => post.category_id === id);
+        security.renderUi(app, `
+            <header class="category__title"><h2>${security.escapeHtml(category.title)}</h2></header>
+            ${posts.length ? `
+                <section class="posts">
+                    <div class="container posts__container">${posts.map(renderPostCard).join('')}</div>
+                </section>
+            ` : `
+                <div class="alert__message error lg"><p>No posts found for this category</p></div>
+            `}
+            ${renderCategoryButtons()}
+        `);
+    };
 
-    const index = state.posts.findIndex(item => Number(item.id) === id);
-    const previousPost = state.posts[index + 1] || state.posts[0];
-    const nextPost = state.posts[index - 1] || state.posts[state.posts.length - 1];
+    const init = async () => {
+        if (!app || !security) {
+            return;
+        }
 
-    document.title = `${post.title} | Arda Altunel`;
-    app.innerHTML = `
-        <section class="singlepost">
-            <div class="container singlepost__container" style="padding-bottom: 2rem;">
-                <h2>${escapeHtml(post.title)}</h2>
-                ${renderAuthor(post)}
-                <div class="singlepost__thumbnail">
-                    <img src="${imageUrl(post.thumbnail)}" alt="${escapeHtml(post.title)}">
-                </div>
-                <div id="mlinks">${post.body}</div>
-                <br>
-                <div class="singlepost__buttons" style="display: flex; justify-content: space-between; margin-bottom: 0; padding-bottom: 0;">
-                    <a href="./post.html?id=${previousPost.id}" style="text-align: left">
-                        <div style="font-size: 70%">PREVIOUS POST</div>
-                        <div style="font-size: 100%">${escapeHtml(previousPost.title)}</div>
-                    </a>
-                    <a href="./post.html?id=${nextPost.id}" style="text-align: right">
-                        <div style="font-size: 70%">NEXT POST</div>
-                        <div style="font-size: 100%">${escapeHtml(nextPost.title)}</div>
-                    </a>
-                </div>
-            </div>
-        </section>
-    `;
+        try {
+            await loadData();
+            if (pageName === 'post') {
+                renderPost();
+            } else if (pageName === 'category') {
+                renderCategory();
+            } else {
+                renderHome();
+            }
+        } catch {
+            renderSafeError('Content could not be loaded.');
+        }
+    };
 
-    document.querySelectorAll('#mlinks a').forEach(link => {
-        link.setAttribute('target', '_blank');
-        link.setAttribute('rel', 'noopener noreferrer');
-    });
-};
-
-const renderCategory = () => {
-    const id = Number(params.get('id'));
-    const category = categoryById(id);
-    const posts = state.posts.filter(post => Number(post.category_id) === id);
-
-    app.innerHTML = `
-        <header class="category__title">
-            <h2>${escapeHtml(category ? category.title : 'Category')}</h2>
-        </header>
-        ${posts.length ? `
-            <section class="posts">
-                <div class="container posts__container">
-                    ${posts.map(renderPostCard).join('')}
-                </div>
-            </section>
-        ` : `
-            <div class="alert__message error lg">
-                <p>No posts found for this category</p>
-            </div>
-        `}
-        ${renderCategoryButtons()}
-    `;
-};
-
-const init = async () => {
-    await loadData();
-
-    if (pageName === 'post') {
-        renderPost();
-    } else if (pageName === 'category') {
-        renderCategory();
-    } else {
-        renderHome();
-    }
-};
-
-init();
+    init();
+}());

@@ -1,58 +1,42 @@
-const navItems = document.querySelector('.nav__items');
-const openNavBtn = document.querySelector('#open__nav-btn');
-const closeNavBtn = document.querySelector('#close__nav-btn');
-const sidebar = document.querySelector('aside');
-const showSidebarBtn = document.querySelector('#show__sidebar-btn');
-const hideSidebarBtn = document.querySelector('#hide__sidebar-btn');
-const themeToggles = document.querySelectorAll('.theme__toggle');
+(function initializeUi() {
+    'use strict';
 
-const setTheme = (theme) => {
-    document.documentElement.dataset.theme = theme;
-    localStorage.setItem('theme', theme);
+    const security = window.SecurityUtils;
+    const navItems = document.querySelector('.nav__items');
+    const openNavBtn = document.querySelector('#open__nav-btn');
+    const closeNavBtn = document.querySelector('#close__nav-btn');
+    const themeToggles = document.querySelectorAll('.theme__toggle');
 
-    themeToggles.forEach((button) => {
-        const icon = button.querySelector('i');
-        if (!icon) {
-            return;
-        }
+    const setTheme = (theme) => {
+        const safeTheme = theme === 'light' ? 'light' : 'dark';
+        document.documentElement.dataset.theme = safeTheme;
+        security?.setStoredTheme(safeTheme);
+        themeToggles.forEach(button => {
+            const icon = button.querySelector('img');
+            if (icon) {
+                const iconName = safeTheme === 'dark' ? 'sun' : 'moon';
+                icon.src = `./assets/vendor/lucide/icons/${iconName}.svg`;
+            }
+        });
+    };
 
-        icon.className = theme === 'dark' ? 'uil uil-sun' : 'uil uil-moon';
-    });
-};
-
-setTheme(localStorage.getItem('theme') || 'dark');
-
-themeToggles.forEach((button) => {
-    button.addEventListener('click', () => {
-        const nextTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-        setTheme(nextTheme);
-    });
-});
-
-if (navItems && openNavBtn && closeNavBtn) {
-    openNavBtn.addEventListener('click', () => {
-        navItems.style.display = 'flex';
-        openNavBtn.style.display = 'none';
-        closeNavBtn.style.display = 'inline-flex';
+    setTheme(security?.getStoredTheme() || 'dark');
+    themeToggles.forEach(button => {
+        button.addEventListener('click', () => {
+            setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+        });
     });
 
-    closeNavBtn.addEventListener('click', () => {
-        navItems.style.display = 'none';
-        openNavBtn.style.display = 'inline-flex';
-        closeNavBtn.style.display = 'none';
-    });
-}
-
-if (sidebar && showSidebarBtn && hideSidebarBtn) {
-    showSidebarBtn.addEventListener('click', () => {
-        sidebar.style.left = '0';
-        showSidebarBtn.style.display = 'none';
-        hideSidebarBtn.style.display = 'inline-flex';
-    });
-
-    hideSidebarBtn.addEventListener('click', () => {
-        sidebar.style.left = '-100%';
-        showSidebarBtn.style.display = 'inline-flex';
-        hideSidebarBtn.style.display = 'none';
-    });
-}
+    if (navItems && openNavBtn && closeNavBtn) {
+        openNavBtn.addEventListener('click', () => {
+            navItems.classList.add('is-open');
+            openNavBtn.hidden = true;
+            closeNavBtn.hidden = false;
+        });
+        closeNavBtn.addEventListener('click', () => {
+            navItems.classList.remove('is-open');
+            openNavBtn.hidden = false;
+            closeNavBtn.hidden = true;
+        });
+    }
+}());

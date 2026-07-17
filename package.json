@@ -1,0 +1,28 @@
+{
+  "name": "ardaltunel-blog",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Static GitHub Pages blog with Supabase-backed content and authentication.",
+  "scripts": {
+    "build": "node scripts/vendor.mjs",
+    "lint": "eslint assets/js scripts tests",
+    "test": "node --test",
+    "test:security": "node scripts/security-scan.mjs",
+    "test:links": "node scripts/check-links.mjs",
+    "audit": "npm audit --audit-level=high",
+    "check": "npm run build && npm run lint && npm test && npm run test:security && npm run test:links && npm run audit"
+  },
+  "dependencies": {
+    "@fontsource/montserrat": "5.2.8",
+    "@supabase/supabase-js": "2.110.7",
+    "dompurify": "3.4.12",
+    "lucide-static": "1.25.0"
+  },
+  "devDependencies": {
+    "eslint": "10.7.0",
+    "eslint-plugin-security": "4.0.1"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  }
+}
