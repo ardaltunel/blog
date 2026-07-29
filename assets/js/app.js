@@ -253,19 +253,23 @@
         security.renderUi(app, `
             <section class="singlepost">
                 <article class="container singlepost__container">
-                    <header class="singlepost__header">
-                        <div class="singlepost__eyebrow">
-                            <a href="${categoryHref}" class="category__button">${security.escapeHtml(category.title)}</a>
-                            <span>${readingTime(post.body)} dk okuma</span>
-                        </div>
-                        <h1>${security.escapeHtml(post.title)}</h1>
-                        ${renderAuthor(post)}
-                    </header>
-                    <figure class="singlepost__thumbnail">
-                        <img src="${security.escapeHtml(post.thumbnail)}" alt="${security.escapeHtml(post.title)}">
-                    </figure>
-                    <div id="post-content" class="article-content"></div>
-                    <div class="singlepost__buttons">
+                    <div class="singlepost__hero">
+                        <figure class="singlepost__thumbnail">
+                            <img src="${security.escapeHtml(post.thumbnail)}" alt="${security.escapeHtml(post.title)}">
+                        </figure>
+                        <div class="singlepost__hero-shade"></div>
+                        <header class="singlepost__header">
+                            <div class="singlepost__eyebrow">
+                                <a href="${categoryHref}" class="category__button">${security.escapeHtml(category.title)}</a>
+                                <span>${readingTime(post.body)} dk okuma</span>
+                            </div>
+                            <h1>${security.escapeHtml(post.title)}</h1>
+                            ${renderAuthor(post)}
+                        </header>
+                    </div>
+                    <div class="singlepost__body">
+                        <div id="post-content" class="article-content"></div>
+                        <div class="singlepost__buttons">
                         <a href="${security.buildRoute('post', { id: previousPost.id })}" class="singlepost__previous">
                             <div class="singlepost__button-label">ÖNCEKİ YAZI</div>
                             <div>${security.escapeHtml(previousPost.title)}</div>
@@ -274,6 +278,7 @@
                             <div class="singlepost__button-label">SONRAKİ YAZI</div>
                             <div>${security.escapeHtml(nextPost.title)}</div>
                         </a>
+                        </div>
                     </div>
                 </article>
             </section>
