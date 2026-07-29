@@ -553,23 +553,25 @@
                 ) || ''
             };
         }).filter(Boolean);
+        const isAdminTable = profile.is_admin === true;
+        const showsAuthor = isAdminTable && view === 'all-posts';
         security.renderUi(container, `
             <div class="dashboard__table-scroll">
-            <table class="dashboard__table dashboard__table--posts">
+            <table class="dashboard__table dashboard__table--posts${isAdminTable ? ' dashboard__table--admin-posts' : ''}${showsAuthor ? ' dashboard__table--with-author' : ''}">
                 <thead><tr>
                     <th scope="col">Başlık</th><th scope="col">Kategori</th>
-                    ${profile.is_admin && view === 'all-posts' ? '<th scope="col">Yazar</th>' : ''}
+                    ${showsAuthor ? '<th scope="col">Yazar</th>' : ''}
                     <th scope="col">Düzenle</th>${profile.is_admin ? '<th scope="col">Yayın durumu</th><th scope="col">Sil</th>' : ''}
                 </tr></thead>
                 <tbody>${posts.map(post => `
                     <tr>
-                        <td data-label="Başlık">${security.escapeHtml(post.title)}</td>
-                        <td data-label="Kategori">${security.escapeHtml(post.categoryTitle)}</td>
-                        ${profile.is_admin && view === 'all-posts' ? `<td data-label="Yazar">${security.escapeHtml(post.authorName)}</td>` : ''}
-                        <td data-label="Düzenle"><button type="button" class="btn sm edit-post" data-id="${post.id}">Düzenle</button></td>
+                        <td class="dashboard__post-title" data-label="Başlık">${security.escapeHtml(post.title)}</td>
+                        <td class="dashboard__post-category" data-label="Kategori">${security.escapeHtml(post.categoryTitle)}</td>
+                        ${showsAuthor ? `<td class="dashboard__post-author" data-label="Yazar">${security.escapeHtml(post.authorName)}</td>` : ''}
+                        <td class="dashboard__post-action" data-label="Düzenle"><button type="button" class="btn sm edit-post" data-id="${post.id}">Düzenle</button></td>
                         ${profile.is_admin ? `
-                            <td data-label="Yayın durumu"><button type="button" class="btn sm toggle-post" data-id="${post.id}" data-verified="${post.is_verified === true}">${post.is_verified === true ? 'Yayından kaldır' : 'Yayınla'}</button></td>
-                            <td data-label="Sil"><button type="button" class="btn sm danger delete-post" data-id="${post.id}">Sil</button></td>
+                            <td class="dashboard__post-action" data-label="Yayın durumu"><button type="button" class="btn sm toggle-post" data-id="${post.id}" data-verified="${post.is_verified === true}">${post.is_verified === true ? 'Yayından kaldır' : 'Yayınla'}</button></td>
+                            <td class="dashboard__post-action" data-label="Sil"><button type="button" class="btn sm danger delete-post" data-id="${post.id}">Sil</button></td>
                         ` : ''}
                     </tr>
                 `).join('')}</tbody>

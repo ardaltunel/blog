@@ -29,15 +29,62 @@
     });
 
     if (navItems && openNavBtn && closeNavBtn) {
-        openNavBtn.addEventListener('click', () => {
-            navItems.classList.add('is-open');
-            openNavBtn.hidden = true;
-            closeNavBtn.hidden = false;
+        const nav = navItems.closest('nav');
+        const desktopMedia = window.matchMedia('(min-width: 1025px)');
+
+        if (!navItems.id) {
+            navItems.id = 'site-navigation';
+        }
+        [openNavBtn, closeNavBtn].forEach(button => {
+            button.setAttribute('aria-controls', navItems.id);
         });
+
+        const setNavOpen = (isOpen, restoreFocus = false) => {
+            navItems.classList.toggle('is-open', isOpen);
+            openNavBtn.hidden = isOpen;
+            closeNavBtn.hidden = !isOpen;
+            openNavBtn.setAttribute('aria-expanded', String(isOpen));
+            closeNavBtn.setAttribute('aria-expanded', String(isOpen));
+            document.body.classList.toggle('nav-open', isOpen);
+
+            if (restoreFocus) {
+                openNavBtn.focus();
+            }
+        };
+
+        setNavOpen(false);
+
+        openNavBtn.addEventListener('click', () => {
+            setNavOpen(true);
+            closeNavBtn.focus();
+        });
+
         closeNavBtn.addEventListener('click', () => {
-            navItems.classList.remove('is-open');
-            openNavBtn.hidden = false;
-            closeNavBtn.hidden = true;
+            setNavOpen(false, true);
+        });
+
+        navItems.addEventListener('click', event => {
+            if (event.target.closest('a')) {
+                setNavOpen(false);
+            }
+        });
+
+        document.addEventListener('click', event => {
+            if (navItems.classList.contains('is-open') && nav && !nav.contains(event.target)) {
+                setNavOpen(false);
+            }
+        });
+
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && navItems.classList.contains('is-open')) {
+                setNavOpen(false, true);
+            }
+        });
+
+        desktopMedia.addEventListener('change', event => {
+            if (event.matches) {
+                setNavOpen(false);
+            }
         });
     }
 }());
