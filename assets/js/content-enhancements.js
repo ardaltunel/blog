@@ -122,22 +122,53 @@
         const details = document.createElement('details');
         details.className = 'article-toc';
         const summary = document.createElement('summary');
-        summary.textContent = 'İçindekiler';
-        const list = document.createElement('ol');
+        const summaryIcon = document.createElement('span');
+        summaryIcon.className = 'article-toc__icon';
+        summaryIcon.setAttribute('aria-hidden', 'true');
 
-        headings.forEach(heading => {
+        const summaryCopy = document.createElement('span');
+        summaryCopy.className = 'article-toc__summary-copy';
+        const summaryTitle = document.createElement('strong');
+        summaryTitle.textContent = 'İçindekiler';
+        const summaryMeta = document.createElement('span');
+        summaryMeta.textContent = `${headings.length} bölüm · Okumak istediğin yere geç`;
+        summaryCopy.append(summaryTitle, summaryMeta);
+
+        const summaryControl = document.createElement('span');
+        summaryControl.className = 'article-toc__control';
+        summaryControl.setAttribute('aria-hidden', 'true');
+        const toggleText = document.createElement('span');
+        toggleText.className = 'article-toc__toggle-text';
+        const chevron = document.createElement('span');
+        chevron.className = 'article-toc__chevron';
+        summaryControl.append(toggleText, chevron);
+        summary.append(summaryIcon, summaryCopy, summaryControl);
+
+        const panel = document.createElement('div');
+        panel.className = 'article-toc__panel';
+        const list = document.createElement('ol');
+        list.className = 'article-toc__list';
+
+        headings.forEach((heading, index) => {
             const item = document.createElement('li');
             if (heading.tagName === 'H3') {
                 item.className = 'article-toc__subitem';
             }
             const link = document.createElement('a');
             link.href = `#${heading.id}`;
-            link.textContent = heading.textContent.trim();
+            const number = document.createElement('span');
+            number.className = 'article-toc__number';
+            number.textContent = String(index + 1).padStart(2, '0');
+            const label = document.createElement('span');
+            label.className = 'article-toc__label';
+            label.textContent = heading.textContent.trim().replace(/^\d{1,3}[.)]\s*/, '');
+            link.append(number, label);
             item.append(link);
             list.append(item);
         });
 
-        details.append(summary, list);
+        panel.append(list);
+        details.append(summary, panel);
         root.before(details);
     };
 
