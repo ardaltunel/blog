@@ -3,31 +3,22 @@
 
     const security = window.SecurityUtils;
     const authConfig = security?.getSafeSupabaseConfig();
-    const memoryStorage = (() => {
+    const authSessionManager = window.AuthStorage?.create();
+    const fallbackStorage = (() => {
         const values = new Map();
-        return {
-            getItem: key => values.get(key) || null,
-            removeItem: key => values.delete(key),
-            setItem: (key, value) => values.set(key, value)
-        };
+        return Object.freeze({
+            getItem: key => values.get(String(key)) ?? null,
+            removeItem: key => values.delete(String(key)),
+            setItem: (key, value) => values.set(String(key), String(value))
+        });
     })();
-    const getAuthStorage = () => {
-        try {
-            const key = '__storage_test__';
-            window.sessionStorage.setItem(key, '1');
-            window.sessionStorage.removeItem(key);
-            return window.sessionStorage;
-        } catch {
-            return memoryStorage;
-        }
-    };
     const authClient = authConfig && window.supabase?.createClient
         ? window.supabase.createClient(authConfig.url, authConfig.anonKey, {
             auth: {
                 persistSession: true,
                 autoRefreshToken: true,
                 detectSessionInUrl: true,
-                storage: getAuthStorage()
+                storage: authSessionManager?.storage || fallbackStorage
             }
         })
         : null;
@@ -148,6 +139,7 @@
 
     window.authConfig = authConfig;
     window.authClient = authClient;
+    window.authSessionManager = authSessionManager;
     window.getProfile = getProfile;
     setNavAuth();
 }());

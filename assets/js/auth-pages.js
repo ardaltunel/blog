@@ -4,6 +4,7 @@
     const security = window.SecurityUtils;
     const client = window.authClient;
     const config = window.authConfig;
+    const authSessionManager = window.authSessionManager;
     const getCurrentProfile = window.getProfile;
     const messageBox = document.querySelector('#auth-message');
     const editPostModal = document.querySelector('#edit-post-modal');
@@ -183,6 +184,11 @@
         if (!form) {
             return;
         }
+        const rememberInput = form.querySelector('input[name="remember"]');
+        if (rememberInput) {
+            rememberInput.checked = authSessionManager?.isRemembered() === true;
+            rememberInput.disabled = authSessionManager?.canRemember() === false;
+        }
         form.addEventListener('submit', async event => {
             event.preventDefault();
             clearMessage();
@@ -192,23 +198,31 @@
             const formData = new FormData(form);
             const email = security.validateEmail(formData.get('email'));
             const password = security.validatePassword(formData.get('password'));
+            const rememberMe = formData.get('remember') === '1';
             if (!email || !password) {
                 showMessage('Enter a valid email and a password between 8 and 128 characters.');
                 return;
             }
+            if (rememberMe && authSessionManager?.setRememberMe(true) !== true) {
+                showMessage('Bu tarayıcı kalıcı oturum saklamayı desteklemiyor.');
+                return;
+            }
+            if (!rememberMe) {
+                authSessionManager?.setRememberMe(false);
+            }
             const button = form.querySelector('button[type="submit"]');
-            setSubmitting(button, true, 'Signing in...');
+            setSubmitting(button, true, 'Giriş yapılıyor...');
             try {
                 const { error } = await client.auth.signInWithPassword({ email, password });
                 if (error) {
-                    showMessage('Email or password is incorrect.');
+                    showMessage('E-posta veya şifre hatalı.');
                     return;
                 }
                 security.navigate('admin');
             } catch {
-                showMessage('Sign in could not be completed. Try again.');
+                showMessage('Giriş tamamlanamadı. Lütfen tekrar deneyin.');
             } finally {
-                setSubmitting(button, false, 'Signin');
+                setSubmitting(button, false, 'Giriş yap');
             }
         });
     };
@@ -358,7 +372,7 @@
                 return;
             }
             const button = form.querySelector('button[type="submit"]');
-            setSubmitting(button, true, 'Sending...');
+            setSubmitting(button, true, 'Gönderiliyor...');
             let uploadedPath = null;
             try {
                 const upload = await uploadImage(thumbnailFile, user.id, 'posts', 5 * 1024 * 1024);
@@ -377,14 +391,14 @@
                     uploadedPath = null;
                     throw new Error('POST_INSERT_FAILED');
                 }
-                showMessage('Post sent for admin review.', 'success');
+                showMessage('Yazı yönetici incelemesine gönderildi.', 'success');
                 form.reset();
                 activeEditor?.setData('');
             } catch {
                 await cleanupUpload(uploadedPath);
-                showMessage('Post could not be submitted. Try again.');
+                showMessage('Yazı gönderilemedi. Lütfen tekrar deneyin.');
             } finally {
-                setSubmitting(button, false, 'Send for Review');
+                setSubmitting(button, false, 'İncelemeye gönder');
             }
         });
     };
@@ -640,12 +654,21 @@
         security.renderUi(editPostPanel, `
             <div class="form__section-container dashboard__editor">
                 <form id="edit-post-form">
-                    <input type="text" name="title" maxlength="160" value="${security.escapeHtml(postTitle)}" required>
-                    <select name="category" required>${categories.map(category => `
+                    <div class="form__control">
+                        <label for="edit-post-title">Yazı başlığı</label>
+                        <input type="text" id="edit-post-title" name="title" maxlength="160" value="${security.escapeHtml(postTitle)}" required>
+                    </div>
+                    <div class="form__control">
+                        <label for="edit-post-category">Kategori</label>
+                        <select id="edit-post-category" name="category" required>${categories.map(category => `
                         <option value="${category.id}" ${category.id === categoryId ? 'selected' : ''}>${security.escapeHtml(category.title)}</option>
-                    `).join('')}</select>
-                    <textarea name="body" id="edit-editor" rows="10" maxlength="200000" required>${security.escapeHtml(body)}</textarea>
-                    <button type="submit" class="btn">Save</button>
+                        `).join('')}</select>
+                    </div>
+                    <div class="form__control">
+                        <label for="edit-editor">Yazı içeriği</label>
+                        <textarea name="body" id="edit-editor" rows="10" maxlength="200000" required>${security.escapeHtml(body)}</textarea>
+                    </div>
+                    <button type="submit" class="btn">Değişiklikleri kaydet</button>
                 </form>
             </div>
         `);
@@ -670,7 +693,7 @@
                 return;
             }
             const button = event.currentTarget.querySelector('button[type="submit"]');
-            setSubmitting(button, true, 'Saving...');
+            setSubmitting(button, true, 'Kaydediliyor...');
             const { data: updated, error } = await client.from('posts').update({
                 title,
                 body: updatedBody,
@@ -678,7 +701,7 @@
             }).eq('id', postId).select('id');
             if (error || !updated?.length) {
                 showEditPostMessage('Post could not be updated.');
-                setSubmitting(button, false, 'Save');
+                setSubmitting(button, false, 'Değişiklikleri kaydet');
                 return;
             }
             showMessage('Post updated.', 'success');

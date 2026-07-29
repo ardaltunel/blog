@@ -117,6 +117,74 @@
         return parsed.protocol === 'https:' ? parsed.href : null;
     };
 
+    const parseYouTubeTime = value => {
+        const raw = normalizeString(value).trim().toLowerCase();
+        if (!raw) {
+            return 0;
+        }
+        if (/^\d{1,6}s?$/.test(raw)) {
+            return Math.min(Number.parseInt(raw, 10), 86400);
+        }
+        if (raw.length > 9 || !/^[0-9hms]+$/.test(raw)) {
+            return 0;
+        }
+        const matches = Array.from(raw.matchAll(/(\d{1,2})([hms])/g));
+        if (!matches.length || matches.map(match => match[0]).join('') !== raw) {
+            return 0;
+        }
+        const multipliers = Object.freeze({ h: 3600, m: 60, s: 1 });
+        const order = Object.freeze({ h: 3, m: 2, s: 1 });
+        let previousOrder = 4;
+        let seconds = 0;
+        for (const match of matches) {
+            if (order[match[2]] >= previousOrder) {
+                return 0;
+            }
+            previousOrder = order[match[2]];
+            seconds += Number(match[1]) * multipliers[match[2]];
+        }
+        return Math.min(seconds, 86400);
+    };
+
+    const parseYouTubeUrl = (value, baseUrl = currentBaseUrl()) => {
+        const raw = normalizeString(value).trim();
+        const candidate = /^(?:www\.|m\.)?(?:youtube\.com|youtu\.be)\//i.test(raw)
+            ? `https://${raw}`
+            : raw;
+        const safeUrl = safeContentUrl(candidate, baseUrl);
+        if (!safeUrl) {
+            return null;
+        }
+
+        const parsed = new URL(safeUrl);
+        const host = parsed.hostname.toLowerCase();
+        let videoId = '';
+        if (host === 'youtu.be' || host === 'www.youtu.be') {
+            videoId = parsed.pathname.split('/').filter(Boolean)[0] || '';
+        } else if (['youtube.com', 'www.youtube.com', 'm.youtube.com'].includes(host)) {
+            const segments = parsed.pathname.split('/').filter(Boolean);
+            if (parsed.pathname === '/watch') {
+                videoId = parsed.searchParams.get('v') || '';
+            } else if (['embed', 'live', 'shorts'].includes(segments[0])) {
+                videoId = segments[1] || '';
+            }
+        }
+
+        if (!/^[A-Za-z0-9_-]{11}$/.test(videoId)) {
+            return null;
+        }
+
+        const start = parseYouTubeTime(parsed.searchParams.get('start') || parsed.searchParams.get('t') || '');
+        const startQuery = start ? `&start=${start}` : '';
+        const watchTime = start ? `&t=${start}s` : '';
+        return Object.freeze({
+            id: videoId,
+            start,
+            watchUrl: `https://www.youtube.com/watch?v=${videoId}${watchTime}`,
+            embedUrl: `https://www.youtube-nocookie.com/embed/${videoId}?rel=0${startQuery}`
+        });
+    };
+
     const trustedSupabaseOrigin = () => {
         const rawUrl = normalizeString(global.SUPABASE_CONFIG?.url).trim();
         try {
@@ -347,19 +415,22 @@
     };
 
     let hooksInstalled = false;
+    const safeHrefByNode = new WeakMap();
     const installPurifierHooks = () => {
         const purifier = requirePurifier();
         if (hooksInstalled) {
             return purifier;
         }
 
-        purifier.addHook('uponSanitizeAttribute', (_node, data) => {
+        purifier.addHook('uponSanitizeAttribute', (node, data) => {
             if (data.attrName === 'href') {
                 const href = safeContentUrl(data.attrValue);
                 if (!href) {
                     data.keepAttr = false;
+                    safeHrefByNode.delete(node);
                 } else {
                     data.attrValue = href;
+                    safeHrefByNode.set(node, href);
                 }
             }
 
@@ -375,13 +446,14 @@
 
         purifier.addHook('afterSanitizeAttributes', node => {
             if (node.tagName === 'A') {
-                const href = node.getAttribute('href');
+                const href = node.getAttribute('href') || safeHrefByNode.get(node);
                 if (!href) {
                     node.removeAttribute('target');
                     node.removeAttribute('rel');
                     return;
                 }
 
+                node.setAttribute('href', href);
                 const parsed = new URL(href, currentBaseUrl());
                 if (parsed.origin !== currentOrigin()) {
                     node.setAttribute('target', '_blank');
@@ -416,8 +488,8 @@
 
     const uiSanitizerOptions = Object.freeze({
         ALLOWED_TAGS: [
-            'a', 'article', 'br', 'button', 'div', 'form', 'h2', 'h3', 'h5', 'header',
-            'img', 'input', 'label', 'option', 'p', 'section', 'select', 'small', 'span',
+            'a', 'article', 'br', 'button', 'div', 'figcaption', 'figure', 'form', 'h1',
+            'h2', 'h3', 'h5', 'header', 'img', 'input', 'label', 'option', 'p', 'section', 'select', 'small', 'span',
             'table', 'tbody', 'td', 'textarea', 'th', 'thead', 'tr'
         ],
         ALLOWED_ATTR: [
@@ -507,6 +579,7 @@
         navigate,
         normalizeLegacyLineBreaks,
         parsePositiveInteger,
+        parseYouTubeUrl,
         renderUi,
         safeContentUrl,
         safeImageUrl,

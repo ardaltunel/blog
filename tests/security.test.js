@@ -83,6 +83,33 @@ test('allows HTTPS content links but blocks active and ambiguous schemes', () =>
         .forEach(value => assert.equal(security.safeContentUrl(value, base), null, value));
 });
 
+test('accepts supported YouTube URLs and creates privacy-enhanced embed URLs', () => {
+    const base = 'https://ardaltunel.github.io/blog/post.html?id=122';
+    assert.deepEqual(
+        security.parseYouTubeUrl('https://www.youtube.com/watch?v=F7a0lp0cEyY&t=1m30s', base),
+        {
+            id: 'F7a0lp0cEyY',
+            start: 90,
+            watchUrl: 'https://www.youtube.com/watch?v=F7a0lp0cEyY&t=90s',
+            embedUrl: 'https://www.youtube-nocookie.com/embed/F7a0lp0cEyY?rel=0&start=90'
+        }
+    );
+    assert.equal(
+        security.parseYouTubeUrl('youtu.be/78BwmqRsU8A?start=42', base)?.embedUrl,
+        'https://www.youtube-nocookie.com/embed/78BwmqRsU8A?rel=0&start=42'
+    );
+    assert.equal(
+        security.parseYouTubeUrl('https://youtube.com/shorts/LuHd-cdKX_s', base)?.id,
+        'LuHd-cdKX_s'
+    );
+    [
+        'https://youtube.example/watch?v=F7a0lp0cEyY',
+        'https://www.youtube.com/watch?v=invalid',
+        'javascript:alert(1)',
+        'https://www.youtube.com.evil.example/watch?v=F7a0lp0cEyY'
+    ].forEach(value => assert.equal(security.parseYouTubeUrl(value, base), null, value));
+});
+
 test('restricts image URLs to local assets and the configured Storage bucket', () => {
     const base = 'https://ardaltunel.github.io/blog/post.html?id=122';
     const storage = 'https://project-ref.supabase.co/storage/v1/object/public/blog-images/uploads/user/avatar.png';

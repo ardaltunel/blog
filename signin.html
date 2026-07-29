@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
-    <title>Signin | Arda Altunel</title>
+    <title>Giriş Yap | Arda Altunel</title>
     <meta charset="utf-8">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; frame-src 'none'; form-action 'self'; script-src 'self'; style-src 'self'; img-src 'self' https://bdadbqlkmdwzzkrwetrf.supabase.co; font-src 'self'; connect-src 'self' https://bdadbqlkmdwzzkrwetrf.supabase.co; media-src 'none'; worker-src 'none'; manifest-src 'self'; upgrade-insecure-requests">
     <meta name="referrer" content="strict-origin-when-cross-origin">
@@ -10,7 +10,7 @@
     <link rel="apple-touch-icon" href="./assets/favicon/apple-touch-icon.png">
     <link rel="icon" href="./assets/favicon/favicon.ico">
     <link rel="stylesheet" href="./assets/vendor/montserrat/montserrat.css">
-    <link rel="stylesheet" href="./assets/css/style.css?v=8">
+    <link rel="stylesheet" href="./assets/css/style.css?v=19">
 </head>
 <body>
 <nav>
@@ -24,22 +24,30 @@
 </nav>
 <section class="form__section">
     <div class="container form__section-container">
-        <h2>Signin</h2>
+        <h2>Giriş yap</h2>
         <div class="alert__message error" id="auth-message" hidden></div>
         <form id="signin-form">
-            <input type="email" name="email" maxlength="254" autocomplete="email" placeholder="Email" required>
-            <input type="password" name="password" minlength="8" maxlength="128" autocomplete="current-password" placeholder="Password" required>
-            <button type="submit" class="btn">Signin</button>
-            <small>Don't have an account? <a href="./signup.html">Signup</a></small>
+            <input type="email" name="email" maxlength="254" autocomplete="email" placeholder="E-posta" required>
+            <input type="password" name="password" minlength="8" maxlength="128" autocomplete="current-password" placeholder="Şifre" required>
+            <div class="signin__remember">
+                <input type="checkbox" name="remember" value="1" id="remember-me">
+                <label for="remember-me">
+                    <span>Beni hatırla</span>
+                    <small>Bu cihazda oturumum açık kalsın</small>
+                </label>
+            </div>
+            <button type="submit" class="btn">Giriş yap</button>
+            <small>Hesabınız yok mu? <a href="./signup.html">Kayıt olun</a></small>
         </form>
     </div>
 </section>
 <script src="./assets/vendor/dompurify/purify.min.js"></script>
-<script src="./assets/js/security.js?v=9"></script>
+<script src="./assets/js/security.js?v=11"></script>
 <script src="./assets/vendor/supabase/supabase.js"></script>
 <script src="./assets/js/supabase-config.js?v=8"></script>
-<script src="./assets/js/auth.js?v=8"></script>
-<script src="./assets/js/auth-pages.js?v=10"></script>
+<script src="./assets/js/auth-storage.js?v=1"></script>
+<script src="./assets/js/auth.js?v=10"></script>
+<script src="./assets/js/auth-pages.js?v=13"></script>
 <script src="./assets/js/main.js?v=8"></script>
 </body>
 </html>

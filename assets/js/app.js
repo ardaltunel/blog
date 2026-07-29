@@ -110,13 +110,10 @@
     const authorById = id => state.authors.find(author => author.id === id);
     const formatDate = dateValue => {
         try {
-            return new Intl.DateTimeFormat('en', {
-                month: 'short',
-                day: '2-digit',
+            return new Intl.DateTimeFormat('tr-TR', {
+                day: 'numeric',
+                month: 'long',
                 year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: false
             }).format(new Date(dateValue));
         } catch {
             return '';
@@ -125,6 +122,10 @@
     const excerpt = (html = '', length = 150) => {
         const text = security.stripHtml(html).replace(/\s+/g, ' ').trim();
         return text.length > length ? `${text.slice(0, length)}...` : text;
+    };
+    const readingTime = html => {
+        const words = security.stripHtml(html).trim().split(/\s+/).filter(Boolean).length;
+        return Math.max(1, Math.ceil(words / 200));
     };
 
     const renderAuthor = (post) => {
@@ -137,7 +138,7 @@
                     <img src="${security.escapeHtml(avatar)}" alt="${security.escapeHtml(name)}">
                 </div>
                 <div class="post__author-info">
-                    <h5>By: ${security.escapeHtml(name)}</h5>
+                    <h5>${security.escapeHtml(name)}</h5>
                     <small>${security.escapeHtml(formatDate(post.date_time))}</small>
                 </div>
             </div>
@@ -244,31 +245,42 @@
         const index = state.posts.findIndex(item => item.id === id);
         const previousPost = state.posts[index + 1] || state.posts[0];
         const nextPost = state.posts[index - 1] || state.posts[state.posts.length - 1];
+        const category = categoryById(post.category_id) || { title: 'Genel', id: null };
+        const categoryHref = category.id
+            ? security.buildRoute('category', { id: category.id })
+            : security.buildRoute('home');
         document.title = `${post.title} | Arda Altunel`;
         security.renderUi(app, `
             <section class="singlepost">
-                <div class="container singlepost__container singlepost__content">
-                    <h2>${security.escapeHtml(post.title)}</h2>
-                    ${renderAuthor(post)}
-                    <div class="singlepost__thumbnail">
+                <article class="container singlepost__container">
+                    <header class="singlepost__header">
+                        <div class="singlepost__eyebrow">
+                            <a href="${categoryHref}" class="category__button">${security.escapeHtml(category.title)}</a>
+                            <span>${readingTime(post.body)} dk okuma</span>
+                        </div>
+                        <h1>${security.escapeHtml(post.title)}</h1>
+                        ${renderAuthor(post)}
+                    </header>
+                    <figure class="singlepost__thumbnail">
                         <img src="${security.escapeHtml(post.thumbnail)}" alt="${security.escapeHtml(post.title)}">
-                    </div>
-                    <div id="mlinks"></div>
-                    <br>
+                    </figure>
+                    <div id="post-content" class="article-content"></div>
                     <div class="singlepost__buttons">
                         <a href="${security.buildRoute('post', { id: previousPost.id })}" class="singlepost__previous">
-                            <div class="singlepost__button-label">PREVIOUS POST</div>
+                            <div class="singlepost__button-label">ÖNCEKİ YAZI</div>
                             <div>${security.escapeHtml(previousPost.title)}</div>
                         </a>
                         <a href="${security.buildRoute('post', { id: nextPost.id })}" class="singlepost__next">
-                            <div class="singlepost__button-label">NEXT POST</div>
+                            <div class="singlepost__button-label">SONRAKİ YAZI</div>
                             <div>${security.escapeHtml(nextPost.title)}</div>
                         </a>
                     </div>
-                </div>
+                </article>
             </section>
         `);
-        app.querySelector('#mlinks')?.append(security.sanitizeBlogFragment(post.body));
+        const content = app.querySelector('#post-content');
+        content?.append(security.sanitizeBlogFragment(post.body));
+        globalThis.ContentEnhancements?.enhance(content);
     };
 
     const renderCategory = () => {
