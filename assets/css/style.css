@@ -1555,36 +1555,85 @@ select:focus {
 }
 
 .dashboard {
-    margin-top: 7rem;
+    margin-top: 6.75rem;
 }
 
 .dashboard__container {
     display: grid;
-    grid-template-columns: 12.5rem minmax(0, 1fr);
-    gap: 1rem;
-    padding: 1.2rem;
+    grid-template-columns: 14rem minmax(0, 1fr);
+    gap: 1.6rem;
+    width: min(1380px, calc(100% - 2rem));
+    padding: 0;
     margin-bottom: 5rem;
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: 8px;
-    box-shadow: var(--shadow-md);
+    background: transparent;
 }
 
 .dashboard aside {
+    position: sticky;
+    top: 6.25rem;
+    align-self: start;
+    padding: 0.7rem;
     overflow-y: auto;
-    border-radius: 8px;
-    background: var(--color-surface-2);
+    border-radius: 20px;
+    background: color-mix(in srgb, var(--color-surface) 96%, transparent);
     border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-sm);
+}
+
+.dashboard__sidebar-header {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.55rem 0.55rem 1rem;
+    margin-bottom: 0.45rem;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.dashboard__sidebar-header > span:last-child {
+    display: grid;
+    gap: 0.08rem;
+    min-width: 0;
+}
+
+.dashboard__sidebar-header strong {
+    color: var(--color-heading);
+    font-size: 0.8rem;
+    line-height: 1.2;
+}
+
+.dashboard__sidebar-header small {
+    color: var(--color-muted);
+    font-size: 0.66rem;
+    font-weight: 650;
+}
+
+.dashboard__sidebar-mark {
+    display: grid;
+    width: 2.45rem;
+    height: 2.45rem;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 12px;
+    color: var(--color-white);
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-strong));
+    font-size: 0.68rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    box-shadow: 0 8px 18px color-mix(in srgb, var(--color-primary) 24%, transparent);
 }
 
 .dashboard aside a {
     display: flex;
-    gap: 0.65rem;
+    gap: 0.72rem;
     align-items: center;
-    padding: 0.72rem 0.85rem;
+    min-height: 2.8rem;
+    padding: 0.62rem 0.72rem;
+    margin: 0.16rem 0;
+    border: 1px solid transparent;
+    border-radius: 12px;
     color: var(--color-muted);
-    font-weight: 800;
-    font-size: 0.86rem;
+    font-weight: 750;
+    font-size: 0.8rem;
 }
 
 .dashboard aside i {
@@ -1593,18 +1642,33 @@ select:focus {
 
 .dashboard aside .ui-icon {
     flex: 0 0 auto;
+    width: 1.05rem !important;
+    height: 1.05rem;
+    opacity: 0.82;
 }
 
 .dashboard aside h5 {
-    font-size: 0.78rem;
-    line-height: 1.1;
+    font-size: 0.74rem;
+    line-height: 1.25;
 }
 
 .dashboard aside a:hover,
-.dashboard aside a:focus-visible,
-.dashboard aside a.active {
-    background: var(--color-primary-light);
+.dashboard aside a:focus-visible {
+    border-color: color-mix(in srgb, var(--color-primary) 24%, var(--color-border));
+    background: color-mix(in srgb, var(--color-primary-light) 55%, transparent);
     color: var(--color-primary);
+    transform: translateX(2px);
+}
+
+.dashboard aside a.active {
+    border-color: color-mix(in srgb, var(--color-primary) 20%, transparent);
+    background: linear-gradient(90deg, var(--color-primary-light), transparent);
+    color: var(--color-heading);
+    box-shadow: inset 3px 0 0 var(--color-primary);
+}
+
+.dashboard aside a.active .ui-icon {
+    opacity: 1;
 }
 
 .dashboard main {
@@ -1615,8 +1679,40 @@ select:focus {
     min-width: 0;
 }
 
+.dashboard__page-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 5rem;
+    margin-bottom: 1.25rem;
+}
+
+.dashboard__eyebrow {
+    display: block;
+    margin-bottom: 0.3rem;
+    color: var(--color-primary);
+    font-size: 0.66rem;
+    font-weight: 850;
+    letter-spacing: 0.14em;
+}
+
 .dashboard main h2 {
-    margin: 0 0 1.4rem;
+    margin: 0;
+    font-size: clamp(2rem, 3.4vw, 2.85rem);
+    letter-spacing: -0.045em;
+}
+
+.dashboard__new-post {
+    min-height: 2.75rem;
+    gap: 0.5rem;
+    padding-inline: 1rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 24px color-mix(in srgb, var(--color-primary) 20%, transparent);
+}
+
+.dashboard__new-post .ui-icon {
+    filter: brightness(0) invert(1);
 }
 
 body.modal-open {
@@ -1724,7 +1820,11 @@ body.modal-open {
     width: 100%;
     max-width: 100%;
     overflow-x: auto;
-    border-radius: 8px;
+    padding: 0.65rem;
+    border: 1px solid var(--color-border);
+    border-radius: 20px;
+    background: color-mix(in srgb, var(--color-surface) 97%, transparent);
+    box-shadow: var(--shadow-sm);
     overscroll-behavior-inline: contain;
 }
 
@@ -1732,27 +1832,96 @@ body.modal-open {
     width: 100%;
     text-align: left;
     border-collapse: collapse;
-    overflow: hidden;
-    border-radius: 8px;
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
+    background: transparent;
 }
 
 .dashboard main table th {
-    padding: 0.85rem;
-    background: var(--color-surface-2);
-    color: var(--color-heading);
-    font-size: 0.82rem;
+    padding: 0.75rem 0.8rem 0.9rem;
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-muted);
+    font-size: 0.66rem;
+    font-weight: 850;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
 }
 
 .dashboard main table td {
-    padding: 0.85rem;
-    border-top: 1px solid var(--color-border);
+    min-height: 4.5rem;
+    padding: 1rem 0.8rem;
+    border-bottom: 1px solid var(--color-border);
     color: var(--color-text);
+    font-size: 0.82rem;
+    vertical-align: middle;
+    transition: background 180ms ease;
 }
 
 .dashboard main table tr:hover td {
-    background: var(--color-bg-soft);
+    background: color-mix(in srgb, var(--color-primary-light) 34%, transparent);
+}
+
+.dashboard main table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.dashboard__table--posts th:nth-last-child(-n + 3),
+.dashboard__table--posts td:nth-last-child(-n + 3) {
+    text-align: center;
+}
+
+.dashboard__table--posts td:first-child {
+    min-width: 15rem;
+    color: var(--color-heading);
+    font-weight: 680;
+}
+
+.dashboard__table--posts td:nth-child(2) {
+    min-width: 8rem;
+}
+
+.dashboard__table--posts td:nth-child(3) {
+    min-width: 8rem;
+}
+
+.dashboard__table .btn.sm {
+    min-height: 2.35rem;
+    padding: 0.45rem 0.75rem;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    box-shadow: none;
+    font-size: 0.7rem;
+}
+
+.dashboard__table .edit-post,
+.dashboard__table .save-category {
+    border-color: color-mix(in srgb, var(--color-primary) 28%, transparent);
+    color: var(--color-heading);
+    background: color-mix(in srgb, var(--color-primary-light) 72%, var(--color-surface-2));
+}
+
+.dashboard__table .toggle-post {
+    min-width: 6.9rem;
+}
+
+.dashboard__table .btn.danger {
+    border-color: color-mix(in srgb, var(--color-red) 24%, transparent);
+    color: color-mix(in srgb, var(--color-red) 44%, var(--color-white));
+    background: color-mix(in srgb, var(--color-red-light) 74%, var(--color-surface-2));
+}
+
+.dashboard__table .edit-post:hover,
+.dashboard__table .edit-post:focus-visible,
+.dashboard__table .save-category:hover,
+.dashboard__table .save-category:focus-visible {
+    border-color: var(--color-primary);
+    color: var(--color-white);
+    background: var(--color-primary);
+}
+
+.dashboard__table .btn.danger:hover,
+.dashboard__table .btn.danger:focus-visible {
+    border-color: var(--color-red);
+    color: var(--color-white);
+    background: var(--color-red);
 }
 
 .table {
@@ -1952,8 +2121,12 @@ body.modal-open {
 
 @media screen and (max-width: 900px) {
     .dashboard__table-scroll {
+        padding: 0;
         overflow: visible;
+        border: 0;
         border-radius: 0;
+        background: transparent;
+        box-shadow: none;
     }
 
     .dashboard main .dashboard__table {
@@ -1984,11 +2157,12 @@ body.modal-open {
     .dashboard main .dashboard__table tbody tr {
         display: grid;
         min-width: 0;
-        padding: 0.35rem 0.9rem;
+        padding: 0.45rem 1rem;
         overflow: hidden;
         border: 1px solid var(--color-border);
-        border-radius: 8px;
-        background: var(--color-surface-2);
+        border-radius: 16px;
+        background: var(--color-surface);
+        box-shadow: var(--shadow-sm);
     }
 
     .dashboard main .dashboard__table td {
@@ -2000,6 +2174,8 @@ body.modal-open {
         padding: 0.65rem 0;
         overflow-wrap: anywhere;
         border-top: 1px solid var(--color-border);
+        border-bottom: 0;
+        text-align: left;
     }
 
     .dashboard main .dashboard__table td:first-child {
@@ -2216,7 +2392,7 @@ body.modal-open {
         grid-template-columns: 1fr;
         width: calc(100% - 1rem);
         gap: 0;
-        padding: 0.85rem;
+        padding: 0;
         margin-bottom: 3rem;
     }
 
@@ -2224,9 +2400,20 @@ body.modal-open {
         overflow: visible;
     }
 
+    .dashboard__page-header {
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
     .dashboard main h2 {
         font-size: 1.45rem;
         overflow-wrap: anywhere;
+    }
+
+    .dashboard__new-post {
+        min-height: 2.45rem;
+        padding-inline: 0.75rem;
+        font-size: 0.72rem;
     }
 
     .dashboard__modal {
