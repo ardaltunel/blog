@@ -1,26 +1,26 @@
 # Blog
 
-Supabase destekli, GitHub Pages üzerinde çalışan modern statik blog sistemi.
+A modern static blog system powered by Supabase and designed to run on GitHub Pages.
 
-Bu proje; kullanıcı sistemi, blog yönetimi, kategori yapısı ve admin onay sistemi bulunan modern bir blog altyapısı sunmaktadır.
+This project provides a complete blog infrastructure with user authentication, post management, category organization, image uploads, and an administrator approval system.
 
-## 🌍 Özellikler
+## 🌍 Features
 
-- GitHub Pages desteği
-- Supabase veritabanı entegrasyonu
-- Kullanıcı kayıt & giriş sistemi
-- Admin paneli
-- Blog yazı yönetimi
-- Kategori sistemi
-- Thumbnail yükleme sistemi
-- Supabase Storage desteği
-- Responsive tasarım
-- Tamamen statik frontend yapısı
-- PHP gerektirmez
+* GitHub Pages support
+* Supabase database integration
+* User registration and authentication
+* Admin dashboard
+* Blog post management
+* Category system
+* Thumbnail upload functionality
+* Supabase Storage integration
+* Responsive design
+* Fully static frontend architecture
+* No PHP required
 
 ---
 
-# 🚀 Kullanılan Teknolojiler
+# 🚀 Technologies Used
 
 <p align="left">
   <img src="https://img.shields.io/badge/HTML-E34F26?style=for-the-badge&logo=html5&logoColor=white">
@@ -32,7 +32,7 @@ Bu proje; kullanıcı sistemi, blog yönetimi, kategori yapısı ve admin onay s
 
 ---
 
-# 📂 Proje Yapısı
+# 📂 Project Structure
 
 ```text
 .
@@ -56,110 +56,106 @@ Bu proje; kullanıcı sistemi, blog yönetimi, kategori yapısı ve admin onay s
 
 ---
 
-# ⚙️ Supabase Kurulumu
+# ⚙️ Supabase Setup
 
-## 1. Supabase Projesi Oluştur
+## 1. Create a Supabase Project
+
+Visit:
 
 🔗 https://supabase.com
 
-Yeni bir Supabase projesi oluşturun.
+Create a new Supabase project.
 
-Proje oluştururken:
+During project creation, keep the following options enabled:
 
-- Enable Data API
-- Automatically expose new tables
-- Enable automatic RLS
-
-ayarlarını açık bırakın.
+* Enable Data API
+* Automatically expose new tables
+* Enable automatic Row Level Security
 
 ---
 
-## 2. SQL Dosyalarını Çalıştır
+## 2. Run the SQL Files
 
-Supabase panelinde:
+Open the following section in the Supabase Dashboard:
 
 ```text
 SQL Editor
 ```
 
-ekranına girin.
-
-Sırasıyla:
+Run the SQL files in the following order:
 
 ```text
 database/supabase/schema.sql
 ```
 
-ve ardından:
+Then run:
 
 ```text
 database/supabase/seed.sql
 ```
 
-dosyalarını çalıştırın.
-
 ---
 
-# 🔐 Authentication Ayarları
+# 🔐 Authentication Settings
 
-Supabase panelinde:
+In the Supabase Dashboard, open:
 
 ```text
 Authentication > Providers
 ```
 
-ekranından:
+Make sure that the following provider is enabled:
 
 ```text
 Email Provider
 ```
 
-aktif olmalıdır.
-
-Geliştirme sürecinde email doğrulama kapatılabilir, ancak canlı ortamda açık bırakılması önerilir.
+Email confirmation may be disabled during development. However, enabling it in production is recommended for improved account security.
 
 ---
 
-# 👑 Admin Yetkisi Verme
+# 👑 Granting Administrator Access
 
-İlk admin hesabı için:
+To create the first administrator account:
 
-1. Site üzerinden hesap oluşturun.
-2. Supabase SQL Editor ekranında aşağıdaki sorguyu çalıştırın:
+1. Register an account through the website.
+2. Open the Supabase SQL Editor.
+3. Run the following query:
 
 ```sql
-update public.authors
-set is_admin = true
-where user_id = (
-    select id from auth.users
-    where email = 'YOUR_EMAIL_ADDRESS'
+UPDATE public.authors
+SET is_admin = true
+WHERE user_id = (
+    SELECT id
+    FROM auth.users
+    WHERE email = 'YOUR_EMAIL_ADDRESS'
 );
 ```
 
+Replace `YOUR_EMAIL_ADDRESS` with the email address of the account that should receive administrator privileges.
+
 ---
 
-# 🔑 Supabase API Ayarları
+# 🔑 Supabase API Configuration
 
-Supabase panelinde:
+In the Supabase Dashboard, open:
 
 ```text
 Project Settings > API
 ```
 
-ekranına girin.
+Copy the following values:
 
-Aşağıdaki bilgileri alın:
+* Project URL
+* Anon public key
 
-- Project URL
-- anon public key
-
-Daha sonra:
+Then edit the following file:
 
 ```text
 assets/js/supabase-config.js
 ```
 
-dosyasını düzenleyin.
+Add your Supabase project credentials:
 
 ```js
 window.SUPABASE_CONFIG = {
@@ -170,88 +166,104 @@ window.SUPABASE_CONFIG = {
 };
 ```
 
-⚠️ Güvenlik nedeniyle `service_role` key kullanmayın.
+> ⚠️ **Security Notice:** Never use or expose the `service_role` key in frontend code. Only the anonymous public key should be used in the browser.
 
 ---
 
-# 🖼️ Storage Sistemi
+# 🖼️ Storage System
 
-Proje;
+The project uses a public Supabase Storage bucket named:
 
 ```text
 blog-images
 ```
 
-isimli public storage bucket kullanır.
+The storage system works as follows:
 
-- Yeni yüklenen görseller Supabase Storage'a gider.
-- Eski görseller `assets/images/` klasöründen okunur.
-- Thumbnail URL'leri otomatik oluşturulur.
+* Newly uploaded images are stored in Supabase Storage.
+* Existing static images are loaded from the `assets/images/` directory.
+* Thumbnail URLs are generated automatically.
+* Uploaded images can be associated with blog posts.
 
 ---
 
-# 🚀 GitHub Pages Yayına Alma
+# 🚀 Deploying to GitHub Pages
 
-1. Dosyaları GitHub repository içerisine yükleyin.
-2. Repository ayarlarından:
+1. Upload the project files to a GitHub repository.
+2. Open the repository settings.
+3. Navigate to:
 
 ```text
 Settings > Pages
 ```
 
-ekranına girin.
-
-3. Şunları seçin:
+4. Select the following options:
 
 ```text
-Deploy from a branch
+Source: Deploy from a branch
 Branch: main
 Folder: /root
 ```
 
-4. Kaydedin ve GitHub Pages linkini açın.
+5. Save the configuration.
+6. Open the generated GitHub Pages URL after deployment is complete.
+
+The website URL will usually follow this format:
+
+```text
+https://username.github.io/repository-name/
+```
 
 ---
 
-# 💻 Local Test
+# 💻 Local Development
 
-Local server başlatmak için:
+To start a local development server with PHP, run:
 
 ```powershell
 C:\xampp\php\php.exe -S 127.0.0.1:4173 -t .
 ```
 
-Ardından:
+Then open the following address in your browser:
 
 ```text
 http://127.0.0.1:4173/
 ```
 
-adresini açın.
+PHP is used only to start a local web server. The application itself does not require a PHP backend.
+
+You may also use another static development server, such as:
+
+```bash
+python -m http.server 4173
+```
+
+or:
+
+```bash
+npx serve .
+```
 
 ---
 
-# 🎯 Proje Amacı
+# 🎯 Project Purpose
 
-Bu proje;
+This project was developed to:
 
-- Modern blog sistemi geliştirmek
-- Supabase pratiği yapmak
-- Authentication sistemleri geliştirmek
-- Static frontend mimarisi oluşturmak
-- GitHub Pages üzerinde backend benzeri yapı kurmak
-
-amacıyla geliştirilmiştir.
+* Build a modern blog platform
+* Gain practical experience with Supabase
+* Develop authentication systems
+* Practice static frontend architecture
+* Create backend-like functionality for a GitHub Pages website
+* Learn database, storage, and authorization concepts
+* Improve responsive web development skills
 
 ---
 
 # 📄 License
 
-This project is licensed under the MIT License.
-
-For more details:
-<a href="LICENSE">LICENSE</a>
+This project is licensed under the [MIT License](LICENSE).
 
 ---
 
-Made with ❤️ by Arda Altunel
+Made with ❤️ by **Arda Altunel**
