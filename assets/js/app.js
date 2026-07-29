@@ -87,7 +87,7 @@
         ]);
 
         if (categoriesResult.error || authorsResult.error || postsResult.error) {
-            throw new Error('Remote content could not be loaded.');
+            throw new Error('Uzak içerik yüklenemedi.');
         }
 
         return {
@@ -108,6 +108,7 @@
 
     const categoryById = id => state.categories.find(category => category.id === id);
     const authorById = id => state.authors.find(author => author.id === id);
+    const categoryTitle = category => security.localizeCategoryTitle(category?.title) || 'Kategorisiz';
     const formatDate = dateValue => {
         try {
             return new Intl.DateTimeFormat('tr-TR', {
@@ -146,7 +147,7 @@
     };
 
     const renderPostCard = (post) => {
-        const category = categoryById(post.category_id) || { title: 'Uncategorized', id: null };
+        const category = categoryById(post.category_id) || { title: 'Kategorisiz', id: null };
         const postHref = security.buildRoute('post', { id: post.id });
         const categoryHref = category.id ? security.buildRoute('category', { id: category.id }) : security.buildRoute('home');
         return `
@@ -157,7 +158,7 @@
                     </div>
                 </a>
                 <div class="post__info">
-                    <a href="${categoryHref}" class="category__button">${security.escapeHtml(category.title)}</a>
+                    <a href="${categoryHref}" class="category__button">${security.escapeHtml(categoryTitle(category))}</a>
                     <h3 class="post__title"><a href="${postHref}">${security.escapeHtml(post.title)}</a></h3>
                     <p class="post__body">${security.escapeHtml(excerpt(post.body))}</p>
                     ${renderAuthor(post)}
@@ -170,7 +171,7 @@
         <section class="category__buttons">
             <div class="container category__buttons-container">
                 ${state.categories.map(category => `
-                    <a href="${security.buildRoute('category', { id: category.id })}" class="category__button">${security.escapeHtml(category.title)}</a>
+                    <a href="${security.buildRoute('category', { id: category.id })}" class="category__button">${security.escapeHtml(categoryTitle(category))}</a>
                 `).join('')}
             </div>
         </section>
@@ -185,9 +186,9 @@
         const next = security.buildRoute('home', { page: currentPage + 1 });
         return `
             <div class="container pagination__container">
-                ${currentPage > 1 ? `<a href="${previous}#posts" class="pagination__button">Onceki Sayfa</a>` : ''}
+                ${currentPage > 1 ? `<a href="${previous}#posts" class="pagination__button">Önceki sayfa</a>` : ''}
                 <span class="pagination__status">${currentPage} / ${totalPages}</span>
-                ${currentPage < totalPages ? `<a href="${next}#posts" class="pagination__button">Sonraki Sayfa</a>` : ''}
+                ${currentPage < totalPages ? `<a href="${next}#posts" class="pagination__button">Sonraki sayfa</a>` : ''}
             </div>
         `;
     };
@@ -210,7 +211,7 @@
                             </div>
                         </a>
                         <div class="post__info">
-                            <a href="${security.buildRoute('category', { id: featured.category_id })}" class="category__button">${security.escapeHtml(categoryById(featured.category_id)?.title || 'Uncategorized')}</a>
+                            <a href="${security.buildRoute('category', { id: featured.category_id })}" class="category__button">${security.escapeHtml(categoryTitle(categoryById(featured.category_id)))}</a>
                             <h2 class="post__title"><a href="${security.buildRoute('post', { id: featured.id })}">${security.escapeHtml(featured.title)}</a></h2>
                             <p class="post__body">${security.escapeHtml(excerpt(featured.body, 300))}</p>
                             ${renderAuthor(featured)}
@@ -260,7 +261,7 @@
                         <div class="singlepost__hero-shade"></div>
                         <header class="singlepost__header">
                             <div class="singlepost__eyebrow">
-                                <a href="${categoryHref}" class="category__button">${security.escapeHtml(category.title)}</a>
+                                <a href="${categoryHref}" class="category__button">${security.escapeHtml(categoryTitle(category))}</a>
                                 <span>${readingTime(post.body)} dk okuma</span>
                             </div>
                             <h1>${security.escapeHtml(post.title)}</h1>
@@ -298,13 +299,13 @@
 
         const posts = state.posts.filter(post => post.category_id === id);
         security.renderUi(app, `
-            <header class="category__title"><h2>${security.escapeHtml(category.title)}</h2></header>
+            <header class="category__title"><h2>${security.escapeHtml(categoryTitle(category))}</h2></header>
             ${posts.length ? `
                 <section class="posts">
                     <div class="container posts__container">${posts.map(renderPostCard).join('')}</div>
                 </section>
             ` : `
-                <div class="alert__message error lg"><p>No posts found for this category</p></div>
+                <div class="alert__message error lg"><p>Bu kategoride henüz yazı bulunmuyor.</p></div>
             `}
             ${renderCategoryButtons()}
         `);
@@ -325,7 +326,7 @@
                 renderHome();
             }
         } catch {
-            renderSafeError('Content could not be loaded.');
+            renderSafeError('İçerik yüklenemedi.');
         }
     };
 

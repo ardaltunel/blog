@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
-    <title>Dashboard | Arda Altunel</title>
+    <title>Yönetim Paneli | Arda Altunel</title>
     <meta charset="utf-8">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; frame-src 'none'; form-action 'self'; script-src 'self'; style-src 'self'; img-src 'self' https://bdadbqlkmdwzzkrwetrf.supabase.co; font-src 'self'; connect-src 'self' https://bdadbqlkmdwzzkrwetrf.supabase.co; media-src 'none'; worker-src 'none'; manifest-src 'self'; upgrade-insecure-requests">
     <meta name="referrer" content="strict-origin-when-cross-origin">
@@ -17,25 +17,25 @@
     <div class="container nav__container">
         <a href="./index.html" class="nav__logo">ARDALTUNEL</a>
         <ul class="nav__items"></ul>
-        <button class="theme__toggle" type="button" aria-label="Change theme"><img class="ui-icon" src="./assets/vendor/lucide/icons/moon.svg" alt="" aria-hidden="true"></button>
-        <button id="open__nav-btn" type="button" aria-label="Open menu"><img class="ui-icon" src="./assets/vendor/lucide/icons/menu.svg" alt="" aria-hidden="true"></button>
-        <button id="close__nav-btn" type="button" aria-label="Close menu" hidden><img class="ui-icon" src="./assets/vendor/lucide/icons/x.svg" alt="" aria-hidden="true"></button>
+        <button class="theme__toggle" type="button" aria-label="Temayı değiştir"><img class="ui-icon" src="./assets/vendor/lucide/icons/moon.svg" alt="" aria-hidden="true"></button>
+        <button id="open__nav-btn" type="button" aria-label="Menüyü aç"><img class="ui-icon" src="./assets/vendor/lucide/icons/menu.svg" alt="" aria-hidden="true"></button>
+        <button id="close__nav-btn" type="button" aria-label="Menüyü kapat" hidden><img class="ui-icon" src="./assets/vendor/lucide/icons/x.svg" alt="" aria-hidden="true"></button>
     </div>
 </nav>
 <section class="dashboard">
     <div class="container dashboard__container">
-        <aside id="dashboard-sidebar" aria-label="Dashboard navigation">
-            <a href="./add-post.html" aria-label="Add Post" title="Add Post"><img class="ui-icon" src="./assets/vendor/lucide/icons/pen-line.svg" alt="" aria-hidden="true"><h5>Add Post</h5></a>
-            <a href="./admin.html?view=profile" data-view-link="profile" aria-label="Profile" title="Profile"><img class="ui-icon" src="./assets/vendor/lucide/icons/users.svg" alt="" aria-hidden="true"><h5>Profile</h5></a>
-            <a href="./admin.html?view=my-posts" data-view-link="my-posts" aria-label="My Posts" title="My Posts"><img class="ui-icon" src="./assets/vendor/lucide/icons/files.svg" alt="" aria-hidden="true"><h5>My Posts</h5></a>
-            <a href="./admin.html?view=all-posts" data-admin-only data-view-link="all-posts" aria-label="All Posts" title="All Posts"><img class="ui-icon" src="./assets/vendor/lucide/icons/layout-list.svg" alt="" aria-hidden="true"><h5>All Posts</h5></a>
-            <a href="./admin.html?view=add-user" data-admin-only data-view-link="add-user" aria-label="Add User" title="Add User"><img class="ui-icon" src="./assets/vendor/lucide/icons/user-plus.svg" alt="" aria-hidden="true"><h5>Add User</h5></a>
-            <a href="./admin.html?view=manage-users" data-admin-only data-view-link="manage-users" aria-label="Manage Users" title="Manage Users"><img class="ui-icon" src="./assets/vendor/lucide/icons/users.svg" alt="" aria-hidden="true"><h5>Manage Users</h5></a>
-            <a href="./admin.html?view=add-category" data-admin-only data-view-link="add-category" aria-label="Add Category" title="Add Category"><img class="ui-icon" src="./assets/vendor/lucide/icons/folder-plus.svg" alt="" aria-hidden="true"><h5>Add Category</h5></a>
-            <a href="./admin.html?view=manage-categories" data-admin-only data-view-link="manage-categories" aria-label="Manage Categories" title="Manage Categories"><img class="ui-icon" src="./assets/vendor/lucide/icons/files.svg" alt="" aria-hidden="true"><h5>Manage Categories</h5></a>
+        <aside id="dashboard-sidebar" aria-label="Yönetim paneli menüsü">
+            <a href="./add-post.html" aria-label="Yazı ekle" title="Yazı ekle"><img class="ui-icon" src="./assets/vendor/lucide/icons/pen-line.svg" alt="" aria-hidden="true"><h5>Yazı ekle</h5></a>
+            <a href="./admin.html?view=profile" data-view-link="profile" aria-label="Profil" title="Profil"><img class="ui-icon" src="./assets/vendor/lucide/icons/users.svg" alt="" aria-hidden="true"><h5>Profil</h5></a>
+            <a href="./admin.html?view=my-posts" data-view-link="my-posts" aria-label="Yazılarım" title="Yazılarım"><img class="ui-icon" src="./assets/vendor/lucide/icons/files.svg" alt="" aria-hidden="true"><h5>Yazılarım</h5></a>
+            <a href="./admin.html?view=all-posts" data-admin-only data-view-link="all-posts" aria-label="Tüm yazılar" title="Tüm yazılar"><img class="ui-icon" src="./assets/vendor/lucide/icons/layout-list.svg" alt="" aria-hidden="true"><h5>Tüm yazılar</h5></a>
+            <a href="./admin.html?view=add-user" data-admin-only data-view-link="add-user" aria-label="Kullanıcı ekle" title="Kullanıcı ekle"><img class="ui-icon" src="./assets/vendor/lucide/icons/user-plus.svg" alt="" aria-hidden="true"><h5>Kullanıcı ekle</h5></a>
+            <a href="./admin.html?view=manage-users" data-admin-only data-view-link="manage-users" aria-label="Kullanıcıları yönet" title="Kullanıcıları yönet"><img class="ui-icon" src="./assets/vendor/lucide/icons/users.svg" alt="" aria-hidden="true"><h5>Kullanıcıları yönet</h5></a>
+            <a href="./admin.html?view=add-category" data-admin-only data-view-link="add-category" aria-label="Kategori ekle" title="Kategori ekle"><img class="ui-icon" src="./assets/vendor/lucide/icons/folder-plus.svg" alt="" aria-hidden="true"><h5>Kategori ekle</h5></a>
+            <a href="./admin.html?view=manage-categories" data-admin-only data-view-link="manage-categories" aria-label="Kategorileri yönet" title="Kategorileri yönet"><img class="ui-icon" src="./assets/vendor/lucide/icons/files.svg" alt="" aria-hidden="true"><h5>Kategorileri yönet</h5></a>
         </aside>
         <main>
-            <h2 id="dashboard-title" tabindex="-1">Dashboard</h2>
+            <h2 id="dashboard-title" tabindex="-1">Yönetim paneli</h2>
             <div class="alert__message error" id="auth-message" hidden></div>
             <div id="dashboard-content"></div>
         </main>
@@ -56,13 +56,13 @@
     </div>
 </div>
 <script src="./assets/vendor/dompurify/purify.min.js"></script>
-<script src="./assets/js/security.js?v=11"></script>
+<script src="./assets/js/security.js?v=12"></script>
 <script src="./assets/vendor/supabase/supabase.js"></script>
 <script src="./assets/js/supabase-config.js?v=8"></script>
 <script src="./assets/js/auth-storage.js?v=1"></script>
-<script src="./assets/js/auth.js?v=10"></script>
-<script src="./assets/js/rich-editor.js?v=9"></script>
-<script src="./assets/js/auth-pages.js?v=12"></script>
-<script src="./assets/js/main.js?v=12"></script>
+<script src="./assets/js/auth.js?v=11"></script>
+<script src="./assets/js/rich-editor.js?v=10"></script>
+<script src="./assets/js/auth-pages.js?v=14"></script>
+<script src="./assets/js/main.js?v=13"></script>
 </body>
 </html>

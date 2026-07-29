@@ -17,6 +17,7 @@
                 const iconName = safeTheme === 'dark' ? 'sun' : 'moon';
                 icon.src = `./assets/vendor/lucide/icons/${iconName}.svg`;
             }
+            button.setAttribute('aria-label', safeTheme === 'dark' ? 'Açık temaya geç' : 'Koyu temaya geç');
         });
     };
 

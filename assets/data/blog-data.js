@@ -2,33 +2,33 @@ window.BLOG_FALLBACK_DATA = {
     "categories": [
         {
             "id": 4,
-            "title": "Science & Technology",
-            "description": "This is the description or science and technology"
+            "title": "Bilim ve Teknoloji",
+            "description": "Bilim ve teknoloji üzerine yazılar"
         },
         {
             "id": 11,
-            "title": "Software",
-            "description": "This is the description for software category"
+            "title": "Yazılım",
+            "description": "Yazılım üzerine yazılar"
         },
         {
             "id": 12,
-            "title": "Advertising",
-            "description": "This is the description for the advertising category"
+            "title": "Reklamcılık",
+            "description": "Reklamcılık üzerine yazılar"
         },
         {
             "id": 13,
-            "title": "About Life",
-            "description": "This is the description for about life category"
+            "title": "Yaşam",
+            "description": "Yaşam üzerine yazılar"
         },
         {
             "id": 99,
-            "title": "Uncategorized",
-            "description": "This is the description for uncategorized category"
+            "title": "Kategorisiz",
+            "description": "Henüz bir kategoriye atanmamış yazılar"
         },
         {
             "id": 102,
-            "title": "Education",
-            "description": "This is the description for education category"
+            "title": "Eğitim",
+            "description": "Eğitim üzerine yazılar"
         }
     ],
     "authors": [

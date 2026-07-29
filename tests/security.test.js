@@ -9,6 +9,12 @@ global.SUPABASE_CONFIG = {
 
 const security = require('../assets/js/security.js');
 
+test('localizes built-in category titles without changing custom categories', () => {
+    assert.equal(security.localizeCategoryTitle('Science & Technology'), 'Bilim ve Teknoloji');
+    assert.equal(security.localizeCategoryTitle('software'), 'Yazılım');
+    assert.equal(security.localizeCategoryTitle('Özel Kategori'), 'Özel Kategori');
+});
+
 test('accepts only canonical positive post IDs', () => {
     assert.equal(security.getQueryParam('id', '?id=122'), 122);
     const rejected = [

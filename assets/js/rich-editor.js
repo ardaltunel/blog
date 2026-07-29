@@ -33,7 +33,7 @@
 
     const create = textarea => {
         if (!textarea || !global.SecurityUtils) {
-            throw new Error('Editor could not be initialized.');
+            throw new Error('Düzenleyici başlatılamadı.');
         }
 
         const wrapper = document.createElement('div');

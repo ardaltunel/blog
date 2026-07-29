@@ -34,10 +34,22 @@
         'image/png': 'png',
         'image/webp': 'webp'
     });
+    const CATEGORY_TRANSLATIONS = Object.freeze({
+        'about life': 'Yaşam',
+        'advertising': 'Reklamcılık',
+        'education': 'Eğitim',
+        'science & technology': 'Bilim ve Teknoloji',
+        'software': 'Yazılım',
+        'uncategorized': 'Kategorisiz'
+    });
 
     const currentBaseUrl = () => global.location?.href || 'https://example.invalid/';
     const currentOrigin = () => new URL(currentBaseUrl()).origin;
     const normalizeString = value => typeof value === 'string' ? value : '';
+    const localizeCategoryTitle = value => {
+        const title = normalizeString(value).trim();
+        return CATEGORY_TRANSLATIONS[title.toLocaleLowerCase('en-US')] || title;
+    };
     const containsControlCharacters = value => /[\u0000-\u001F\u007F]/.test(value);
     const containsTraversalEncoding = value => /(?:^|[\\/])\.\.(?:[\\/]|$)|%00|%2e|%2f|%5c|%25|\\/i.test(value);
 
@@ -409,7 +421,7 @@
 
     const requirePurifier = () => {
         if (!global.DOMPurify) {
-            throw new Error('HTML sanitizer is unavailable.');
+            throw new Error('HTML temizleyicisi kullanılamıyor.');
         }
         return global.DOMPurify;
     };
@@ -576,6 +588,7 @@
         getSafeSupabaseConfig,
         getStoredTheme,
         hasValidImageSignature,
+        localizeCategoryTitle,
         navigate,
         normalizeLegacyLineBreaks,
         parsePositiveInteger,

@@ -94,7 +94,7 @@
 
         navItems.replaceChildren();
         if (!profileResult.user) {
-            navItems.append(createNavItem('Signin', security.buildRoute('signin')));
+            navItems.append(createNavItem('Giriş yap', security.buildRoute('signin')));
             return;
         }
 
@@ -108,28 +108,28 @@
                 'nav__admin-entry'
             );
             navItems.append(
-                createNavItem('Dashboard', security.buildRoute('admin'), 'nav__desktop-item', 'nav__desktop-entry'),
-                createNavItem('Write', security.buildRoute('addPost'), 'nav__desktop-item', 'nav__desktop-entry'),
-                createNavItem('Add Post', security.buildRoute('addPost'), 'nav__admin-item', 'nav__admin-entry'),
-                createAdminNavItem('Profile', 'profile'),
-                createAdminNavItem('My Posts', 'my-posts')
+                createNavItem('Yönetim', security.buildRoute('admin'), 'nav__desktop-item', 'nav__desktop-entry'),
+                createNavItem('Yazı yaz', security.buildRoute('addPost'), 'nav__desktop-item', 'nav__desktop-entry'),
+                createNavItem('Yazı ekle', security.buildRoute('addPost'), 'nav__admin-item', 'nav__admin-entry'),
+                createAdminNavItem('Profil', 'profile'),
+                createAdminNavItem('Yazılarım', 'my-posts')
             );
             if (profileResult.profile?.is_admin) {
                 navItems.append(
-                    createAdminNavItem('All Posts', 'all-posts'),
-                    createAdminNavItem('Add User', 'add-user'),
-                    createAdminNavItem('Manage Users', 'manage-users'),
-                    createAdminNavItem('Add Category', 'add-category'),
-                    createAdminNavItem('Manage Categories', 'manage-categories')
+                    createAdminNavItem('Tüm yazılar', 'all-posts'),
+                    createAdminNavItem('Kullanıcı ekle', 'add-user'),
+                    createAdminNavItem('Kullanıcıları yönet', 'manage-users'),
+                    createAdminNavItem('Kategori ekle', 'add-category'),
+                    createAdminNavItem('Kategorileri yönet', 'manage-categories')
                 );
             }
         } else {
             navItems.append(
-                createNavItem('Dashboard', security.buildRoute('admin')),
-                createNavItem('Write', security.buildRoute('addPost'))
+                createNavItem('Yönetim', security.buildRoute('admin')),
+                createNavItem('Yazı yaz', security.buildRoute('addPost'))
             );
         }
-        navItems.append(createNavItem('Logout', '#', 'nav__logout'));
+        navItems.append(createNavItem('Çıkış yap', '#', 'nav__logout'));
         navItems.querySelector('.nav__logout')?.addEventListener('click', async event => {
             event.preventDefault();
             await authClient.auth.signOut({ scope: 'local' });
