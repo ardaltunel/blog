@@ -539,6 +539,7 @@ nav button {
 }
 
 .posts__container .post__title a {
+    font-size: 18px;
     background-image: linear-gradient(var(--color-primary), var(--color-primary));
     background-position: 0 100%;
     background-repeat: no-repeat;
