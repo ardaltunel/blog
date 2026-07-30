@@ -529,7 +529,6 @@ nav button {
 
 .posts__container .post__title {
     display: -webkit-box;
-    min-height: 2.8em;
     margin: 0.1rem 0 0.55rem;
     overflow: hidden;
     font-size: clamp(1.05rem, 1.5vw, 1.18rem);
