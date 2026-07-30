@@ -508,24 +508,29 @@ nav button {
     flex: 1;
     flex-direction: column;
     min-width: 0;
-    padding: 1rem 0.45rem 0.35rem;
+    padding: 0.9rem 0.45rem 0.35rem;
 }
 
 .posts__container .category__button {
-    align-self: flex-start;
-    min-height: 2rem;
-    padding: 0.38rem 0.72rem;
+    position: absolute;
+    z-index: 4;
+    top: 1.5rem;
+    left: 1.5rem;
+    min-height: 1.85rem;
+    padding: 0.32rem 0.68rem;
     border-radius: 999px;
-    background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
-    border-color: color-mix(in srgb, var(--color-primary) 24%, var(--color-border));
-    box-shadow: 0 6px 18px color-mix(in srgb, var(--color-primary) 8%, transparent);
+    background: rgb(5 19 31 / 78%);
+    border-color: rgb(255 255 255 / 18%);
+    color: #55dce6;
+    box-shadow: 0 8px 24px rgb(0 0 0 / 24%);
+    backdrop-filter: blur(12px) saturate(1.15);
     letter-spacing: 0.015em;
 }
 
 .posts__container .post__title {
     display: -webkit-box;
     min-height: 2.8em;
-    margin: 0.85rem 0 0.55rem;
+    margin: 0.1rem 0 0.55rem;
     overflow: hidden;
     font-size: clamp(1.05rem, 1.5vw, 1.18rem);
     line-height: 1.4;
