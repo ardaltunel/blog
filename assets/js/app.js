@@ -272,9 +272,19 @@
         const next = security.buildRoute('home', { page: currentPage + 1 });
         return `
             <div class="container pagination__container">
-                ${currentPage > 1 ? `<a href="${previous}#posts" class="pagination__button">Önceki sayfa</a>` : ''}
-                <span class="pagination__status">${currentPage} / ${totalPages}</span>
-                ${currentPage < totalPages ? `<a href="${next}#posts" class="pagination__button">Sonraki sayfa</a>` : ''}
+                ${currentPage > 1 ? `
+                    <a href="${previous}#posts" class="pagination__button pagination__button--previous" aria-label="Önceki sayfaya git">
+                        <span class="pagination__icon" aria-hidden="true">&larr;</span>
+                        <span>Önceki <span class="pagination__label-suffix">sayfa</span></span>
+                    </a>
+                ` : ''}
+                <span class="pagination__status" aria-label="${currentPage}. sayfa, toplam ${totalPages} sayfa">${currentPage} / ${totalPages}</span>
+                ${currentPage < totalPages ? `
+                    <a href="${next}#posts" class="pagination__button pagination__button--next" aria-label="Sonraki sayfaya git">
+                        <span>Sonraki <span class="pagination__label-suffix">sayfa</span></span>
+                        <span class="pagination__icon" aria-hidden="true">&rarr;</span>
+                    </a>
+                ` : ''}
             </div>
         `;
     };
@@ -313,7 +323,7 @@
                     </div>
                 </section>
             ` : ''}
-            <section class="posts ${featured ? '' : 'section__extra-margin'}" id="posts">
+            <section class="posts posts--home ${featured ? '' : 'section__extra-margin'}" id="posts">
                 <div class="container posts__container">${pagePosts.map(renderPostCard).join('')}</div>
                 ${renderPagination(safePage, totalPages)}
             </section>

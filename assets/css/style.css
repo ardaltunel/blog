@@ -528,6 +528,10 @@ nav button {
     scroll-margin-top: 6rem;
 }
 
+.posts--home {
+    margin-bottom: 1rem;
+}
+
 .posts__container .post {
     position: relative;
     isolation: isolate;
@@ -2085,55 +2089,48 @@ select:focus {
     flex-wrap: nowrap;
     align-items: center;
     justify-content: center;
-    gap: 0.3rem;
+    gap: 0.55rem;
     width: fit-content;
     max-width: calc(100% - 2rem);
-    margin-top: -1rem;
-    padding: 0.35rem;
-    border: 1px solid color-mix(in srgb, var(--color-border) 82%, var(--color-primary));
-    border-radius: 999px;
-    background:
-        radial-gradient(
-            circle at 100% 0,
-            color-mix(in srgb, var(--color-primary) 8%, transparent),
-            transparent 45%
-        ),
-        linear-gradient(
-            145deg,
-            color-mix(in srgb, var(--color-surface) 98%, var(--color-primary)),
-            var(--color-surface)
-        );
-    box-shadow:
-        inset 0 1px 0 color-mix(in srgb, var(--color-white) 5%, transparent),
-        0 12px 30px rgba(0, 0, 0, 0.16);
+    margin-top: -0.75rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
 }
 
 .pagination__button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 2.45rem;
-    padding: 0.5rem 1rem;
-    border-radius: 999px;
-    background: linear-gradient(
-        135deg,
-        color-mix(in srgb, var(--color-primary) 92%, var(--color-white)),
-        var(--color-primary-strong)
-    );
-    color: var(--color-white);
-    border: 1px solid var(--color-primary);
+    gap: 0.5rem;
+    min-height: 2.8rem;
+    padding: 0.45rem 0.8rem;
+    border-radius: 14px;
+    background:
+        linear-gradient(
+            145deg,
+            color-mix(in srgb, var(--color-surface) 97%, var(--color-primary)),
+            var(--color-surface)
+        );
+    color: var(--color-heading);
+    border: 1px solid color-mix(in srgb, var(--color-border) 78%, var(--color-primary));
     font-weight: 800;
-    font-size: 0.84rem;
-    box-shadow: 0 5px 14px color-mix(in srgb, var(--color-primary) 22%, transparent);
+    font-size: 0.8rem;
+    box-shadow:
+        inset 0 1px 0 color-mix(in srgb, var(--color-white) 5%, transparent),
+        0 8px 22px rgba(0, 0, 0, 0.12);
     transition: var(--transition);
 }
 
 .pagination__button:hover {
-    background: var(--color-primary-strong);
-    color: var(--color-white);
-    border-color: var(--color-primary-strong);
+    background: color-mix(in srgb, var(--color-primary) 7%, var(--color-surface));
+    color: var(--color-primary);
+    border-color: color-mix(in srgb, var(--color-primary) 52%, var(--color-border));
     transform: translateY(-1px);
-    box-shadow: 0 7px 18px color-mix(in srgb, var(--color-primary) 28%, transparent);
+    box-shadow:
+        inset 0 1px 0 color-mix(in srgb, var(--color-white) 7%, transparent),
+        0 10px 26px rgba(0, 0, 0, 0.15);
 }
 
 .pagination__button:focus-visible {
@@ -2141,19 +2138,51 @@ select:focus {
     outline-offset: 2px;
 }
 
+.pagination__icon {
+    display: inline-grid;
+    flex: 0 0 1.8rem;
+    width: 1.8rem;
+    height: 1.8rem;
+    place-items: center;
+    border-radius: 9px;
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+    font-size: 1rem;
+    line-height: 1;
+    transition: var(--transition);
+}
+
+.pagination__button:hover .pagination__icon {
+    background: var(--color-primary);
+    color: var(--color-white);
+}
+
 .pagination__status {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 3.35rem;
-    min-height: 2.45rem;
-    padding: 0 0.8rem;
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--color-surface-2) 84%, transparent);
+    min-width: 3.8rem;
+    min-height: 2.8rem;
+    padding: 0 0.75rem;
+    border-radius: 14px;
+    background: var(--color-surface-2);
     color: var(--color-muted);
-    border: 1px solid color-mix(in srgb, var(--color-border) 72%, transparent);
+    border: 1px solid var(--color-border);
     font-weight: 800;
-    font-size: 0.82rem;
+    font-size: 0.78rem;
+    letter-spacing: 0.02em;
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-white) 4%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pagination__button,
+    .pagination__icon {
+        transition: none;
+    }
+
+    .pagination__button:hover {
+        transform: none;
+    }
 }
 
 .dashboard {
@@ -2979,6 +3008,42 @@ body.modal-open {
     .posts__container .post__body {
         min-height: auto;
         -webkit-line-clamp: 3;
+    }
+
+    .pagination__container {
+        gap: 0.4rem;
+        width: min(24rem, calc(100% - 1.5rem));
+        max-width: none;
+        margin-top: -0.5rem;
+    }
+
+    .pagination__button {
+        flex: 1 1 0;
+        gap: 0.4rem;
+        min-width: 0;
+        min-height: 2.65rem;
+        padding: 0.4rem 0.55rem;
+        border-radius: 12px;
+        font-size: 0.76rem;
+    }
+
+    .pagination__icon {
+        flex-basis: 1.65rem;
+        width: 1.65rem;
+        height: 1.65rem;
+        border-radius: 8px;
+    }
+
+    .pagination__label-suffix {
+        display: none;
+    }
+
+    .pagination__status {
+        min-width: 3.5rem;
+        min-height: 2.65rem;
+        padding-inline: 0.6rem;
+        border-radius: 12px;
+        font-size: 0.74rem;
     }
 
     .category__buttons-container {
