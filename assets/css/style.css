@@ -1378,6 +1378,237 @@ p a {
     margin: 0;
 }
 
+.not-found {
+    position: relative;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    margin: 0;
+    padding: 7.75rem 0 3rem;
+    overflow: hidden;
+}
+
+.not-found::before {
+    content: '';
+    position: absolute;
+    width: min(58rem, 90vw);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(circle, color-mix(in srgb, var(--color-primary) 16%, transparent), transparent 66%);
+    filter: blur(18px);
+    opacity: 0.72;
+    pointer-events: none;
+}
+
+.not-found__container {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    align-items: center;
+    gap: clamp(2rem, 6vw, 5rem);
+    padding: clamp(2rem, 5vw, 4.5rem);
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--color-border) 72%, var(--color-primary));
+    border-radius: 28px;
+    background:
+        radial-gradient(circle at 0 0, color-mix(in srgb, var(--color-primary) 10%, transparent), transparent 42%),
+        linear-gradient(145deg, color-mix(in srgb, var(--color-surface) 98%, var(--color-primary)), var(--color-surface));
+    box-shadow:
+        0 1px 0 color-mix(in srgb, var(--color-white) 24%, transparent) inset,
+        0 30px 80px color-mix(in srgb, #07131f 26%, transparent);
+}
+
+.not-found__container::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+        linear-gradient(color-mix(in srgb, var(--color-primary) 6%, transparent) 1px, transparent 1px),
+        linear-gradient(90deg, color-mix(in srgb, var(--color-primary) 6%, transparent) 1px, transparent 1px);
+    background-size: 34px 34px;
+    -webkit-mask-image: linear-gradient(90deg, black, transparent 62%);
+    mask-image: linear-gradient(90deg, black, transparent 62%);
+    opacity: 0.58;
+}
+
+.not-found__container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 14%;
+    width: 72%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--color-primary) 78%, white), transparent);
+}
+
+.not-found__visual {
+    position: relative;
+    min-height: 18rem;
+    display: grid;
+    place-items: center;
+    border-right: 1px solid color-mix(in srgb, var(--color-border) 76%, transparent);
+}
+
+.not-found__visual::before,
+.not-found__visual::after {
+    content: '';
+    position: absolute;
+    border: 1px solid color-mix(in srgb, var(--color-primary) 28%, transparent);
+    border-radius: 50%;
+}
+
+.not-found__visual::before {
+    width: 15rem;
+    height: 15rem;
+}
+
+.not-found__visual::after {
+    width: 10.5rem;
+    height: 10.5rem;
+    border-style: dashed;
+    opacity: 0.72;
+    transform: rotate(18deg);
+}
+
+.not-found__code {
+    position: relative;
+    z-index: 1;
+    padding-right: 0.08em;
+    color: transparent;
+    background: linear-gradient(135deg, var(--color-heading) 18%, #55dce6 54%, var(--color-primary));
+    background-clip: text;
+    font-size: clamp(7.5rem, 15vw, 12rem);
+    font-weight: 800;
+    letter-spacing: -0.11em;
+    line-height: 0.8;
+    filter: drop-shadow(0 18px 30px color-mix(in srgb, var(--color-primary) 20%, transparent));
+}
+
+.not-found__content {
+    position: relative;
+    z-index: 1;
+    max-width: 35rem;
+}
+
+.not-found__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2rem;
+    padding: 0.35rem 0.75rem;
+    border: 1px solid color-mix(in srgb, var(--color-primary) 28%, var(--color-border));
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
+    color: var(--color-primary);
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+}
+
+.not-found__content h1 {
+    max-width: 11ch;
+    margin: 1.15rem 0 1rem;
+    font-size: clamp(2.2rem, 5vw, 3.7rem);
+    letter-spacing: -0.045em;
+}
+
+.not-found__content p {
+    max-width: 54ch;
+    color: var(--color-muted);
+    font-size: clamp(0.95rem, 1.4vw, 1.05rem);
+    line-height: 1.8;
+}
+
+.not-found__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.85rem 1.25rem;
+    margin-top: 1.65rem;
+}
+
+.not-found__button {
+    min-height: 3rem;
+    padding-inline: 1.25rem;
+    border-radius: 999px;
+    box-shadow: 0 12px 28px color-mix(in srgb, var(--color-primary) 22%, transparent);
+}
+
+.not-found__secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 3rem;
+    color: var(--color-heading);
+    font-weight: 800;
+}
+
+.not-found__secondary span {
+    color: var(--color-primary);
+    font-size: 1.2rem;
+    transition: transform 220ms ease;
+}
+
+.not-found__secondary:hover span {
+    transform: translateX(4px);
+}
+
+.not-found__button:focus-visible,
+.not-found__secondary:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--color-primary) 45%, transparent);
+    outline-offset: 4px;
+}
+
+@media screen and (max-width: 800px) {
+    .not-found {
+        padding: 6.5rem 0 2rem;
+    }
+
+    .not-found__container {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .not-found__container::before {
+        -webkit-mask-image: linear-gradient(180deg, black, transparent 72%);
+        mask-image: linear-gradient(180deg, black, transparent 72%);
+    }
+
+    .not-found__visual {
+        min-height: 12rem;
+        border-right: 0;
+        border-bottom: 1px solid color-mix(in srgb, var(--color-border) 76%, transparent);
+    }
+
+    .not-found__visual::before {
+        width: 11rem;
+        height: 11rem;
+    }
+
+    .not-found__visual::after {
+        width: 7.5rem;
+        height: 7.5rem;
+    }
+
+    .not-found__content {
+        max-width: 38rem;
+        margin-inline: auto;
+    }
+
+    .not-found__content h1,
+    .not-found__content p {
+        margin-inline: auto;
+    }
+
+    .not-found__actions {
+        justify-content: center;
+    }
+}
+
 .form__section {
     min-height: 100vh;
     display: grid;

@@ -1,18 +1,19 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <title>Yazı | Arda Altunel</title>
+    <title>Sayfa Bulunamadı | Arda Altunel</title>
     <meta charset="utf-8">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; frame-src https://www.youtube-nocookie.com; form-action 'self'; script-src 'self'; style-src 'self'; img-src 'self' https://bdadbqlkmdwzzkrwetrf.supabase.co; font-src 'self'; connect-src 'self' https://bdadbqlkmdwzzkrwetrf.supabase.co; media-src 'none'; worker-src 'none'; manifest-src 'self'; upgrade-insecure-requests">
     <meta name="referrer" content="strict-origin-when-cross-origin">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Aradığınız sayfa taşınmış, kaldırılmış veya hiç var olmamış olabilir.">
     <meta name="robots" content="noindex,follow">
     <script src="/blog/assets/js/theme-bootstrap.js?v=8"></script>
     <link rel="apple-touch-icon" href="/blog/assets/favicon/apple-touch-icon.png">
     <link rel="icon" href="/blog/assets/favicon/favicon.ico">
     <link rel="stylesheet" href="/blog/assets/vendor/montserrat/montserrat.css">
-    <link rel="stylesheet" href="/blog/assets/css/style.css?v=28">
+    <link rel="stylesheet" href="/blog/assets/css/style.css?v=29">
 </head>
 <body data-page="route">
 <nav>
@@ -28,8 +29,21 @@
 </nav>
 
 <main id="app">
-    <section class="empty__page">
-        <h3>Yükleniyor...</h3>
+    <section class="not-found">
+        <div class="container not-found__container">
+            <div class="not-found__visual" aria-hidden="true">
+                <span class="not-found__code">404</span>
+            </div>
+            <div class="not-found__content">
+                <span class="not-found__eyebrow">ROTA BULUNAMADI</span>
+                <h1>Aradığın sayfa burada değil.</h1>
+                <p>Bağlantı taşınmış, kaldırılmış veya adres yanlış yazılmış olabilir. Dilersen ana sayfaya dönebilir ya da son yazılara göz atabilirsin.</p>
+                <div class="not-found__actions">
+                    <a class="btn not-found__button" href="/blog/">Ana sayfaya dön</a>
+                    <a class="not-found__secondary" href="/blog/#posts">Yazılara göz at <span aria-hidden="true">→</span></a>
+                </div>
+            </div>
+        </div>
     </section>
 </main>
 
@@ -41,7 +55,7 @@
 <script src="/blog/assets/js/auth-storage.js?v=1"></script>
 <script src="/blog/assets/js/auth.js?v=13"></script>
 <script src="/blog/assets/js/content-enhancements.js?v=3"></script>
-<script src="/blog/assets/js/app.js?v=14"></script>
+<script src="/blog/assets/js/app.js?v=15"></script>
 <script src="/blog/assets/js/main.js?v=16"></script>
 </body>
 </html>

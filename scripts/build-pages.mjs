@@ -258,7 +258,7 @@ const scripts = ({ article = false } = {}) => `
 <script src="${basePath}assets/js/auth-storage.js?v=1"></script>
 <script src="${basePath}assets/js/auth.js?v=13"></script>
 ${article ? `<script src="${basePath}assets/js/content-enhancements.js?v=3"></script>` : ''}
-<script src="${basePath}assets/js/app.js?v=14"></script>
+<script src="${basePath}assets/js/app.js?v=15"></script>
 <script src="${basePath}assets/js/main.js?v=16"></script>`;
 
 const navigation = () => `<nav>
@@ -287,7 +287,7 @@ ${metadataTags({ title, description, canonical, type, image, published, section 
     <link rel="apple-touch-icon" href="${basePath}assets/favicon/apple-touch-icon.png">
     <link rel="icon" href="${basePath}assets/favicon/favicon.ico">
     <link rel="stylesheet" href="${basePath}assets/vendor/montserrat/montserrat.css">
-    <link rel="stylesheet" href="${basePath}assets/css/style.css?v=28">
+    <link rel="stylesheet" href="${basePath}assets/css/style.css?v=29">
     <script type="application/ld+json">${jsonForHtml(structuredData)}</script>
 </head>
 <body data-page="${pageName}">

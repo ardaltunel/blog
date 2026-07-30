@@ -321,7 +321,39 @@
         `);
     };
 
+    const renderNotFound = () => {
+        const title = 'Sayfa Bulunamadı | Arda Altunel';
+        const description = 'Aradığınız sayfa taşınmış, kaldırılmış veya hiç var olmamış olabilir.';
+        document.title = title;
+        setMeta('name', 'description', description);
+        setMeta('name', 'robots', 'noindex,follow');
+        setMeta('property', 'og:title', title);
+        setMeta('property', 'og:description', description);
+        security.renderUi(app, `
+            <section class="not-found">
+                <div class="container not-found__container">
+                    <div class="not-found__visual" aria-hidden="true">
+                        <span class="not-found__code">404</span>
+                    </div>
+                    <div class="not-found__content">
+                        <span class="not-found__eyebrow">ROTA BULUNAMADI</span>
+                        <h1>Aradığın sayfa burada değil.</h1>
+                        <p>Bağlantı taşınmış, kaldırılmış veya adres yanlış yazılmış olabilir. Dilersen ana sayfaya dönebilir ya da son yazılara göz atabilirsin.</p>
+                        <div class="not-found__actions">
+                            <a class="btn not-found__button" href="${security.buildRoute('home')}">Ana sayfaya dön</a>
+                            <a class="not-found__secondary" href="${security.buildRoute('home')}#posts">Yazılara göz at <span aria-hidden="true">→</span></a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        `);
+    };
+
     const renderSafeError = (message) => {
+        if (message === 'Yazı bulunamadı.' || message === 'Kategori bulunamadı.') {
+            renderNotFound();
+            return;
+        }
         security.renderUi(app, '<section class="empty__page"><h3></h3></section>');
         const heading = app.querySelector('h3');
         if (heading) {
