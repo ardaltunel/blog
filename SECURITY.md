@@ -1,69 +1,50 @@
-# Security Policy
-
-## Supported Versions
+# 🛡 Supported Versions
 
 The latest version of this project is actively maintained and receives security updates when necessary.
 
 | Version | Supported |
-| --- | --- |
+|---|---|
 | Latest | ✅ |
-| Older versions | ❌ |
+| Older Versions | ❌ |
 
 ---
 
-## Reporting a Vulnerability
+# 🚨 Reporting a Vulnerability
 
-If you discover a security vulnerability, please report it responsibly and privately. Do not create a public GitHub issue for an undisclosed vulnerability.
-
-Contact the project maintainer through the private contact methods listed on the [Arda Altunel GitHub profile](https://github.com/ardaltunel).
+If you discover a security vulnerability, please report it responsibly.
 
 Please include:
 
-- A clear description of the vulnerability
-- The affected page, component, or file
-- Steps required to reproduce the issue
-- The potential security impact
-- Proof-of-concept material, if appropriate
-- Suggested fixes or mitigations, if available
-
-Reports will be reviewed as soon as reasonably possible. Additional information may be requested to confirm the issue and determine an appropriate resolution.
+- 📌 A clear description of the issue
+- 🧪 Steps to reproduce the vulnerability
+- 💥 Potential impact
+- 🛠 Suggested fixes (if available)
 
 ---
 
-## Scope
+# 📬 Contact
 
-This policy covers security issues caused by this repository, including:
-
-- The public blog pages and client-side application code
-- Authentication and authorization flows
-- Supabase schema, Row Level Security, functions, and Storage policies maintained in this repository
-- Dependency and GitHub Actions configuration
-
-Vulnerabilities in GitHub Pages, Supabase, browsers, or other third-party services should be reported directly to the relevant provider unless the issue is caused by this project's integration or configuration.
+For security-related reports or concerns, please contact the project maintainer privately instead of creating a public issue.
 
 ---
 
-## Responsible Disclosure
+# ⚠️ Responsible Disclosure
 
-Please do not publicly disclose a vulnerability before it has been reviewed and resolved. Allow reasonable time for investigation, remediation, testing, and release.
+Please do not publicly disclose security vulnerabilities before they have been reviewed and resolved.
 
-Do not access, modify, delete, or retain data that does not belong to you. Avoid privacy violations, service disruption, denial-of-service testing, social engineering, and automated testing that could degrade the service.
-
-Responsible disclosure helps protect users, contributors, and the wider community.
+Responsible disclosure helps keep users and contributors safe.
 
 ---
 
-## Security Notes
+# 🔐 Security Notes
 
-- Never expose secret keys, service-role credentials, tokens, or environment variables.
-- Do not commit passwords or other sensitive credentials to the repository.
-- Treat the Supabase anonymous key as public and rely on Row Level Security and Storage policies for authorization.
-- Use secure authentication methods and the minimum permissions required.
-- Keep dependencies and pinned GitHub Actions revisions up to date.
-- Sanitize untrusted content and validate all routes, URLs, uploads, and user-controlled input.
+- Never expose secret keys or environment variables
+- Do not commit sensitive credentials to the repository
+- Use secure authentication methods when applicable
+- Keep dependencies updated regularly
 
 ---
 
-## Disclaimer
+# 📄 Disclaimer
 
-Reasonable efforts are made to improve the security of this project. However, the project is provided "as is," without guarantees or warranties of any kind.
+While reasonable efforts are made to improve security, this project is provided "as is" without any guarantees or warranties.
