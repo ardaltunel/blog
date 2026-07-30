@@ -212,6 +212,10 @@ nav button {
         0 8px 22px rgba(0, 0, 0, 0.14);
 }
 
+.nav__items:empty {
+    display: none;
+}
+
 .nav__items > li > a {
     display: inline-flex;
     align-items: center;
