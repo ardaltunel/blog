@@ -273,7 +273,7 @@ const navigation = () => `<nav>
     </div>
 </nav>`;
 
-const page = ({ title, description, canonical, type, image, published, section, pageName, main, structuredData, article = false }) => `<!DOCTYPE html>
+const page = ({ title, description, canonical, type, image, published, section, pageName, main, structuredData, article = false, siteVerification = false }) => `<!DOCTYPE html>
 <html lang="tr">
 <head>
     <title>${escapeHtml(title)}</title>
@@ -282,6 +282,7 @@ const page = ({ title, description, canonical, type, image, published, section, 
     <meta name="referrer" content="strict-origin-when-cross-origin">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+${siteVerification ? '    <meta name="google-site-verification" content="WhMumUYTcsUfTcXBMlek_AFSOMQFO66puERKoP0kpbE" />' : ''}
 ${metadataTags({ title, description, canonical, type, image, published, section })}
     <script src="${basePath}assets/js/theme-bootstrap.js?v=8"></script>
     <link rel="apple-touch-icon" href="${basePath}assets/favicon/apple-touch-icon.png">
@@ -412,6 +413,7 @@ const renderHome = data => {
         type: 'website',
         image: newest?.thumbnail || logoUrl,
         pageName: 'home',
+        siteVerification: true,
         main,
         structuredData: {
             '@context': 'https://schema.org',
