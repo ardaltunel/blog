@@ -2076,6 +2076,40 @@ form.search__bar-container {
     opacity: 0.6;
 }
 
+.password__field {
+    position: relative;
+}
+
+.password__field input {
+    padding-right: 5.5rem;
+}
+
+.password__toggle {
+    position: absolute;
+    top: 50%;
+    right: 0.5rem;
+    min-width: 4.5rem;
+    min-height: 2.35rem;
+    padding: 0.35rem 0.65rem;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--color-primary);
+    font: inherit;
+    font-size: 0.75rem;
+    font-weight: 800;
+    cursor: pointer;
+    transform: translateY(-50%);
+    transition: var(--transition);
+}
+
+.password__toggle:hover {
+    background: var(--color-primary-light);
+}
+
+.password__toggle:focus-visible {
+    box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
 input,
 textarea,
 select {

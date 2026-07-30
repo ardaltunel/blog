@@ -190,6 +190,16 @@
             rememberInput.checked = authSessionManager?.isRemembered() === true;
             rememberInput.disabled = authSessionManager?.canRemember() === false;
         }
+        const passwordInput = form.querySelector('input[name="password"]');
+        const passwordToggle = form.querySelector('.password__toggle');
+        passwordToggle?.addEventListener('click', () => {
+            const isVisible = passwordInput?.type === 'text';
+            if (passwordInput) {
+                passwordInput.type = isVisible ? 'password' : 'text';
+            }
+            passwordToggle.textContent = isVisible ? 'Göster' : 'Gizle';
+            passwordToggle.setAttribute('aria-pressed', String(!isVisible));
+        });
         form.addEventListener('submit', async event => {
             event.preventDefault();
             clearMessage();

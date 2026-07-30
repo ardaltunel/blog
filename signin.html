@@ -11,7 +11,7 @@
     <link rel="apple-touch-icon" href="./assets/favicon/apple-touch-icon.png">
     <link rel="icon" href="./assets/favicon/favicon.ico">
     <link rel="stylesheet" href="./assets/vendor/montserrat/montserrat.css">
-    <link rel="stylesheet" href="./assets/css/style.css?v=35">
+    <link rel="stylesheet" href="./assets/css/style.css?v=36">
 </head>
 <body>
 <nav>
@@ -29,7 +29,10 @@
         <div class="alert__message error" id="auth-message" hidden></div>
         <form id="signin-form">
             <input type="email" name="email" maxlength="254" autocomplete="email" placeholder="E-posta" required>
-            <input type="password" name="password" minlength="8" maxlength="128" autocomplete="current-password" placeholder="Şifre" required>
+            <div class="password__field">
+                <input id="signin-password" type="password" name="password" minlength="8" maxlength="128" autocomplete="current-password" placeholder="Şifre" required>
+                <button class="password__toggle" type="button" aria-controls="signin-password" aria-pressed="false">Göster</button>
+            </div>
             <div class="signin__remember">
                 <input type="checkbox" name="remember" value="1" id="remember-me">
                 <label for="remember-me">
@@ -48,7 +51,7 @@
 <script src="./assets/js/supabase-config.js?v=8"></script>
 <script src="./assets/js/auth-storage.js?v=1"></script>
 <script src="./assets/js/auth.js?v=13"></script>
-<script src="./assets/js/auth-pages.js?v=15"></script>
+<script src="./assets/js/auth-pages.js?v=16"></script>
 <script src="./assets/js/main.js?v=16"></script>
 </body>
 </html>
