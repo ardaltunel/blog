@@ -6,7 +6,10 @@
     const MAX_AUTHORS = 2000;
     const MAX_POSTS = 2000;
     const app = document.querySelector('#app');
-    const pageName = document.body.dataset.page || 'home';
+    const declaredPageName = document.body.dataset.page || 'home';
+    const pageName = declaredPageName === 'route'
+        ? window.location.pathname.split('/').filter(Boolean).at(-2) === 'kategori' ? 'category' : 'post'
+        : declaredPageName;
     const security = window.SecurityUtils;
     const config = security?.getSafeSupabaseConfig();
     const state = {
@@ -61,31 +64,41 @@
     const normalizeList = (value, limit, normalizer) => Array.isArray(value)
         ? value.slice(0, limit).map(normalizer).filter(Boolean)
         : [];
-    const assignPostRoutes = posts => {
+    const assignRoutes = (items, reservedSlugs = [], titleForRoute = item => item.title) => {
         const slugCounts = new Map();
-        const usedSlugs = new Set(['yeni-blog-ekle']);
-        [...posts].sort((a, b) => a.id - b.id).forEach(post => {
-            const baseSlug = security.createSlug(post.title) || 'yazi';
+        const usedSlugs = new Set(reservedSlugs);
+        [...items].sort((a, b) => a.id - b.id).forEach(item => {
+            const routeTitle = titleForRoute(item);
+            const baseSlug = security.createSlug(routeTitle) || 'yazi';
             let duplicateIndex = (slugCounts.get(baseSlug) || 0) + 1;
-            let routeSlug = security.createPostSlug(post.title, duplicateIndex);
+            let routeSlug = security.createPostSlug(routeTitle, duplicateIndex);
             while (usedSlugs.has(routeSlug)) {
                 duplicateIndex += 1;
-                routeSlug = security.createPostSlug(post.title, duplicateIndex);
+                routeSlug = security.createPostSlug(routeTitle, duplicateIndex);
             }
             slugCounts.set(baseSlug, duplicateIndex);
             usedSlugs.add(routeSlug);
-            post.route_slug = routeSlug;
-            post.duplicate_index = duplicateIndex;
+            item.route_slug = routeSlug;
+            item.duplicate_index = duplicateIndex;
         });
-        return posts;
+        return items;
     };
     const applyData = source => {
         const safeSource = source && typeof source === 'object' && !Array.isArray(source) ? source : {};
-        state.categories = normalizeList(safeSource.categories, MAX_CATEGORIES, normalizeCategory);
+        state.categories = assignRoutes(
+            normalizeList(safeSource.categories, MAX_CATEGORIES, normalizeCategory),
+            [],
+            category => security.localizeCategoryTitle(category.title) || category.title
+        );
         state.authors = normalizeList(safeSource.authors, MAX_AUTHORS, normalizeAuthor);
-        state.posts = assignPostRoutes(normalizeList(safeSource.posts, MAX_POSTS, normalizePost)
+        state.posts = assignRoutes(normalizeList(safeSource.posts, MAX_POSTS, normalizePost)
             .filter(post => post.is_verified)
-            .sort((a, b) => new Date(b.date_time) - new Date(a.date_time)));
+            .sort((a, b) => new Date(b.date_time) - new Date(a.date_time)), [
+                'assets',
+                'kategori',
+                'yazi',
+                'yeni-blog-ekle'
+            ]);
     };
 
     const loadFromSupabase = async () => {
@@ -127,6 +140,13 @@
     const categoryById = id => state.categories.find(category => category.id === id);
     const authorById = id => state.authors.find(author => author.id === id);
     const categoryTitle = category => security.localizeCategoryTitle(category?.title) || 'Kategorisiz';
+    const categoryRoute = category => category?.id
+        ? security.buildRoute('category', {
+            id: category.id,
+            title: categoryTitle(category),
+            duplicateIndex: category.duplicate_index
+        })
+        : security.buildRoute('home');
     const formatDate = dateValue => {
         try {
             return new Intl.DateTimeFormat('tr-TR', {
@@ -151,6 +171,49 @@
         title: post.title,
         duplicateIndex: post.duplicate_index
     });
+    const setMeta = (attribute, key, value) => {
+        if (!value) {
+            return;
+        }
+        let meta = [...document.head.querySelectorAll('meta')]
+            .find(item => item.getAttribute(attribute) === key);
+        if (!meta) {
+            meta = document.createElement('meta');
+            meta.setAttribute(attribute, key);
+            document.head.append(meta);
+        }
+        meta.content = value;
+    };
+    const setCanonical = value => {
+        let link = document.querySelector('link[rel="canonical"]');
+        if (!link) {
+            link = document.createElement('link');
+            link.rel = 'canonical';
+            document.head.append(link);
+        }
+        link.href = value;
+    };
+    const updatePageMetadata = ({ title, description, url, type = 'website', image = '', published = '' }) => {
+        document.title = title;
+        setCanonical(url);
+        setMeta('name', 'description', description);
+        setMeta('property', 'og:title', title);
+        setMeta('property', 'og:description', description);
+        setMeta('property', 'og:type', type);
+        setMeta('property', 'og:url', url);
+        setMeta('property', 'og:site_name', 'ARDALTUNEL');
+        setMeta('property', 'og:locale', 'tr_TR');
+        setMeta('name', 'twitter:card', image ? 'summary_large_image' : 'summary');
+        setMeta('name', 'twitter:title', title);
+        setMeta('name', 'twitter:description', description);
+        if (image) {
+            setMeta('property', 'og:image', image);
+            setMeta('name', 'twitter:image', image);
+        }
+        if (published) {
+            setMeta('property', 'article:published_time', published);
+        }
+    };
 
     const renderAuthor = (post) => {
         const author = authorById(post.author_id) || {};
@@ -159,7 +222,7 @@
         return `
             <div class="post__author">
                 <div class="post__author-avatar">
-                    <img src="${security.escapeHtml(avatar)}" alt="${security.escapeHtml(name)}">
+                    <img src="${security.escapeHtml(avatar)}" alt="${security.escapeHtml(name)}" width="46" height="46" decoding="async">
                 </div>
                 <div class="post__author-info">
                     <h5>${security.escapeHtml(name)}</h5>
@@ -172,12 +235,12 @@
     const renderPostCard = (post) => {
         const category = categoryById(post.category_id) || { title: 'Kategorisiz', id: null };
         const postHref = postRoute(post);
-        const categoryHref = category.id ? security.buildRoute('category', { id: category.id }) : security.buildRoute('home');
+        const categoryHref = category.id ? categoryRoute(category) : security.buildRoute('home');
         return `
             <article class="post">
                 <a href="${postHref}">
                     <div class="post__thumbnail">
-                        <img src="${security.escapeHtml(post.thumbnail)}" alt="${security.escapeHtml(post.title)}">
+                        <img src="${security.escapeHtml(post.thumbnail)}" alt="${security.escapeHtml(post.title)}" loading="lazy" decoding="async">
                     </div>
                 </a>
                 <div class="post__info">
@@ -194,7 +257,7 @@
         <section class="category__buttons">
             <div class="container category__buttons-container">
                 ${state.categories.map(category => `
-                    <a href="${security.buildRoute('category', { id: category.id })}" class="category__button">${security.escapeHtml(categoryTitle(category))}</a>
+                    <a href="${categoryRoute(category)}" class="category__button">${security.escapeHtml(categoryTitle(category))}</a>
                 `).join('')}
             </div>
         </section>
@@ -223,6 +286,14 @@
         const totalPages = Math.max(1, Math.ceil(state.posts.length / POSTS_PER_PAGE));
         const safePage = Math.min(currentPage, totalPages);
         const pagePosts = state.posts.slice((safePage - 1) * POSTS_PER_PAGE, safePage * POSTS_PER_PAGE);
+        const homeUrl = new URL(security.buildRoute('home', safePage > 1 ? { page: safePage } : {}), window.location.href);
+        const homeTitle = safePage > 1 ? `Blog Yazıları – Sayfa ${safePage} | Arda Altunel` : 'Blog Yazıları | Arda Altunel';
+        updatePageMetadata({
+            title: homeTitle,
+            description: 'Arda Altunel’in yazılım, teknoloji, tasarım, bilim ve yaşam üzerine blog yazıları.',
+            url: homeUrl.href,
+            image: state.posts[0]?.thumbnail || ''
+        });
 
         security.renderUi(app, `
             ${featured ? `
@@ -230,11 +301,11 @@
                     <div class="container featured__container">
                         <a href="${postRoute(featured)}">
                             <div class="post__thumbnail">
-                                <img src="${security.escapeHtml(featured.thumbnail)}" alt="${security.escapeHtml(featured.title)}">
+                                <img src="${security.escapeHtml(featured.thumbnail)}" alt="${security.escapeHtml(featured.title)}" decoding="async" fetchpriority="high">
                             </div>
                         </a>
                         <div class="post__info">
-                            <a href="${security.buildRoute('category', { id: featured.category_id })}" class="category__button">${security.escapeHtml(categoryTitle(categoryById(featured.category_id)))}</a>
+                            <a href="${categoryRoute(categoryById(featured.category_id))}" class="category__button">${security.escapeHtml(categoryTitle(categoryById(featured.category_id)))}</a>
                             <h2 class="post__title"><a href="${postRoute(featured)}">${security.escapeHtml(featured.title)}</a></h2>
                             <p class="post__body">${security.escapeHtml(excerpt(featured.body, 300))}</p>
                             ${renderAuthor(featured)}
@@ -274,27 +345,27 @@
         const nextPost = state.posts[index - 1] || state.posts[state.posts.length - 1];
         const category = categoryById(post.category_id) || { title: 'Genel', id: null };
         const categoryHref = category.id
-            ? security.buildRoute('category', { id: category.id })
+            ? categoryRoute(category)
             : security.buildRoute('home');
         const canonicalPath = postRoute(post);
         const canonicalUrl = new URL(canonicalPath, window.location.href);
         if (`${window.location.pathname}${window.location.search}` !== `${canonicalUrl.pathname}${canonicalUrl.search}`) {
             window.history.replaceState(null, '', `${canonicalUrl.pathname}${canonicalUrl.search}${window.location.hash}`);
         }
-        let canonicalLink = document.querySelector('link[rel="canonical"]');
-        if (!canonicalLink) {
-            canonicalLink = document.createElement('link');
-            canonicalLink.rel = 'canonical';
-            document.head.append(canonicalLink);
-        }
-        canonicalLink.href = canonicalUrl.href;
-        document.title = `${post.title} | Arda Altunel`;
+        updatePageMetadata({
+            title: `${post.title} | Arda Altunel`,
+            description: excerpt(post.body, 155),
+            url: canonicalUrl.href,
+            type: 'article',
+            image: post.thumbnail,
+            published: post.date_time
+        });
         security.renderUi(app, `
             <section class="singlepost">
                 <article class="container singlepost__container">
                     <div class="singlepost__hero">
                         <figure class="singlepost__thumbnail">
-                            <img src="${security.escapeHtml(post.thumbnail)}" alt="${security.escapeHtml(post.title)}">
+                            <img src="${security.escapeHtml(post.thumbnail)}" alt="${security.escapeHtml(post.title)}" decoding="async" fetchpriority="high">
                         </figure>
                         <div class="singlepost__hero-shade"></div>
                         <header class="singlepost__header">
@@ -329,13 +400,26 @@
 
     const renderCategory = () => {
         const id = security.getQueryParam('id');
-        const category = id ? categoryById(id) : null;
+        const requestedSlug = security.getCategorySlug();
+        const category = id
+            ? categoryById(id)
+            : state.categories.find(item => item.route_slug === requestedSlug);
         if (!category) {
             renderSafeError('Kategori bulunamadı.');
             return;
         }
 
-        const posts = state.posts.filter(post => post.category_id === id);
+        const posts = state.posts.filter(post => post.category_id === category.id);
+        const canonicalUrl = new URL(categoryRoute(category), window.location.href);
+        if (`${window.location.pathname}${window.location.search}` !== `${canonicalUrl.pathname}${canonicalUrl.search}`) {
+            window.history.replaceState(null, '', canonicalUrl.pathname);
+        }
+        updatePageMetadata({
+            title: `${categoryTitle(category)} Yazıları | Arda Altunel`,
+            description: category.description || `${categoryTitle(category)} kategorisindeki blog yazıları.`,
+            url: canonicalUrl.href,
+            image: posts[0]?.thumbnail || ''
+        });
         security.renderUi(app, `
             <header class="category__title"><h2>${security.escapeHtml(categoryTitle(category))}</h2></header>
             ${posts.length ? `

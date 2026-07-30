@@ -328,6 +328,7 @@ nav button {
 }
 
 .post__thumbnail {
+    position: relative;
     aspect-ratio: 16 / 9;
     overflow: hidden;
     margin-bottom: 1.15rem;
@@ -410,16 +411,195 @@ nav button {
 .posts__container {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 3.2rem 2rem;
+    gap: 2rem;
     margin-bottom: 4rem;
 }
 
 .posts__container .post {
-    padding: 1rem;
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: 8px;
-    box-shadow: var(--shadow-sm);
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: 0.75rem;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--color-border) 82%, var(--color-primary));
+    border-radius: 20px;
+    background:
+        radial-gradient(circle at 100% 0, color-mix(in srgb, var(--color-primary) 7%, transparent), transparent 36%),
+        linear-gradient(145deg, color-mix(in srgb, var(--color-surface) 98%, var(--color-primary)), var(--color-surface));
+    box-shadow:
+        0 1px 0 color-mix(in srgb, var(--color-white) 24%, transparent) inset,
+        0 14px 34px color-mix(in srgb, var(--color-bg) 28%, transparent);
+    transition:
+        transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1),
+        border-color 280ms ease,
+        box-shadow 280ms ease;
+}
+
+.posts__container .post::before {
+    content: '';
+    position: absolute;
+    z-index: 2;
+    top: 0;
+    left: 12%;
+    width: 76%;
+    height: 1px;
+    pointer-events: none;
+    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--color-primary) 72%, white), transparent);
+    opacity: 0;
+    transition: opacity 280ms ease;
+}
+
+.posts__container .post:hover,
+.posts__container .post:focus-within {
+    transform: translateY(-6px);
+    border-color: color-mix(in srgb, var(--color-primary) 46%, var(--color-border));
+    box-shadow:
+        0 1px 0 color-mix(in srgb, var(--color-white) 30%, transparent) inset,
+        0 24px 54px color-mix(in srgb, #07131f 22%, transparent);
+}
+
+.posts__container .post:hover::before,
+.posts__container .post:focus-within::before {
+    opacity: 1;
+}
+
+.posts__container .post > a {
+    display: block;
+    border-radius: 14px;
+}
+
+.posts__container .post > a:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--color-primary) 52%, transparent);
+    outline-offset: 3px;
+}
+
+.posts__container .post__thumbnail {
+    aspect-ratio: 16 / 10;
+    margin-bottom: 0;
+    border: 0;
+    border-radius: 14px;
+    box-shadow: none;
+}
+
+.posts__container .post__thumbnail::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+        linear-gradient(180deg, transparent 56%, rgb(3 12 22 / 24%)),
+        linear-gradient(120deg, color-mix(in srgb, var(--color-primary) 8%, transparent), transparent 44%);
+}
+
+.posts__container .post__thumbnail img {
+    transition: transform 420ms cubic-bezier(0.2, 0.8, 0.2, 1), filter 280ms ease;
+}
+
+.posts__container .post:hover .post__thumbnail img,
+.posts__container .post:focus-within .post__thumbnail img {
+    transform: scale(1.055);
+    filter: saturate(1.08) contrast(1.035);
+}
+
+.posts__container .post__info {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+    padding: 1rem 0.45rem 0.35rem;
+}
+
+.posts__container .category__button {
+    align-self: flex-start;
+    min-height: 2rem;
+    padding: 0.38rem 0.72rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
+    border-color: color-mix(in srgb, var(--color-primary) 24%, var(--color-border));
+    box-shadow: 0 6px 18px color-mix(in srgb, var(--color-primary) 8%, transparent);
+    letter-spacing: 0.015em;
+}
+
+.posts__container .post__title {
+    display: -webkit-box;
+    min-height: 2.8em;
+    margin: 0.85rem 0 0.55rem;
+    overflow: hidden;
+    font-size: clamp(1.05rem, 1.5vw, 1.18rem);
+    line-height: 1.4;
+    letter-spacing: -0.018em;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.posts__container .post__title a {
+    background-image: linear-gradient(var(--color-primary), var(--color-primary));
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    background-size: 0 1px;
+    transition: color 220ms ease, background-size 280ms ease;
+}
+
+.posts__container .post:hover .post__title a,
+.posts__container .post:focus-within .post__title a {
+    color: var(--color-primary);
+    background-size: 100% 1px;
+}
+
+.posts__container .post__body {
+    display: -webkit-box;
+    min-height: calc(1.7em * 4);
+    margin: 0;
+    overflow: hidden;
+    line-height: 1.7;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+}
+
+.posts__container .post__author {
+    margin-top: auto;
+    padding-top: 1rem;
+    border-top: 1px solid color-mix(in srgb, var(--color-border) 78%, transparent);
+}
+
+.posts__container .post__author-avatar {
+    flex-basis: 2.65rem;
+    width: 2.65rem;
+    height: 2.65rem;
+    border: 2px solid color-mix(in srgb, var(--color-surface) 76%, transparent);
+    outline: 1px solid color-mix(in srgb, var(--color-primary) 26%, var(--color-border));
+    box-shadow: 0 7px 18px color-mix(in srgb, #07131f 18%, transparent);
+}
+
+.posts__container .post__author-info {
+    min-width: 0;
+}
+
+.posts__container .post__author-info h5 {
+    overflow: hidden;
+    color: var(--color-heading);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.posts__container .post__author-info small {
+    display: block;
+    margin-top: 0.05rem;
+    font-size: 0.74rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .posts__container .post,
+    .posts__container .post__thumbnail img {
+        transition: none;
+    }
+
+    .posts__container .post:hover,
+    .posts__container .post:focus-within {
+        transform: none;
+    }
 }
 
 .category__buttons {
@@ -2342,7 +2522,22 @@ body.modal-open {
     }
 
     .posts__container .post {
-        padding: 0.85rem;
+        padding: 0.65rem;
+        border-radius: 18px;
+    }
+
+    .posts__container .post__info {
+        padding: 0.9rem 0.35rem 0.3rem;
+    }
+
+    .posts__container .post__title {
+        min-height: auto;
+        font-size: 1.08rem;
+    }
+
+    .posts__container .post__body {
+        min-height: auto;
+        -webkit-line-clamp: 3;
     }
 
     .category__buttons-container {

@@ -1,0 +1,648 @@
+import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { dirname, join, resolve, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import vm from 'node:vm';
+import sanitizeHtml from 'sanitize-html';
+
+const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
+const output = join(root, 'dist');
+if (dirname(output) !== root || !output.startsWith(`${root}${sep}`)) {
+    throw new Error('Unsafe build output path.');
+}
+
+const defaultSiteUrl = 'https://ardaltunel.github.io/blog/';
+const siteUrl = new URL(process.env.SITE_URL || defaultSiteUrl);
+if (!siteUrl.pathname.endsWith('/')) {
+    siteUrl.pathname += '/';
+}
+const siteBaseUrl = siteUrl.href;
+const basePath = siteUrl.pathname;
+const siteOrigin = siteUrl.origin;
+const siteName = 'ARDALTUNEL';
+const homeDescription = 'Arda Altunel’in yazılım, teknoloji, tasarım, bilim ve yaşam üzerine blog yazıları.';
+const logoUrl = new URL('assets/logo/logo.png', siteBaseUrl).href;
+const fallbackAvatar = new URL('assets/images/1663704007ardaltunel-pp.png', siteBaseUrl).href;
+const reservedPostSlugs = ['assets', 'kategori', 'yazi', 'yeni-blog-ekle'];
+const csp = "default-src 'self'; base-uri 'none'; object-src 'none'; frame-src https://www.youtube-nocookie.com; form-action 'self'; script-src 'self'; style-src 'self'; img-src 'self' https://bdadbqlkmdwzzkrwetrf.supabase.co; font-src 'self'; connect-src 'self' https://bdadbqlkmdwzzkrwetrf.supabase.co; media-src 'none'; worker-src 'none'; manifest-src 'self'; upgrade-insecure-requests";
+
+const escapeHtml = value => String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+const escapeXml = escapeHtml;
+const slugify = value => String(value ?? '')
+    .trim()
+    .toLocaleLowerCase('tr-TR')
+    .replace(/ı/g, 'i')
+    .replace(/ğ/g, 'g')
+    .replace(/ş/g, 's')
+    .replace(/ç/g, 'c')
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 100)
+    .replace(/-+$/g, '');
+const routeSlug = (title, duplicateIndex = 1) => {
+    const base = slugify(title) || 'yazi';
+    return duplicateIndex > 1 ? `${base}-${duplicateIndex}` : base;
+};
+const assignRoutes = (items, reserved = [], titleForRoute = item => item.title) => {
+    const counts = new Map();
+    const used = new Set(reserved);
+    [...items].sort((a, b) => Number(a.id) - Number(b.id)).forEach(item => {
+        const routeTitle = titleForRoute(item);
+        const base = slugify(routeTitle) || 'yazi';
+        let duplicateIndex = (counts.get(base) || 0) + 1;
+        let slug = routeSlug(routeTitle, duplicateIndex);
+        while (used.has(slug)) {
+            duplicateIndex += 1;
+            slug = routeSlug(routeTitle, duplicateIndex);
+        }
+        counts.set(base, duplicateIndex);
+        used.add(slug);
+        item.route_slug = slug;
+        item.duplicate_index = duplicateIndex;
+    });
+    return items;
+};
+const absoluteUrl = relativePath => new URL(relativePath, siteBaseUrl).href;
+const sitePath = relativePath => new URL(relativePath, siteBaseUrl).pathname;
+const postUrl = post => absoluteUrl(`${post.route_slug}/`);
+const postPath = post => sitePath(`${post.route_slug}/`);
+const categoryUrl = category => absoluteUrl(`kategori/${category.route_slug}/`);
+const categoryPath = category => sitePath(`kategori/${category.route_slug}/`);
+const localizeCategory = value => ({
+    'about life': 'Yaşam',
+    advertising: 'Reklamcılık',
+    education: 'Eğitim',
+    'science & technology': 'Bilim ve Teknoloji',
+    software: 'Yazılım',
+    uncategorized: 'Kategorisiz'
+})[String(value || '').trim().toLocaleLowerCase('en-US')] || String(value || '').trim();
+
+const sanitizeBody = body => sanitizeHtml(String(body || '')
+    .replace(/\\r\\n|\\n|\\r/g, '\n')
+    .replace(/\\"/g, '"'), {
+    allowedTags: [
+        'a', 'b', 'blockquote', 'br', 'code', 'div', 'em', 'figcaption', 'figure',
+        'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'i', 'img', 'li', 'ol', 'p', 'pre',
+        's', 'span', 'strong', 'table', 'tbody', 'td', 'th', 'thead', 'tr', 'u', 'ul'
+    ],
+    allowedAttributes: {
+        a: ['href', 'rel', 'target', 'title'],
+        '*': ['class'],
+        img: ['alt', 'height', 'src', 'title', 'width']
+    },
+    allowedSchemes: ['http', 'https', 'mailto', 'tel'],
+    allowProtocolRelative: false,
+    disallowedTagsMode: 'discard'
+});
+const plainText = html => sanitizeHtml(String(html || '')
+    .replace(/<br\s*\/?>/gi, ' ')
+    .replace(/<\/(?:blockquote|div|figcaption|h[1-6]|li|p|td|th|tr)>/gi, ' '), {
+    allowedTags: [],
+    allowedAttributes: {}
+}).replace(/\s+/g, ' ').trim();
+const excerpt = (html, length = 155) => {
+    const text = plainText(html);
+    if (text.length <= length) {
+        return text;
+    }
+    const shortened = text.slice(0, length + 1);
+    const boundary = shortened.lastIndexOf(' ');
+    return `${shortened.slice(0, boundary > length * 0.7 ? boundary : length).trim()}…`;
+};
+const readingTime = html => Math.max(1, Math.ceil(plainText(html).split(/\s+/).filter(Boolean).length / 200));
+const formatDate = value => new Intl.DateTimeFormat('tr-TR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'Europe/Istanbul'
+}).format(new Date(value));
+const isoDate = value => {
+    const date = new Date(value);
+    return Number.isFinite(date.getTime()) ? date.toISOString() : new Date(0).toISOString();
+};
+const jsonForHtml = value => JSON.stringify(value).replace(/</g, '\\u003c');
+
+const readSupabaseConfig = async () => {
+    const source = await readFile(join(root, 'assets', 'js', 'supabase-config.js'), 'utf8');
+    const url = source.match(/url:\s*'([^']+)'/)?.[1];
+    const anonKey = source.match(/anonKey:\s*'([^']+)'/)?.[1];
+    if (!url || !anonKey) {
+        throw new Error('Supabase configuration could not be read.');
+    }
+    return { url, anonKey };
+};
+const fetchJson = async (config, path) => {
+    const response = await fetch(new URL(path, config.url), {
+        headers: {
+            apikey: config.anonKey,
+            Authorization: `Bearer ${config.anonKey}`
+        },
+        signal: AbortSignal.timeout(20000)
+    });
+    if (!response.ok) {
+        throw new Error(`Supabase returned ${response.status}.`);
+    }
+    return response.json();
+};
+const loadRemoteData = async () => {
+    const config = await readSupabaseConfig();
+    const [categories, authors, posts] = await Promise.all([
+        fetchJson(config, '/rest/v1/categories?select=id,title,description&order=title.asc&limit=500'),
+        fetchJson(config, '/rest/v1/authors?select=id,firstname,lastname,avatar&limit=2000'),
+        fetchJson(config, '/rest/v1/posts?select=id,title,body,thumbnail,date_time,category_id,author_id,is_featured,is_verified&is_verified=eq.true&order=date_time.desc&limit=2000')
+    ]);
+    return { categories, authors, posts };
+};
+const loadFallbackData = async () => {
+    const source = await readFile(join(root, 'assets', 'data', 'blog-data.js'), 'utf8');
+    const context = { window: {} };
+    vm.runInNewContext(source, context, { timeout: 5000 });
+    return context.window.BLOG_FALLBACK_DATA;
+};
+const loadData = async () => {
+    try {
+        return { data: await loadRemoteData(), source: 'Supabase' };
+    } catch (error) {
+        if (process.env.SEO_REQUIRE_REMOTE === '1') {
+            throw error;
+        }
+        return { data: await loadFallbackData(), source: 'fallback' };
+    }
+};
+
+const normalizeImage = value => {
+    const raw = String(value || '').trim();
+    if (!raw) {
+        return fallbackAvatar;
+    }
+    if (/^https:\/\//i.test(raw)) {
+        try {
+            const parsed = new URL(raw);
+            return parsed.origin === siteOrigin || parsed.hostname.endsWith('.supabase.co') ? parsed.href : fallbackAvatar;
+        } catch {
+            return fallbackAvatar;
+        }
+    }
+    if (raw.startsWith('images/')) {
+        return absoluteUrl(`assets/${raw}`);
+    }
+    if (/^[^\\/]+\.(?:png|jpe?g|webp|gif)$/i.test(raw)) {
+        return absoluteUrl(`assets/images/${raw}`);
+    }
+    return fallbackAvatar;
+};
+const normalizeData = source => {
+    const categories = assignRoutes((Array.isArray(source.categories) ? source.categories : [])
+        .filter(item => Number.isInteger(Number(item.id)) && String(item.title || '').trim())
+        .map(item => ({
+            id: Number(item.id),
+            title: String(item.title).trim(),
+            description: String(item.description || '').trim()
+        })), [], category => localizeCategory(category.title));
+    const authors = (Array.isArray(source.authors) ? source.authors : [])
+        .filter(item => Number.isInteger(Number(item.id)) && String(item.firstname || '').trim())
+        .map(item => ({
+            id: Number(item.id),
+            firstname: String(item.firstname).trim(),
+            lastname: String(item.lastname || '').trim(),
+            avatar: normalizeImage(item.avatar)
+        }));
+    const posts = assignRoutes((Array.isArray(source.posts) ? source.posts : [])
+        .filter(item => Number.isInteger(Number(item.id)) && item.is_verified !== false && item.is_verified !== 0)
+        .map(item => ({
+            id: Number(item.id),
+            title: String(item.title || '').trim(),
+            body: String(item.body || ''),
+            thumbnail: normalizeImage(item.thumbnail),
+            date_time: isoDate(item.date_time),
+            category_id: Number(item.category_id) || null,
+            author_id: Number(item.author_id) || null,
+            is_featured: item.is_featured === true || item.is_featured === 1
+        }))
+        .filter(item => item.title && item.body)
+        .sort((a, b) => new Date(b.date_time) - new Date(a.date_time)), reservedPostSlugs);
+    return { categories, authors, posts };
+};
+
+const metadataTags = ({ title, description, canonical, type = 'website', image = '', published = '', section = '' }) => `
+    <meta name="description" content="${escapeHtml(description)}">
+    <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
+    <link rel="canonical" href="${escapeHtml(canonical)}">
+    <link rel="alternate" type="application/atom+xml" title="Arda Altunel Blog" href="${escapeHtml(absoluteUrl('feed.xml'))}">
+    <meta property="og:locale" content="tr_TR">
+    <meta property="og:type" content="${escapeHtml(type)}">
+    <meta property="og:site_name" content="${siteName}">
+    <meta property="og:title" content="${escapeHtml(title)}">
+    <meta property="og:description" content="${escapeHtml(description)}">
+    <meta property="og:url" content="${escapeHtml(canonical)}">
+    ${image ? `<meta property="og:image" content="${escapeHtml(image)}">` : ''}
+    ${published ? `<meta property="article:published_time" content="${escapeHtml(published)}">` : ''}
+    ${section ? `<meta property="article:section" content="${escapeHtml(section)}">` : ''}
+    <meta name="twitter:card" content="${image ? 'summary_large_image' : 'summary'}">
+    <meta name="twitter:title" content="${escapeHtml(title)}">
+    <meta name="twitter:description" content="${escapeHtml(description)}">
+    ${image ? `<meta name="twitter:image" content="${escapeHtml(image)}">` : ''}`;
+
+const scripts = ({ article = false } = {}) => `
+<script src="${basePath}assets/vendor/dompurify/purify.min.js"></script>
+<script src="${basePath}assets/js/security.js?v=16"></script>
+<script src="${basePath}assets/vendor/supabase/supabase.js"></script>
+<script src="${basePath}assets/js/supabase-config.js?v=8"></script>
+<script src="${basePath}assets/data/blog-data.js?v=9"></script>
+<script src="${basePath}assets/js/auth-storage.js?v=1"></script>
+<script src="${basePath}assets/js/auth.js?v=13"></script>
+${article ? `<script src="${basePath}assets/js/content-enhancements.js?v=3"></script>` : ''}
+<script src="${basePath}assets/js/app.js?v=14"></script>
+<script src="${basePath}assets/js/main.js?v=16"></script>`;
+
+const navigation = () => `<nav>
+    <div class="container nav__container">
+        <a href="${basePath}" class="nav__logo">ARDALTUNEL</a>
+        <ul class="nav__items"></ul>
+        <button class="theme__toggle" type="button" aria-label="Temayı değiştir">
+            <img class="ui-icon" src="${basePath}assets/vendor/lucide/icons/moon.svg" alt="" aria-hidden="true">
+        </button>
+        <button id="open__nav-btn" type="button" aria-label="Menüyü aç"><img class="ui-icon" src="${basePath}assets/vendor/lucide/icons/menu.svg" alt="" aria-hidden="true"></button>
+        <button id="close__nav-btn" type="button" aria-label="Menüyü kapat" hidden><img class="ui-icon" src="${basePath}assets/vendor/lucide/icons/x.svg" alt="" aria-hidden="true"></button>
+    </div>
+</nav>`;
+
+const page = ({ title, description, canonical, type, image, published, section, pageName, main, structuredData, article = false }) => `<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <title>${escapeHtml(title)}</title>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Security-Policy" content="${csp}">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+${metadataTags({ title, description, canonical, type, image, published, section })}
+    <script src="${basePath}assets/js/theme-bootstrap.js?v=8"></script>
+    <link rel="apple-touch-icon" href="${basePath}assets/favicon/apple-touch-icon.png">
+    <link rel="icon" href="${basePath}assets/favicon/favicon.ico">
+    <link rel="stylesheet" href="${basePath}assets/vendor/montserrat/montserrat.css">
+    <link rel="stylesheet" href="${basePath}assets/css/style.css?v=24">
+    <script type="application/ld+json">${jsonForHtml(structuredData)}</script>
+</head>
+<body data-page="${pageName}">
+${navigation()}
+<main id="app">
+${main}
+</main>
+${scripts({ article })}
+</body>
+</html>
+`;
+
+const authorFor = (post, authors) => authors.find(author => author.id === post.author_id) || {
+    firstname: 'Arda',
+    lastname: 'Altunel',
+    avatar: fallbackAvatar
+};
+const categoryFor = (post, categories) => categories.find(category => category.id === post.category_id);
+const renderAuthor = (post, authors) => {
+    const author = authorFor(post, authors);
+    const name = `${author.firstname} ${author.lastname}`.trim();
+    return `<div class="post__author">
+                    <div class="post__author-avatar">
+                        <img src="${escapeHtml(author.avatar)}" alt="${escapeHtml(name)}" width="46" height="46" decoding="async">
+                    </div>
+                    <div class="post__author-info">
+                        <h5>${escapeHtml(name)}</h5>
+                        <small>${escapeHtml(formatDate(post.date_time))}</small>
+                    </div>
+                </div>`;
+};
+const renderPostCard = (post, data) => {
+    const category = categoryFor(post, data.categories);
+    return `<article class="post">
+                <a href="${postPath(post)}">
+                    <div class="post__thumbnail">
+                        <img src="${escapeHtml(post.thumbnail)}" alt="${escapeHtml(post.title)}" loading="lazy" decoding="async">
+                    </div>
+                </a>
+                <div class="post__info">
+                    <a href="${category ? categoryPath(category) : basePath}" class="category__button">${escapeHtml(localizeCategory(category?.title) || 'Kategorisiz')}</a>
+                    <h3 class="post__title"><a href="${postPath(post)}">${escapeHtml(post.title)}</a></h3>
+                    <p class="post__body">${escapeHtml(excerpt(post.body, 150))}</p>
+                    ${renderAuthor(post, data.authors)}
+                </div>
+            </article>`;
+};
+const renderCategoryButtons = categories => `<section class="category__buttons">
+            <div class="container category__buttons-container">
+                ${categories.map(category => `<a href="${categoryPath(category)}" class="category__button">${escapeHtml(localizeCategory(category.title))}</a>`).join('')}
+            </div>
+        </section>`;
+
+const renderHome = data => {
+    const featured = data.posts.find(post => post.is_featured);
+    const posts = data.posts.slice(0, 9);
+    const featuredCategory = featured ? categoryFor(featured, data.categories) : null;
+    const main = `${featured ? `<section class="featured">
+            <div class="container featured__container">
+                <a href="${postPath(featured)}">
+                    <div class="post__thumbnail">
+                        <img src="${escapeHtml(featured.thumbnail)}" alt="${escapeHtml(featured.title)}" decoding="async" fetchpriority="high">
+                    </div>
+                </a>
+                <div class="post__info">
+                    <a href="${featuredCategory ? categoryPath(featuredCategory) : basePath}" class="category__button">${escapeHtml(localizeCategory(featuredCategory?.title) || 'Kategorisiz')}</a>
+                    <h2 class="post__title"><a href="${postPath(featured)}">${escapeHtml(featured.title)}</a></h2>
+                    <p class="post__body">${escapeHtml(excerpt(featured.body, 300))}</p>
+                    ${renderAuthor(featured, data.authors)}
+                </div>
+            </div>
+        </section>` : ''}
+        <section class="posts ${featured ? '' : 'section__extra-margin'}" id="posts">
+            <div class="container posts__container">${posts.map(post => renderPostCard(post, data)).join('')}</div>
+        </section>
+        ${renderCategoryButtons(data.categories)}`;
+    const newest = data.posts[0];
+    return page({
+        title: 'Blog Yazıları | Arda Altunel',
+        description: homeDescription,
+        canonical: siteBaseUrl,
+        type: 'website',
+        image: newest?.thumbnail || logoUrl,
+        pageName: 'home',
+        main,
+        structuredData: {
+            '@context': 'https://schema.org',
+            '@graph': [
+                {
+                    '@type': 'Blog',
+                    '@id': `${siteBaseUrl}#blog`,
+                    name: 'Arda Altunel Blog',
+                    url: siteBaseUrl,
+                    description: homeDescription,
+                    inLanguage: 'tr-TR',
+                    publisher: {
+                        '@type': 'Person',
+                        name: 'Arda Altunel'
+                    }
+                },
+                {
+                    '@type': 'ItemList',
+                    itemListElement: posts.map((post, index) => ({
+                        '@type': 'ListItem',
+                        position: index + 1,
+                        url: postUrl(post),
+                        name: post.title
+                    }))
+                }
+            ]
+        }
+    });
+};
+
+const renderPost = (post, index, data) => {
+    const previousPost = data.posts[index + 1] || data.posts[0];
+    const nextPost = data.posts[index - 1] || data.posts.at(-1);
+    const category = categoryFor(post, data.categories);
+    const author = authorFor(post, data.authors);
+    const authorName = `${author.firstname} ${author.lastname}`.trim();
+    const description = excerpt(post.body);
+    const canonical = postUrl(post);
+    const main = `<section class="singlepost">
+        <article class="container singlepost__container">
+            <div class="singlepost__hero">
+                <figure class="singlepost__thumbnail">
+                    <img src="${escapeHtml(post.thumbnail)}" alt="${escapeHtml(post.title)}" decoding="async" fetchpriority="high">
+                </figure>
+                <div class="singlepost__hero-shade"></div>
+                <header class="singlepost__header">
+                    <div class="singlepost__eyebrow">
+                        <a href="${category ? categoryPath(category) : basePath}" class="category__button">${escapeHtml(localizeCategory(category?.title) || 'Genel')}</a>
+                        <span>${readingTime(post.body)} dk okuma</span>
+                    </div>
+                    <h1>${escapeHtml(post.title)}</h1>
+                    ${renderAuthor(post, data.authors)}
+                </header>
+            </div>
+            <div class="singlepost__body">
+                <div id="post-content" class="article-content">${sanitizeBody(post.body)}</div>
+                <div class="singlepost__buttons">
+                    <a href="${postPath(previousPost)}" class="singlepost__previous">
+                        <div class="singlepost__button-label">ÖNCEKİ YAZI</div>
+                        <div>${escapeHtml(previousPost.title)}</div>
+                    </a>
+                    <a href="${postPath(nextPost)}" class="singlepost__next">
+                        <div class="singlepost__button-label">SONRAKİ YAZI</div>
+                        <div>${escapeHtml(nextPost.title)}</div>
+                    </a>
+                </div>
+            </div>
+        </article>
+    </section>`;
+    return page({
+        title: `${post.title} | Arda Altunel`,
+        description,
+        canonical,
+        type: 'article',
+        image: post.thumbnail,
+        published: post.date_time,
+        section: localizeCategory(category?.title),
+        pageName: 'post',
+        main,
+        article: true,
+        structuredData: {
+            '@context': 'https://schema.org',
+            '@graph': [
+                {
+                    '@type': 'BlogPosting',
+                    '@id': `${canonical}#article`,
+                    mainEntityOfPage: canonical,
+                    headline: post.title,
+                    description,
+                    image: [post.thumbnail],
+                    datePublished: post.date_time,
+                    dateModified: post.date_time,
+                    inLanguage: 'tr-TR',
+                    articleSection: localizeCategory(category?.title) || 'Genel',
+                    author: {
+                        '@type': 'Person',
+                        name: authorName
+                    },
+                    publisher: {
+                        '@type': 'Person',
+                        name: 'Arda Altunel'
+                    }
+                },
+                {
+                    '@type': 'BreadcrumbList',
+                    itemListElement: [
+                        {
+                            '@type': 'ListItem',
+                            position: 1,
+                            name: 'Blog',
+                            item: siteBaseUrl
+                        },
+                        ...(category ? [{
+                            '@type': 'ListItem',
+                            position: 2,
+                            name: localizeCategory(category.title),
+                            item: categoryUrl(category)
+                        }] : []),
+                        {
+                            '@type': 'ListItem',
+                            position: category ? 3 : 2,
+                            name: post.title,
+                            item: canonical
+                        }
+                    ]
+                }
+            ]
+        }
+    });
+};
+
+const renderCategory = (category, data) => {
+    const posts = data.posts.filter(post => post.category_id === category.id);
+    const title = `${localizeCategory(category.title)} Yazıları | Arda Altunel`;
+    const description = category.description || `${localizeCategory(category.title)} kategorisindeki blog yazıları.`;
+    const canonical = categoryUrl(category);
+    const main = `<header class="category__title"><h2>${escapeHtml(localizeCategory(category.title))}</h2></header>
+        ${posts.length ? `<section class="posts">
+            <div class="container posts__container">${posts.map(post => renderPostCard(post, data)).join('')}</div>
+        </section>` : '<div class="alert__message error lg"><p>Bu kategoride henüz yazı bulunmuyor.</p></div>'}
+        ${renderCategoryButtons(data.categories)}`;
+    return page({
+        title,
+        description,
+        canonical,
+        type: 'website',
+        image: posts[0]?.thumbnail || logoUrl,
+        pageName: 'category',
+        main,
+        structuredData: {
+            '@context': 'https://schema.org',
+            '@type': 'CollectionPage',
+            name: title,
+            description,
+            url: canonical,
+            inLanguage: 'tr-TR',
+            isPartOf: {
+                '@type': 'Blog',
+                name: 'Arda Altunel Blog',
+                url: siteBaseUrl
+            }
+        }
+    });
+};
+
+const sitemapXml = data => {
+    const newestDate = data.posts[0]?.date_time || new Date().toISOString();
+    const entries = [
+        { loc: siteBaseUrl, lastmod: newestDate, image: data.posts[0]?.thumbnail },
+        ...data.categories.map(category => {
+            const latest = data.posts.find(post => post.category_id === category.id);
+            return {
+                loc: categoryUrl(category),
+                lastmod: latest?.date_time || newestDate,
+                image: latest?.thumbnail
+            };
+        }),
+        ...data.posts.map(post => ({ loc: postUrl(post), lastmod: post.date_time, image: post.thumbnail }))
+    ];
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+${entries.map(entry => `  <url>
+    <loc>${escapeXml(entry.loc)}</loc>
+    <lastmod>${escapeXml(isoDate(entry.lastmod))}</lastmod>
+${entry.image ? `    <image:image><image:loc>${escapeXml(entry.image)}</image:loc></image:image>\n` : ''}  </url>`).join('\n')}
+</urlset>
+`;
+};
+
+const atomFeed = data => {
+    const posts = data.posts.slice(0, 20);
+    const updated = posts[0]?.date_time || new Date().toISOString();
+    return `<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="tr">
+  <title>Arda Altunel Blog</title>
+  <id>${escapeXml(siteBaseUrl)}</id>
+  <link href="${escapeXml(siteBaseUrl)}"/>
+  <link href="${escapeXml(absoluteUrl('feed.xml'))}" rel="self" type="application/atom+xml"/>
+  <updated>${escapeXml(updated)}</updated>
+  ${posts.map(post => {
+        const author = authorFor(post, data.authors);
+        return `<entry>
+    <title>${escapeXml(post.title)}</title>
+    <id>${escapeXml(postUrl(post))}</id>
+    <link href="${escapeXml(postUrl(post))}"/>
+    <updated>${escapeXml(post.date_time)}</updated>
+    <published>${escapeXml(post.date_time)}</published>
+    <author><name>${escapeXml(`${author.firstname} ${author.lastname}`.trim())}</name></author>
+    <summary type="text">${escapeXml(excerpt(post.body, 300))}</summary>
+  </entry>`;
+    }).join('\n  ')}
+</feed>
+`;
+};
+
+const robotsTxt = `User-agent: *
+Allow: ${basePath}
+Disallow: ${basePath}admin.html
+Disallow: ${basePath}add-post.html
+Disallow: ${basePath}signin.html
+Disallow: ${basePath}signup.html
+Disallow: ${basePath}yeni-blog-ekle/
+
+Sitemap: ${absoluteUrl('sitemap.xml')}
+`;
+
+const copySiteAssets = async () => {
+    await rm(output, { recursive: true, force: true });
+    await mkdir(output, { recursive: true });
+    for (const entry of [
+        '.nojekyll',
+        '404.html',
+        'add-post.html',
+        'admin.html',
+        'assets',
+        'category.html',
+        'index.html',
+        'post.html',
+        'signin.html',
+        'signup.html',
+        'yeni-blog-ekle'
+    ]) {
+        await cp(join(root, entry), join(output, entry), { recursive: true });
+    }
+};
+const writePage = async (relativePath, content) => {
+    const destination = join(output, relativePath);
+    const resolved = resolve(destination);
+    if (resolved !== output && !resolved.startsWith(`${output}${sep}`)) {
+        throw new Error(`Unsafe generated path: ${relativePath}`);
+    }
+    await mkdir(dirname(destination), { recursive: true });
+    await writeFile(destination, content, 'utf8');
+};
+
+const { data: rawData, source } = await loadData();
+const data = normalizeData(rawData);
+if (!data.posts.length) {
+    throw new Error('No verified posts were available for the SEO build.');
+}
+
+await copySiteAssets();
+await writePage('index.html', renderHome(data));
+for (const [index, post] of data.posts.entries()) {
+    await writePage(join(post.route_slug, 'index.html'), renderPost(post, index, data));
+}
+for (const category of data.categories) {
+    await writePage(join('kategori', category.route_slug, 'index.html'), renderCategory(category, data));
+}
+await writePage('sitemap.xml', sitemapXml(data));
+await writePage('feed.xml', atomFeed(data));
+await writePage('robots.txt', robotsTxt);
+
+process.stdout.write(`SEO build created ${data.posts.length} post pages and ${data.categories.length} category pages from ${source}.\n`);

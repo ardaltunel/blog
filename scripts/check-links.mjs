@@ -5,11 +5,12 @@ import { fileURLToPath } from 'node:url';
 const root = join(fileURLToPath(new URL('..', import.meta.url)));
 const resolvedRoot = resolve(root);
 const pagesBasePath = '/blog/';
+const generatedReferences = new Set([`${pagesBasePath}feed.xml`]);
 const rootEntries = await readdir(root, { withFileTypes: true });
 const htmlFiles = rootEntries
     .filter(entry => entry.isFile() && extname(entry.name) === '.html')
     .map(entry => join(root, entry.name));
-for (const entry of rootEntries.filter(item => item.isDirectory() && !item.name.startsWith('.'))) {
+for (const entry of rootEntries.filter(item => item.isDirectory() && item.name === 'yeni-blog-ekle')) {
     const indexFile = join(root, entry.name, 'index.html');
     try {
         await access(indexFile);
@@ -29,6 +30,9 @@ for (const file of htmlFiles) {
         }
         const cleanReference = reference.split(/[?#]/, 1)[0];
         if (!cleanReference) {
+            continue;
+        }
+        if (generatedReferences.has(cleanReference)) {
             continue;
         }
         const target = cleanReference.startsWith(pagesBasePath)

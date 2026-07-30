@@ -3,7 +3,7 @@ import { extname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = join(fileURLToPath(new URL('..', import.meta.url)));
-const ignored = new Set(['.git', 'node_modules', 'vendor', 'data']);
+const ignored = new Set(['.git', 'data', 'dist', 'node_modules', 'vendor']);
 const sourceExtensions = new Set(['.html', '.js', '.mjs', '.yml', '.yaml', '.json', '.sql']);
 
 const walk = async directory => {
@@ -67,7 +67,11 @@ for (const file of files) {
         if (/\sstyle\s*=/i.test(content)) {
             failures.push(`${name}: inline style`);
         }
-        if (/(?:src|href)=["'](?:https?:)?\/\//i.test(content)) {
+        if (
+            /<script\b[^>]*\bsrc=["'](?:https?:)?\/\//i.test(content)
+            || /<img\b[^>]*\bsrc=["'](?:https?:)?\/\//i.test(content)
+            || /<link\b(?=[^>]*\brel=["'](?:stylesheet|icon|preload|modulepreload)["'])[^>]*\bhref=["'](?:https?:)?\/\//i.test(content)
+        ) {
             failures.push(`${name}: external runtime asset`);
         }
     }

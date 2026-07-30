@@ -112,6 +112,7 @@
         const slug = createSlug(title) || 'yazi';
         return index > 1 ? `${slug}-${index}` : slug;
     };
+    const createCategorySlug = (title, duplicateIndex = 1) => createPostSlug(title, duplicateIndex);
 
     const getQueryParam = (name, search = global.location?.search || '') => {
         const rule = QUERY_RULES[name];
@@ -170,7 +171,26 @@
 
     const getPostSlug = (pathname = global.location?.pathname || '') => {
         const segments = normalizeString(pathname).split('/').filter(Boolean);
-        if (!segments.length || segments.at(-2) === 'yazi') {
+        if (!segments.length || ['kategori', 'yazi'].includes(segments.at(-2))) {
+            return null;
+        }
+
+        const slug = segments.at(-1);
+        if (
+            slug.length > 110
+            || !/^[a-z0-9-]+$/.test(slug)
+            || slug.startsWith('-')
+            || slug.endsWith('-')
+            || slug.includes('--')
+        ) {
+            return null;
+        }
+        return slug;
+    };
+
+    const getCategorySlug = (pathname = global.location?.pathname || '') => {
+        const segments = normalizeString(pathname).split('/').filter(Boolean);
+        if (segments.length < 2 || segments.at(-2) !== 'kategori') {
             return null;
         }
 
@@ -357,7 +377,12 @@
             if (id === null) {
                 return ROUTES.home;
             }
-            params.set('id', String(id));
+            if (!createSlug(values.title)) {
+                params.set('id', String(id));
+            } else {
+                const slug = createCategorySlug(values.title, values.duplicateIndex ?? 1);
+                return slug ? sitePath(`kategori/${slug}/`) : ROUTES.home;
+            }
         } else if (routeName === 'home' && values.page !== undefined) {
             const page = parsePositiveInteger(String(values.page), QUERY_RULES.page);
             if (page !== null && page > 1) {
@@ -606,9 +631,9 @@
         ],
         ALLOWED_ATTR: [
             'accept', 'alt', 'aria-label', 'checked', 'class', 'data-admin', 'data-id',
-            'data-label', 'data-verified', 'disabled', 'for', 'hidden', 'id', 'maxlength', 'minlength',
-            'href', 'name', 'placeholder', 'rel', 'required', 'rows', 'selected', 'src',
-            'scope', 'target', 'type', 'value'
+            'data-label', 'data-verified', 'decoding', 'disabled', 'fetchpriority', 'for', 'height',
+            'hidden', 'id', 'loading', 'maxlength', 'minlength', 'href', 'name', 'placeholder',
+            'rel', 'required', 'rows', 'selected', 'src', 'scope', 'target', 'type', 'value', 'width'
         ],
         ALLOW_DATA_ATTR: false,
         FORBID_ATTR: ['style'],
@@ -682,10 +707,12 @@
         MAX_ID,
         MAX_PAGE,
         buildRoute,
+        createCategorySlug,
         createPostSlug,
         createSlug,
         createUploadPath,
         escapeHtml,
+        getCategorySlug,
         getPostId,
         getPostSlug,
         getQueryParam,

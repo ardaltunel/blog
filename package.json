@@ -4,13 +4,14 @@
   "private": true,
   "description": "Static GitHub Pages blog with Supabase-backed content and authentication.",
   "scripts": {
-    "build": "node scripts/vendor.mjs",
+    "build": "node scripts/vendor.mjs && node scripts/build-pages.mjs",
     "lint": "eslint assets/js scripts tests",
     "test": "node --test",
     "test:security": "node scripts/security-scan.mjs",
     "test:links": "node scripts/check-links.mjs",
+    "test:seo": "node scripts/check-seo.mjs",
     "audit": "npm audit --audit-level=high",
-    "check": "npm run build && npm run lint && npm test && npm run test:security && npm run test:links && npm run audit"
+    "check": "npm run build && npm run lint && npm test && npm run test:security && npm run test:links && npm run test:seo && npm run audit"
   },
   "dependencies": {
     "@fontsource/montserrat": "5.2.8",
@@ -20,7 +21,8 @@
   },
   "devDependencies": {
     "eslint": "10.7.0",
-    "eslint-plugin-security": "4.0.1"
+    "eslint-plugin-security": "4.0.1",
+    "sanitize-html": "2.17.6"
   },
   "engines": {
     "node": ">=24.0.0"

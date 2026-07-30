@@ -15,7 +15,7 @@ test('uses the GitHub Pages project root for clean routes and local assets in br
     const window = {
         document: {
             currentScript: {
-                src: 'https://ardaltunel.github.io/blog/assets/js/security.js?v=15'
+                src: 'https://ardaltunel.github.io/blog/assets/js/security.js?v=16'
             }
         },
         location: {
@@ -43,6 +43,10 @@ test('uses the GitHub Pages project root for clean routes and local assets in br
     );
     assert.equal(window.SecurityUtils.buildRoute('home'), '/blog/');
     assert.equal(window.SecurityUtils.buildRoute('addPost'), '/blog/yeni-blog-ekle/');
+    assert.equal(
+        window.SecurityUtils.buildRoute('category', { id: 4, title: 'Yazılım' }),
+        '/blog/kategori/yazilim/'
+    );
     assert.equal(
         window.SecurityUtils.safeImageUrl('1675861781yazilim.jpg', ''),
         'https://ardaltunel.github.io/blog/assets/images/1675861781yazilim.jpg'
@@ -112,6 +116,9 @@ test('creates Turkish-safe post slugs and reads clean and legacy post paths', ()
     assert.equal(security.createPostSlug('Dijital Dönüşümde Tasarımın Rolü', 2), 'dijital-donusumde-tasarimin-rolu-2');
     assert.equal(security.getPostSlug('/blog/dijital-donusumde-tasarimin-rolu/'), 'dijital-donusumde-tasarimin-rolu');
     assert.equal(security.getPostSlug('/blog/dijital-donusumde-tasarimin-rolu-2/'), 'dijital-donusumde-tasarimin-rolu-2');
+    assert.equal(security.getPostSlug('/blog/kategori/yazilim/'), null);
+    assert.equal(security.createCategorySlug('Bilim ve Teknoloji'), 'bilim-ve-teknoloji');
+    assert.equal(security.getCategorySlug('/blog/kategori/bilim-ve-teknoloji/'), 'bilim-ve-teknoloji');
     assert.equal(
         security.getPostId('', '/blog/yazi/dijital-donusumde-tasarimin-rolu-122/'),
         122
