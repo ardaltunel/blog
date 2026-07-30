@@ -258,7 +258,7 @@ const scripts = ({ article = false } = {}) => `
 <script src="${basePath}assets/js/auth-storage.js?v=1"></script>
 <script src="${basePath}assets/js/auth.js?v=13"></script>
 ${article ? `<script src="${basePath}assets/js/content-enhancements.js?v=3"></script>` : ''}
-<script src="${basePath}assets/js/app.js?v=16"></script>
+<script src="${basePath}assets/js/app.js?v=17"></script>
 <script src="${basePath}assets/js/main.js?v=16"></script>`;
 
 const navigation = () => `<nav>
@@ -287,7 +287,7 @@ ${metadataTags({ title, description, canonical, type, image, published, section 
     <link rel="apple-touch-icon" href="${basePath}assets/favicon/apple-touch-icon.png">
     <link rel="icon" href="${basePath}assets/favicon/favicon.ico">
     <link rel="stylesheet" href="${basePath}assets/vendor/montserrat/montserrat.css">
-    <link rel="stylesheet" href="${basePath}assets/css/style.css?v=33">
+    <link rel="stylesheet" href="${basePath}assets/css/style.css?v=34">
     <script type="application/ld+json">${jsonForHtml(structuredData)}</script>
 </head>
 <body data-page="${pageName}">
@@ -334,6 +334,46 @@ const renderPostCard = (post, data) => {
                     ${renderAuthor(post, data.authors)}
                 </div>
             </article>`;
+};
+const relatedPostsFor = (post, posts) => {
+    const candidates = posts.filter(candidate => candidate.id !== post.id);
+    const sameCategory = candidates.filter(candidate => candidate.category_id === post.category_id);
+    const otherCategories = candidates.filter(candidate => candidate.category_id !== post.category_id);
+    return [...sameCategory, ...otherCategories].slice(0, 3);
+};
+const renderRelatedPosts = (relatedPosts, data) => {
+    if (!relatedPosts.length) {
+        return '';
+    }
+    return `<section class="container related-posts" aria-labelledby="related-posts-title">
+            <header class="related-posts__heading">
+                <div>
+                    <span class="related-posts__eyebrow">OKUMAYA DEVAM ET</span>
+                    <h2 id="related-posts-title">Önerilen Yazılar</h2>
+                </div>
+                <a href="${basePath}#posts" class="related-posts__all">Tüm yazılar <span aria-hidden="true">&rarr;</span></a>
+            </header>
+            <div class="related-posts__grid">
+                ${relatedPosts.map(relatedPost => {
+                    const relatedCategory = categoryFor(relatedPost, data.categories);
+                    const relatedHref = postPath(relatedPost);
+                    return `<article class="related-post">
+                        <a href="${relatedHref}" class="related-post__thumbnail">
+                            <img src="${escapeHtml(relatedPost.thumbnail)}" alt="${escapeHtml(relatedPost.title)}" loading="lazy" decoding="async">
+                            <span class="related-post__category">${escapeHtml(localizeCategory(relatedCategory?.title) || 'Kategorisiz')}</span>
+                        </a>
+                        <div class="related-post__content">
+                            <h3><a href="${relatedHref}">${escapeHtml(relatedPost.title)}</a></h3>
+                            <p>${escapeHtml(excerpt(relatedPost.body, 105))}</p>
+                            <a href="${relatedHref}" class="related-post__meta" aria-label="${escapeHtml(`${relatedPost.title} yazısını oku`)}">
+                                <span>${readingTime(relatedPost.body)} dk okuma</span>
+                                <span aria-hidden="true">&rarr;</span>
+                            </a>
+                        </div>
+                    </article>`;
+                }).join('')}
+            </div>
+        </section>`;
 };
 const renderCategoryButtons = categories => `<section class="category__buttons">
             <div class="container category__buttons-container">
@@ -405,6 +445,7 @@ const renderHome = data => {
 const renderPost = (post, index, data) => {
     const previousPost = data.posts[index + 1] || data.posts[0];
     const nextPost = data.posts[index - 1] || data.posts.at(-1);
+    const relatedPosts = relatedPostsFor(post, data.posts);
     const category = categoryFor(post, data.categories);
     const author = authorFor(post, data.authors);
     const authorName = `${author.firstname} ${author.lastname}`.trim();
@@ -440,6 +481,7 @@ const renderPost = (post, index, data) => {
                 </div>
             </div>
         </article>
+        ${renderRelatedPosts(relatedPosts, data)}
     </section>`;
     return page({
         title: `${post.title} | Arda Altunel`,
@@ -497,7 +539,17 @@ const renderPost = (post, index, data) => {
                             item: canonical
                         }
                     ]
-                }
+                },
+                ...(relatedPosts.length ? [{
+                    '@type': 'ItemList',
+                    name: 'Önerilen Yazılar',
+                    itemListElement: relatedPosts.map((relatedPost, relatedIndex) => ({
+                        '@type': 'ListItem',
+                        position: relatedIndex + 1,
+                        url: postUrl(relatedPost),
+                        name: relatedPost.title
+                    }))
+                }] : [])
             ]
         }
     });
