@@ -287,7 +287,7 @@ ${metadataTags({ title, description, canonical, type, image, published, section 
     <link rel="apple-touch-icon" href="${basePath}assets/favicon/apple-touch-icon.png">
     <link rel="icon" href="${basePath}assets/favicon/favicon.ico">
     <link rel="stylesheet" href="${basePath}assets/vendor/montserrat/montserrat.css">
-    <link rel="stylesheet" href="${basePath}assets/css/style.css?v=27">
+    <link rel="stylesheet" href="${basePath}assets/css/style.css?v=28">
     <script type="application/ld+json">${jsonForHtml(structuredData)}</script>
 </head>
 <body data-page="${pageName}">
