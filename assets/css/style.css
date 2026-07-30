@@ -724,57 +724,51 @@ nav button {
 }
 
 .category__buttons {
-    padding: 1.25rem 0 1.5rem;
-    margin-top: 1rem;
+    padding: 1.6rem 0 1.8rem;
+    margin-top: 1.5rem;
     margin-bottom: 0;
-    border: 0;
-    background: transparent;
+    border-top: 1px solid color-mix(in srgb, var(--color-border) 88%, var(--color-primary));
+    background:
+        linear-gradient(
+            180deg,
+            color-mix(in srgb, var(--color-surface-2) 38%, var(--color-surface)),
+            var(--color-surface)
+        );
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-white) 4%, transparent);
 }
 
 .category__buttons-container {
-    width: fit-content;
-    max-width: calc(100% - 2rem);
+    width: var(--container-width-lg);
+    max-width: none;
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     align-items: center;
-    gap: 0.4rem;
-    padding: 0.55rem;
-    border: 1px solid color-mix(in srgb, var(--color-border) 82%, var(--color-primary));
-    border-radius: 18px;
-    background:
-        radial-gradient(
-            circle at 100% 0,
-            color-mix(in srgb, var(--color-primary) 7%, transparent),
-            transparent 38%
-        ),
-        linear-gradient(
-            145deg,
-            color-mix(in srgb, var(--color-surface) 98%, var(--color-primary)),
-            var(--color-surface)
-        );
-    box-shadow:
-        inset 0 1px 0 color-mix(in srgb, var(--color-white) 5%, transparent),
-        0 12px 30px rgba(0, 0, 0, 0.16);
+    gap: 0.55rem;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
 }
 
 .category__buttons .category__button {
     min-height: 2.2rem;
     padding: 0.42rem 0.85rem;
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--color-primary) 9%, var(--color-surface-2));
-    border-color: color-mix(in srgb, var(--color-primary) 22%, var(--color-border));
-    color: color-mix(in srgb, var(--color-primary) 86%, var(--color-heading));
+    border-radius: 10px;
+    background: var(--color-surface-2);
+    border-color: color-mix(in srgb, var(--color-border) 82%, var(--color-primary));
+    color: var(--color-muted);
     box-shadow: none;
     transition: var(--transition);
 }
 
 .category__buttons .category__button:hover {
-    border-color: var(--color-primary);
-    background: var(--color-primary);
-    color: var(--color-white);
+    border-color: color-mix(in srgb, var(--color-primary) 48%, var(--color-border));
+    background: color-mix(in srgb, var(--color-primary) 11%, var(--color-surface-2));
+    color: var(--color-primary);
     transform: translateY(-1px);
-    box-shadow: 0 6px 16px color-mix(in srgb, var(--color-primary) 18%, transparent);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
 }
 
 .category__buttons .category__button:focus-visible {
@@ -2988,28 +2982,33 @@ body.modal-open {
     }
 
     .category__buttons-container {
-        width: fit-content;
-        max-width: var(--container-width-md);
-        gap: 0.35rem;
+        width: var(--container-width-md);
+        max-width: none;
+        gap: 0.45rem;
         justify-content: center;
-        padding: 0.5rem;
-        border-radius: 16px;
+        padding: 0;
+        border-radius: 0;
     }
 
     .category__buttons {
-        padding: 1rem 0 1.25rem;
-        margin-top: 0.5rem;
-        background: transparent;
-        border: 0;
+        padding: 1.25rem 0 1.4rem;
+        margin-top: 0.75rem;
+        background:
+            linear-gradient(
+                180deg,
+                color-mix(in srgb, var(--color-surface-2) 38%, var(--color-surface)),
+                var(--color-surface)
+            );
+        border-top: 1px solid color-mix(in srgb, var(--color-border) 88%, var(--color-primary));
     }
 
     .category__buttons .category__button {
         min-height: 2rem;
         padding: 0.38rem 0.72rem;
-        border-radius: 999px;
-        background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
+        border-radius: 9px;
+        background: var(--color-surface-2);
         border-color: color-mix(in srgb, var(--color-primary) 18%, var(--color-border));
-        color: color-mix(in srgb, var(--color-primary) 86%, var(--color-heading));
+        color: var(--color-muted);
         font-size: 0.72rem;
         box-shadow: none;
     }
