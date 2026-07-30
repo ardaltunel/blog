@@ -1,22 +1,46 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <title>404 | Arda Altunel</title>
+    <title>Yazı | Arda Altunel</title>
     <meta charset="utf-8">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; frame-src 'none'; form-action 'self'; script-src 'none'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'none'; media-src 'none'; worker-src 'none'; manifest-src 'self'; upgrade-insecure-requests">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; frame-src https://www.youtube-nocookie.com; form-action 'self'; script-src 'self'; style-src 'self'; img-src 'self' https://bdadbqlkmdwzzkrwetrf.supabase.co; font-src 'self'; connect-src 'self' https://bdadbqlkmdwzzkrwetrf.supabase.co; media-src 'none'; worker-src 'none'; manifest-src 'self'; upgrade-insecure-requests">
     <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="apple-touch-icon" href="./assets/favicon/apple-touch-icon.png">
-    <link rel="icon" href="./assets/favicon/favicon.ico">
-    <link rel="stylesheet" href="./assets/vendor/montserrat/montserrat.css">
-    <link rel="stylesheet" href="./assets/css/style.css?v=23">
+    <script src="/blog/assets/js/theme-bootstrap.js?v=8"></script>
+    <link rel="apple-touch-icon" href="/blog/assets/favicon/apple-touch-icon.png">
+    <link rel="icon" href="/blog/assets/favicon/favicon.ico">
+    <link rel="stylesheet" href="/blog/assets/vendor/montserrat/montserrat.css">
+    <link rel="stylesheet" href="/blog/assets/css/style.css?v=23">
 </head>
-<body>
-<main class="empty__page">
-    <div class="container">
-        <h2>Sayfa bulunamadı</h2>
-        <p><a class="btn" href="./index.html">Ana sayfaya dön</a></p>
+<body data-page="post">
+<nav>
+    <div class="container nav__container">
+        <a href="/blog/" class="nav__logo">ARDALTUNEL</a>
+        <ul class="nav__items"></ul>
+        <button class="theme__toggle" type="button" aria-label="Temayı değiştir">
+            <img class="ui-icon" src="/blog/assets/vendor/lucide/icons/moon.svg" alt="" aria-hidden="true">
+        </button>
+        <button id="open__nav-btn" type="button" aria-label="Menüyü aç"><img class="ui-icon" src="/blog/assets/vendor/lucide/icons/menu.svg" alt="" aria-hidden="true"></button>
+        <button id="close__nav-btn" type="button" aria-label="Menüyü kapat" hidden><img class="ui-icon" src="/blog/assets/vendor/lucide/icons/x.svg" alt="" aria-hidden="true"></button>
     </div>
+</nav>
+
+<main id="app">
+    <section class="empty__page">
+        <h3>Yükleniyor...</h3>
+    </section>
 </main>
+
+<script src="/blog/assets/vendor/dompurify/purify.min.js"></script>
+<script src="/blog/assets/js/security.js?v=15"></script>
+<script src="/blog/assets/vendor/supabase/supabase.js"></script>
+<script src="/blog/assets/js/supabase-config.js?v=8"></script>
+<script src="/blog/assets/data/blog-data.js?v=9"></script>
+<script src="/blog/assets/js/auth-storage.js?v=1"></script>
+<script src="/blog/assets/js/auth.js?v=13"></script>
+<script src="/blog/assets/js/content-enhancements.js?v=3"></script>
+<script src="/blog/assets/js/app.js?v=13"></script>
+<script src="/blog/assets/js/main.js?v=16"></script>
 </body>
 </html>

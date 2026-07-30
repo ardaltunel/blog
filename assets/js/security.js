@@ -4,7 +4,21 @@
     const MAX_ID = 999999999;
     const MAX_PAGE = 100000;
     const MAX_URL_LENGTH = 2048;
-    const DEFAULT_AVATAR = './assets/images/1663704007ardaltunel-pp.png';
+    const resolveSiteBasePath = () => {
+        try {
+            const scriptSource = global.document?.currentScript?.src;
+            if (typeof scriptSource === 'string' && scriptSource) {
+                const pathname = new URL('../../', scriptSource).pathname;
+                return pathname.endsWith('/') ? pathname : `${pathname}/`;
+            }
+        } catch {
+            // Node.js tests and non-browser consumers use relative paths.
+        }
+        return './';
+    };
+    const SITE_BASE_PATH = resolveSiteBasePath();
+    const sitePath = value => `${SITE_BASE_PATH}${String(value || '').replace(/^\/+/, '')}`;
+    const DEFAULT_AVATAR = sitePath('assets/images/1663704007ardaltunel-pp.png');
     const ADMIN_VIEWS = Object.freeze([
         'profile',
         'my-posts',
@@ -15,13 +29,13 @@
         'manage-categories'
     ]);
     const ROUTES = Object.freeze({
-        home: './index.html',
-        post: './post.html',
-        category: './category.html',
-        signin: './signin.html',
-        signup: './signup.html',
-        admin: './admin.html',
-        addPost: './add-post.html'
+        home: sitePath(''),
+        post: sitePath('post.html'),
+        category: sitePath('category.html'),
+        signin: sitePath('signin.html'),
+        signup: sitePath('signup.html'),
+        admin: sitePath('admin.html'),
+        addPost: sitePath('yeni-blog-ekle/')
     });
     const QUERY_RULES = Object.freeze({
         id: Object.freeze({ type: 'integer', min: 1, max: MAX_ID, maxDigits: 9 }),
@@ -46,6 +60,19 @@
     const currentBaseUrl = () => global.location?.href || 'https://example.invalid/';
     const currentOrigin = () => new URL(currentBaseUrl()).origin;
     const normalizeString = value => typeof value === 'string' ? value : '';
+    const createSlug = value => normalizeString(value)
+        .trim()
+        .toLocaleLowerCase('tr-TR')
+        .replace(/ı/g, 'i')
+        .replace(/ğ/g, 'g')
+        .replace(/ş/g, 's')
+        .replace(/ç/g, 'c')
+        .normalize('NFKD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 100)
+        .replace(/-+$/g, '');
     const localizeCategoryTitle = value => {
         const title = normalizeString(value).trim();
         return CATEGORY_TRANSLATIONS[title.toLocaleLowerCase('en-US')] || title;
@@ -77,6 +104,15 @@
         return parsePositiveInteger(String(value), QUERY_RULES.id);
     };
 
+    const createPostSlug = (title, duplicateIndex = 1) => {
+        const index = toSafeId(duplicateIndex);
+        if (index === null) {
+            return null;
+        }
+        const slug = createSlug(title) || 'yazi';
+        return index > 1 ? `${slug}-${index}` : slug;
+    };
+
     const getQueryParam = (name, search = global.location?.search || '') => {
         const rule = QUERY_RULES[name];
         if (!rule || FORBIDDEN_KEYS.has(name)) {
@@ -101,6 +137,56 @@
         return null;
     };
 
+    const getPostId = (
+        search = global.location?.search || '',
+        pathname = global.location?.pathname || ''
+    ) => {
+        const queryId = getQueryParam('id', search);
+        if (queryId !== null) {
+            return queryId;
+        }
+
+        const segments = normalizeString(pathname).split('/').filter(Boolean);
+        if (segments.length < 2 || segments.at(-2) !== 'yazi') {
+            return null;
+        }
+
+        const slugAndId = segments.at(-1);
+        const separatorIndex = slugAndId.lastIndexOf('-');
+        const slug = slugAndId.slice(0, separatorIndex);
+        const id = slugAndId.slice(separatorIndex + 1);
+        if (
+            separatorIndex < 1
+            || slug.length > 100
+            || !/^[a-z0-9-]+$/.test(slug)
+            || slug.startsWith('-')
+            || slug.endsWith('-')
+            || slug.includes('--')
+        ) {
+            return null;
+        }
+        return parsePositiveInteger(id, QUERY_RULES.id);
+    };
+
+    const getPostSlug = (pathname = global.location?.pathname || '') => {
+        const segments = normalizeString(pathname).split('/').filter(Boolean);
+        if (!segments.length || segments.at(-2) === 'yazi') {
+            return null;
+        }
+
+        const slug = segments.at(-1);
+        if (
+            slug.length > 110
+            || !/^[a-z0-9-]+$/.test(slug)
+            || slug.startsWith('-')
+            || slug.endsWith('-')
+            || slug.includes('--')
+        ) {
+            return null;
+        }
+        return slug;
+    };
+
     const safeContentUrl = (value, baseUrl = currentBaseUrl()) => {
         const raw = normalizeString(value).trim();
         if (!raw || raw.length > MAX_URL_LENGTH || containsControlCharacters(raw) || raw.startsWith('//') || containsTraversalEncoding(raw)) {
@@ -113,7 +199,8 @@
 
         let parsed;
         try {
-            parsed = new URL(raw, baseUrl);
+            const resolutionBase = raw.startsWith('./') ? new URL(SITE_BASE_PATH, baseUrl) : baseUrl;
+            parsed = new URL(raw, resolutionBase);
         } catch {
             return null;
         }
@@ -212,9 +299,9 @@
         if (!raw) {
             raw = fallback;
         } else if (/^[^\\/]+\.(?:png|jpe?g|webp|gif)$/i.test(raw)) {
-            raw = `./assets/images/${raw}`;
+            raw = sitePath(`assets/images/${raw}`);
         } else if (raw.startsWith('images/')) {
-            raw = `./assets/${raw}`;
+            raw = sitePath(`assets/${raw}`);
         }
 
         if (raw.length > MAX_URL_LENGTH || containsControlCharacters(raw) || raw.startsWith('//') || containsTraversalEncoding(raw)) {
@@ -223,7 +310,8 @@
 
         let parsed;
         try {
-            parsed = new URL(raw, baseUrl);
+            const resolutionBase = raw.startsWith('./') ? new URL(SITE_BASE_PATH, baseUrl) : baseUrl;
+            parsed = new URL(raw, resolutionBase);
         } catch {
             return fallback === raw ? null : safeImageUrl(fallback, fallback, baseUrl);
         }
@@ -252,7 +340,19 @@
         }
 
         const params = new URLSearchParams();
-        if (routeName === 'post' || routeName === 'category') {
+        if (routeName === 'post') {
+            const id = toSafeId(values.id);
+            if (id === null) {
+                return ROUTES.home;
+            }
+            if (!createSlug(values.title)) {
+                return `${route}?id=${id}`;
+            }
+            const slug = createPostSlug(values.title, values.duplicateIndex ?? 1);
+            return slug ? sitePath(`${slug}/`) : ROUTES.home;
+        }
+
+        if (routeName === 'category') {
             const id = toSafeId(values.id);
             if (id === null) {
                 return ROUTES.home;
@@ -582,8 +682,12 @@
         MAX_ID,
         MAX_PAGE,
         buildRoute,
+        createPostSlug,
+        createSlug,
         createUploadPath,
         escapeHtml,
+        getPostId,
+        getPostSlug,
         getQueryParam,
         getSafeSupabaseConfig,
         getStoredTheme,
@@ -601,6 +705,7 @@
         sanitizeBlogHtml,
         sanitizeUiFragment,
         setStoredTheme,
+        sitePath,
         stripHtml,
         toSafeId,
         validateEmail,

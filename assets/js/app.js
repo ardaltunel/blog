@@ -61,13 +61,31 @@
     const normalizeList = (value, limit, normalizer) => Array.isArray(value)
         ? value.slice(0, limit).map(normalizer).filter(Boolean)
         : [];
+    const assignPostRoutes = posts => {
+        const slugCounts = new Map();
+        const usedSlugs = new Set(['yeni-blog-ekle']);
+        [...posts].sort((a, b) => a.id - b.id).forEach(post => {
+            const baseSlug = security.createSlug(post.title) || 'yazi';
+            let duplicateIndex = (slugCounts.get(baseSlug) || 0) + 1;
+            let routeSlug = security.createPostSlug(post.title, duplicateIndex);
+            while (usedSlugs.has(routeSlug)) {
+                duplicateIndex += 1;
+                routeSlug = security.createPostSlug(post.title, duplicateIndex);
+            }
+            slugCounts.set(baseSlug, duplicateIndex);
+            usedSlugs.add(routeSlug);
+            post.route_slug = routeSlug;
+            post.duplicate_index = duplicateIndex;
+        });
+        return posts;
+    };
     const applyData = source => {
         const safeSource = source && typeof source === 'object' && !Array.isArray(source) ? source : {};
         state.categories = normalizeList(safeSource.categories, MAX_CATEGORIES, normalizeCategory);
         state.authors = normalizeList(safeSource.authors, MAX_AUTHORS, normalizeAuthor);
-        state.posts = normalizeList(safeSource.posts, MAX_POSTS, normalizePost)
+        state.posts = assignPostRoutes(normalizeList(safeSource.posts, MAX_POSTS, normalizePost)
             .filter(post => post.is_verified)
-            .sort((a, b) => new Date(b.date_time) - new Date(a.date_time));
+            .sort((a, b) => new Date(b.date_time) - new Date(a.date_time)));
     };
 
     const loadFromSupabase = async () => {
@@ -128,6 +146,11 @@
         const words = security.stripHtml(html).trim().split(/\s+/).filter(Boolean).length;
         return Math.max(1, Math.ceil(words / 200));
     };
+    const postRoute = post => security.buildRoute('post', {
+        id: post.id,
+        title: post.title,
+        duplicateIndex: post.duplicate_index
+    });
 
     const renderAuthor = (post) => {
         const author = authorById(post.author_id) || {};
@@ -148,7 +171,7 @@
 
     const renderPostCard = (post) => {
         const category = categoryById(post.category_id) || { title: 'Kategorisiz', id: null };
-        const postHref = security.buildRoute('post', { id: post.id });
+        const postHref = postRoute(post);
         const categoryHref = category.id ? security.buildRoute('category', { id: category.id }) : security.buildRoute('home');
         return `
             <article class="post">
@@ -205,14 +228,14 @@
             ${featured ? `
                 <section class="featured">
                     <div class="container featured__container">
-                        <a href="${security.buildRoute('post', { id: featured.id })}">
+                        <a href="${postRoute(featured)}">
                             <div class="post__thumbnail">
                                 <img src="${security.escapeHtml(featured.thumbnail)}" alt="${security.escapeHtml(featured.title)}">
                             </div>
                         </a>
                         <div class="post__info">
                             <a href="${security.buildRoute('category', { id: featured.category_id })}" class="category__button">${security.escapeHtml(categoryTitle(categoryById(featured.category_id)))}</a>
-                            <h2 class="post__title"><a href="${security.buildRoute('post', { id: featured.id })}">${security.escapeHtml(featured.title)}</a></h2>
+                            <h2 class="post__title"><a href="${postRoute(featured)}">${security.escapeHtml(featured.title)}</a></h2>
                             <p class="post__body">${security.escapeHtml(excerpt(featured.body, 300))}</p>
                             ${renderAuthor(featured)}
                         </div>
@@ -236,20 +259,35 @@
     };
 
     const renderPost = () => {
-        const id = security.getQueryParam('id');
-        const post = id ? state.posts.find(item => item.id === id) : null;
+        const id = security.getPostId();
+        const requestedSlug = security.getPostSlug();
+        const post = id
+            ? state.posts.find(item => item.id === id)
+            : state.posts.find(item => item.route_slug === requestedSlug);
         if (!post) {
             renderSafeError('Yazı bulunamadı.');
             return;
         }
 
-        const index = state.posts.findIndex(item => item.id === id);
+        const index = state.posts.findIndex(item => item.id === post.id);
         const previousPost = state.posts[index + 1] || state.posts[0];
         const nextPost = state.posts[index - 1] || state.posts[state.posts.length - 1];
         const category = categoryById(post.category_id) || { title: 'Genel', id: null };
         const categoryHref = category.id
             ? security.buildRoute('category', { id: category.id })
             : security.buildRoute('home');
+        const canonicalPath = postRoute(post);
+        const canonicalUrl = new URL(canonicalPath, window.location.href);
+        if (`${window.location.pathname}${window.location.search}` !== `${canonicalUrl.pathname}${canonicalUrl.search}`) {
+            window.history.replaceState(null, '', `${canonicalUrl.pathname}${canonicalUrl.search}${window.location.hash}`);
+        }
+        let canonicalLink = document.querySelector('link[rel="canonical"]');
+        if (!canonicalLink) {
+            canonicalLink = document.createElement('link');
+            canonicalLink.rel = 'canonical';
+            document.head.append(canonicalLink);
+        }
+        canonicalLink.href = canonicalUrl.href;
         document.title = `${post.title} | Arda Altunel`;
         security.renderUi(app, `
             <section class="singlepost">
@@ -271,11 +309,11 @@
                     <div class="singlepost__body">
                         <div id="post-content" class="article-content"></div>
                         <div class="singlepost__buttons">
-                        <a href="${security.buildRoute('post', { id: previousPost.id })}" class="singlepost__previous">
+                        <a href="${postRoute(previousPost)}" class="singlepost__previous">
                             <div class="singlepost__button-label">ÖNCEKİ YAZI</div>
                             <div>${security.escapeHtml(previousPost.title)}</div>
                         </a>
-                        <a href="${security.buildRoute('post', { id: nextPost.id })}" class="singlepost__next">
+                        <a href="${postRoute(nextPost)}" class="singlepost__next">
                             <div class="singlepost__button-label">SONRAKİ YAZI</div>
                             <div>${security.escapeHtml(nextPost.title)}</div>
                         </a>

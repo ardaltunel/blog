@@ -109,7 +109,7 @@
             );
             navItems.append(
                 createNavItem('Yönetim', security.buildRoute('admin'), 'nav__desktop-item', 'nav__desktop-entry'),
-                createNavItem('Blog yaz', security.buildRoute('addPost'), 'nav__desktop-item', 'nav__desktop-entry'),
+                createNavItem('Yaz', security.buildRoute('addPost'), 'nav__desktop-item', 'nav__desktop-entry'),
                 createNavItem('Yazı ekle', security.buildRoute('addPost'), 'nav__admin-item', 'nav__admin-entry'),
                 createAdminNavItem('Profil', 'profile'),
                 createAdminNavItem('Yazılarım', 'my-posts')
@@ -126,10 +126,10 @@
         } else {
             navItems.append(
                 createNavItem('Yönetim', security.buildRoute('admin')),
-                createNavItem('Blog yaz', security.buildRoute('addPost'))
+                createNavItem('Yaz', security.buildRoute('addPost'))
             );
         }
-        navItems.append(createNavItem('Çıkış yap', '#', 'nav__logout'));
+        navItems.append(createNavItem('Çıkış', '#', 'nav__logout'));
         navItems.querySelector('.nav__logout')?.addEventListener('click', async event => {
             event.preventDefault();
             await authClient.auth.signOut({ scope: 'local' });

@@ -1,7 +1,8 @@
 (function initializeRichEditor(global) {
     'use strict';
 
-    const ICON_BASE = './assets/vendor/lucide/icons/';
+    const ICON_BASE = global.SecurityUtils?.sitePath('assets/vendor/lucide/icons/')
+        || './assets/vendor/lucide/icons/';
     const tools = Object.freeze([
         { command: 'undo', icon: 'undo-2', label: 'Geri al', group: 'history' },
         { command: 'redo', icon: 'redo-2', label: 'Yinele', group: 'history' },

@@ -1,11 +1,23 @@
 import { access, readFile, readdir } from 'node:fs/promises';
-import { dirname, extname, join, resolve } from 'node:path';
+import { dirname, extname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = join(fileURLToPath(new URL('..', import.meta.url)));
-const htmlFiles = (await readdir(root, { withFileTypes: true }))
+const resolvedRoot = resolve(root);
+const pagesBasePath = '/blog/';
+const rootEntries = await readdir(root, { withFileTypes: true });
+const htmlFiles = rootEntries
     .filter(entry => entry.isFile() && extname(entry.name) === '.html')
     .map(entry => join(root, entry.name));
+for (const entry of rootEntries.filter(item => item.isDirectory() && !item.name.startsWith('.'))) {
+    const indexFile = join(root, entry.name, 'index.html');
+    try {
+        await access(indexFile);
+        htmlFiles.push(indexFile);
+    } catch {
+        // Only top-level directories containing an index page are public routes.
+    }
+}
 const failures = [];
 
 for (const file of htmlFiles) {
@@ -19,8 +31,10 @@ for (const file of htmlFiles) {
         if (!cleanReference) {
             continue;
         }
-        const target = resolve(dirname(file), cleanReference);
-        if (!target.startsWith(root)) {
+        const target = cleanReference.startsWith(pagesBasePath)
+            ? resolve(root, cleanReference.slice(pagesBasePath.length))
+            : resolve(dirname(file), cleanReference);
+        if (target !== resolvedRoot && !target.startsWith(`${resolvedRoot}${sep}`)) {
             failures.push(`${file}: path leaves repository: ${reference}`);
             continue;
         }

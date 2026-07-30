@@ -1,5 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const { readFileSync } = require('node:fs');
+const vm = require('node:vm');
 
 global.SUPABASE_CONFIG = {
     url: 'https://project-ref.supabase.co',
@@ -8,6 +10,44 @@ global.SUPABASE_CONFIG = {
 };
 
 const security = require('../assets/js/security.js');
+
+test('uses the GitHub Pages project root for clean routes and local assets in browsers', () => {
+    const window = {
+        document: {
+            currentScript: {
+                src: 'https://ardaltunel.github.io/blog/assets/js/security.js?v=15'
+            }
+        },
+        location: {
+            href: 'https://ardaltunel.github.io/blog/ornek-yazi/',
+            pathname: '/blog/ornek-yazi/',
+            search: ''
+        },
+        SUPABASE_CONFIG: global.SUPABASE_CONFIG
+    };
+    const context = vm.createContext({
+        URL,
+        URLSearchParams,
+        window
+    });
+    const source = readFileSync(require.resolve('../assets/js/security.js'), 'utf8');
+    vm.runInContext(source, context);
+
+    assert.equal(
+        window.SecurityUtils.buildRoute('post', { id: 1, title: 'Örnek Yazı' }),
+        '/blog/ornek-yazi/'
+    );
+    assert.equal(
+        window.SecurityUtils.buildRoute('post', { id: 2, title: 'Örnek Yazı', duplicateIndex: 2 }),
+        '/blog/ornek-yazi-2/'
+    );
+    assert.equal(window.SecurityUtils.buildRoute('home'), '/blog/');
+    assert.equal(window.SecurityUtils.buildRoute('addPost'), '/blog/yeni-blog-ekle/');
+    assert.equal(
+        window.SecurityUtils.safeImageUrl('1675861781yazilim.jpg', ''),
+        'https://ardaltunel.github.io/blog/assets/images/1675861781yazilim.jpg'
+    );
+});
 
 test('localizes built-in category titles without changing custom categories', () => {
     assert.equal(security.localizeCategoryTitle('Science & Technology'), 'Bilim ve Teknoloji');
@@ -48,11 +88,38 @@ test('validates page and dashboard view parameters by schema', () => {
 });
 
 test('builds routes only from the fixed route and parameter allowlists', () => {
-    assert.equal(security.buildRoute('post', { id: 122 }), './post.html?id=122');
-    assert.equal(security.buildRoute('post', { id: '122abc' }), './index.html');
+    assert.equal(
+        security.buildRoute('post', { id: 122, title: 'Dijital Dönüşümde Tasarımın Rolü' }),
+        './dijital-donusumde-tasarimin-rolu/'
+    );
+    assert.equal(
+        security.buildRoute('post', {
+            id: 123,
+            title: 'Dijital Dönüşümde Tasarımın Rolü',
+            duplicateIndex: 2
+        }),
+        './dijital-donusumde-tasarimin-rolu-2/'
+    );
+    assert.equal(security.buildRoute('post', { id: '122abc' }), './');
     assert.equal(security.buildRoute('admin', { view: 'manage-users' }), './admin.html?view=manage-users');
     assert.equal(security.buildRoute('admin', { view: 'https://evil.example' }), './admin.html');
-    assert.equal(security.buildRoute('https://evil.example'), './index.html');
+    assert.equal(security.buildRoute('https://evil.example'), './');
+});
+
+test('creates Turkish-safe post slugs and reads clean and legacy post paths', () => {
+    assert.equal(security.createSlug('  Çığ, ŞÖLEN ve Ürün!  '), 'cig-solen-ve-urun');
+    assert.equal(security.createPostSlug('Dijital Dönüşümde Tasarımın Rolü'), 'dijital-donusumde-tasarimin-rolu');
+    assert.equal(security.createPostSlug('Dijital Dönüşümde Tasarımın Rolü', 2), 'dijital-donusumde-tasarimin-rolu-2');
+    assert.equal(security.getPostSlug('/blog/dijital-donusumde-tasarimin-rolu/'), 'dijital-donusumde-tasarimin-rolu');
+    assert.equal(security.getPostSlug('/blog/dijital-donusumde-tasarimin-rolu-2/'), 'dijital-donusumde-tasarimin-rolu-2');
+    assert.equal(
+        security.getPostId('', '/blog/yazi/dijital-donusumde-tasarimin-rolu-122/'),
+        122
+    );
+    assert.equal(security.getPostId('?id=122', '/blog/post.html'), 122);
+    assert.equal(security.getPostId('', '/blog/yazi/gecersiz/'), null);
+    assert.equal(security.getPostId('', '/blog/yazi/yazi-0/'), null);
+    assert.equal(security.getPostId('', '/blog/yazi/yazi-9999999999/'), null);
 });
 
 test('rejects open redirect and dangerous protocol candidates', () => {

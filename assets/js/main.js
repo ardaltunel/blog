@@ -6,6 +6,26 @@
     const openNavBtn = document.querySelector('#open__nav-btn');
     const closeNavBtn = document.querySelector('#close__nav-btn');
     const themeToggles = document.querySelectorAll('.theme__toggle');
+    const navLogo = document.querySelector('.nav__logo');
+
+    if (navLogo && security) {
+        navLogo.href = security.buildRoute('home');
+    }
+
+    const canonicalRoute = document.body.dataset.route;
+    if (canonicalRoute && security) {
+        const canonicalUrl = new URL(security.buildRoute(canonicalRoute), window.location.href);
+        if (`${window.location.pathname}${window.location.search}` !== `${canonicalUrl.pathname}${canonicalUrl.search}`) {
+            window.history.replaceState(null, '', `${canonicalUrl.pathname}${canonicalUrl.search}${window.location.hash}`);
+        }
+        let canonicalLink = document.querySelector('link[rel="canonical"]');
+        if (!canonicalLink) {
+            canonicalLink = document.createElement('link');
+            canonicalLink.rel = 'canonical';
+            document.head.append(canonicalLink);
+        }
+        canonicalLink.href = canonicalUrl.href;
+    }
 
     const setTheme = (theme) => {
         const safeTheme = theme === 'light' ? 'light' : 'dark';
@@ -15,7 +35,8 @@
             const icon = button.querySelector('img');
             if (icon) {
                 const iconName = safeTheme === 'dark' ? 'sun' : 'moon';
-                icon.src = `./assets/vendor/lucide/icons/${iconName}.svg`;
+                icon.src = security?.sitePath(`assets/vendor/lucide/icons/${iconName}.svg`)
+                    || `./assets/vendor/lucide/icons/${iconName}.svg`;
             }
             button.setAttribute('aria-label', safeTheme === 'dark' ? 'Açık temaya geç' : 'Koyu temaya geç');
         });
