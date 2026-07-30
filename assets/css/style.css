@@ -497,6 +497,10 @@ nav button {
     margin-bottom: 4rem;
 }
 
+#posts {
+    scroll-margin-top: 6rem;
+}
+
 .posts__container .post {
     position: relative;
     isolation: isolate;
