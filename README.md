@@ -4,6 +4,17 @@ A modern static blog system powered by Supabase and designed to run on GitHub Pa
 
 This project provides a complete blog infrastructure with user authentication, post management, category organization, image uploads, and an administrator approval system.
 
+
+---
+
+# 📸 Preview
+
+<p align="center">
+  <img width="1891" height="900" alt="Blog application preview" src="https://github.com/user-attachments/assets/b1d228f0-c8fc-4357-8f8f-3776570adb8a" />
+</p>
+
+---
+
 ## 🌍 Features
 
 * GitHub Pages support
