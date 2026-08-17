@@ -16,7 +16,7 @@
   "dependencies": {
     "@fontsource/montserrat": "5.2.8",
     "@supabase/supabase-js": "2.110.7",
-    "dompurify": "3.4.12",
+    "dompurify": "3.4.13",
     "lucide-static": "1.25.0"
   },
   "devDependencies": {
