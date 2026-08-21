@@ -1718,14 +1718,26 @@ p a {
 }
 
 .pagination__loading {
-    min-height: calc(100vh - 4.75rem);
+    width: var(--container-width-lg);
+    min-height: 18rem;
     display: none;
     align-items: center;
     justify-content: center;
     gap: 1rem;
+    margin: 1.5rem auto 4rem;
     padding: 2rem;
+    border: 1px solid color-mix(in srgb, var(--color-border) 84%, var(--color-primary));
+    border-radius: 20px;
+    background:
+        radial-gradient(circle at 50% 0, color-mix(in srgb, var(--color-primary) 8%, transparent), transparent 52%),
+        color-mix(in srgb, var(--color-surface) 94%, transparent);
     color: var(--color-muted);
     text-align: left;
+    box-shadow: 0 14px 34px color-mix(in srgb, var(--color-bg) 28%, transparent);
+}
+
+.pagination__loading--standalone {
+    margin-top: 7rem;
 }
 
 .pagination__loading-spinner {
@@ -1752,11 +1764,21 @@ p a {
     font-size: 0.78rem;
 }
 
-html[data-pagination-pending="true"] body[data-page="home"] #app > * {
+html[data-pagination-pending="true"] body[data-page="home"] #app .posts__container,
+html[data-pagination-pending="true"] body[data-page="home"] #app > .empty__page {
     display: none;
 }
 
-html[data-pagination-pending="true"] body[data-page="home"] #app > .pagination__loading {
+html[data-pagination-pending="true"] body[data-page="home"] #app > .featured {
+    display: none;
+}
+
+html[data-pagination-pending="true"] body[data-page="home"] #posts {
+    padding-top: 5.5rem;
+}
+
+html[data-pagination-pending="true"] body[data-page="home"] #posts > .pagination__loading,
+html[data-pagination-pending="true"] body[data-page="home"] #app > .pagination__loading--standalone {
     display: flex;
 }
 
