@@ -5,6 +5,7 @@
     const MAX_CATEGORIES = 500;
     const MAX_AUTHORS = 2000;
     const MAX_POSTS = 2000;
+    const MIN_PAGINATION_LOADING_MS = 900;
     const app = document.querySelector('#app');
     const declaredPageName = document.body.dataset.page || 'home';
     const pageName = declaredPageName === 'route'
@@ -17,6 +18,7 @@
         authors: [],
         posts: []
     };
+    let paginationRevealTimer = null;
 
     const normalizeBoolean = value => value === true || value === 1;
     const normalizeDate = value => {
@@ -337,6 +339,25 @@
         `;
     };
 
+    const finishPaginationLoading = () => {
+        const root = document.documentElement;
+        if (root.dataset.paginationPending !== 'true') {
+            return;
+        }
+
+        const startedAt = Number(root.dataset.paginationStartedAt);
+        const elapsed = Number.isFinite(startedAt) ? Math.max(0, Date.now() - startedAt) : MIN_PAGINATION_LOADING_MS;
+        const remaining = Math.max(0, MIN_PAGINATION_LOADING_MS - elapsed);
+        if (paginationRevealTimer !== null) {
+            window.clearTimeout(paginationRevealTimer);
+        }
+        paginationRevealTimer = window.setTimeout(() => {
+            delete root.dataset.paginationPending;
+            delete root.dataset.paginationStartedAt;
+            paginationRevealTimer = null;
+        }, remaining);
+    };
+
     const renderHome = () => {
         const featured = state.posts.find(post => post.is_featured);
         const requestedPage = security.getQueryParam('page');
@@ -372,12 +393,16 @@
                 </section>
             ` : ''}
             <section class="posts posts--home ${featured ? '' : 'section__extra-margin'}" id="posts">
+                <div class="pagination__loading" role="status" aria-live="polite" aria-label="Yazılar yükleniyor">
+                    <span class="pagination__loading-spinner" aria-hidden="true"></span>
+                    <span class="pagination__loading-copy"><span class="pagination__loading-title">Yazılar yükleniyor...</span><small>Gönderiler hazırlanıyor</small></span>
+                </div>
                 <div class="container posts__container">${pagePosts.map(renderPostCard).join('')}</div>
                 ${renderPagination(safePage, totalPages)}
             </section>
             ${renderCategoryButtons()}
         `);
-        delete document.documentElement.dataset.paginationPending;
+        finishPaginationLoading();
     };
 
     const renderNotFound = () => {
@@ -556,6 +581,7 @@
         } catch {
             renderSafeError('İçerik yüklenemedi.');
             delete document.documentElement.dataset.paginationPending;
+            delete document.documentElement.dataset.paginationStartedAt;
         }
     };
 

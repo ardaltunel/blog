@@ -258,7 +258,7 @@ const scripts = ({ article = false } = {}) => `
 <script src="${basePath}assets/js/auth-storage.js?v=1"></script>
 <script src="${basePath}assets/js/auth.js?v=14"></script>
 ${article ? `<script src="${basePath}assets/js/content-enhancements.js?v=3"></script>` : ''}
-<script src="${basePath}assets/js/app.js?v=18"></script>
+<script src="${basePath}assets/js/app.js?v=19"></script>
 <script src="${basePath}assets/js/main.js?v=17"></script>`;
 
 const navigation = () => `<nav>
@@ -285,11 +285,11 @@ const page = ({ title, description, canonical, type, image, published, section, 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 ${siteVerification ? '    <meta name="google-site-verification" content="WhMumUYTcsUfTcXBMlek_AFSOMQFO66puERKoP0kpbE" />' : ''}
 ${metadataTags({ title, description, canonical, type, image, published, section })}
-    <script src="${basePath}assets/js/theme-bootstrap.js?v=9"></script>
+    <script src="${basePath}assets/js/theme-bootstrap.js?v=10"></script>
     <link rel="apple-touch-icon" href="${basePath}assets/favicon/apple-touch-icon.png">
     <link rel="icon" href="${basePath}assets/favicon/favicon.ico">
     <link rel="stylesheet" href="${basePath}assets/vendor/montserrat/montserrat.css">
-    <link rel="stylesheet" href="${basePath}assets/css/style.css?v=40">
+<link rel="stylesheet" href="${basePath}assets/css/style.css?v=41">
     <script type="application/ld+json">${jsonForHtml(structuredData)}</script>
 </head>
 <body data-page="${pageName}">
@@ -405,7 +405,7 @@ const renderHome = data => {
         <section class="posts ${featured ? '' : 'section__extra-margin'}" id="posts">
             <div class="pagination__loading" role="status" aria-live="polite" aria-label="Yazılar yükleniyor">
                 <span class="pagination__loading-spinner" aria-hidden="true"></span>
-                <span class="pagination__loading-copy"><strong>Yazılar yükleniyor...</strong><small>Gönderiler hazırlanıyor</small></span>
+                <span class="pagination__loading-copy"><span class="pagination__loading-title">Yazılar yükleniyor...</span><small>Gönderiler hazırlanıyor</small></span>
             </div>
             <div class="container posts__container">${posts.map(post => renderPostCard(post, data)).join('')}</div>
         </section>

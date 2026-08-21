@@ -1755,9 +1755,10 @@ p a {
     gap: 0.15rem;
 }
 
-.pagination__loading-copy strong {
+.pagination__loading-title {
     color: var(--color-heading);
     font-size: 1rem;
+    font-weight: 700;
 }
 
 .pagination__loading-copy small {
@@ -1765,6 +1766,8 @@ p a {
 }
 
 html[data-pagination-pending="true"] body[data-page="home"] #app .posts__container,
+html[data-pagination-pending="true"] body[data-page="home"] #app .pagination__container,
+html[data-pagination-pending="true"] body[data-page="home"] #app > .category__buttons,
 html[data-pagination-pending="true"] body[data-page="home"] #app > .empty__page {
     display: none;
 }
