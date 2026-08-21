@@ -32,12 +32,6 @@
         document.documentElement.dataset.theme = safeTheme;
         security?.setStoredTheme(safeTheme);
         themeToggles.forEach(button => {
-            const icon = button.querySelector('img');
-            if (icon) {
-                const iconName = safeTheme === 'dark' ? 'sun' : 'moon';
-                icon.src = security?.sitePath(`assets/vendor/lucide/icons/${iconName}.svg`)
-                    || `./assets/vendor/lucide/icons/${iconName}.svg`;
-            }
             button.setAttribute('aria-label', safeTheme === 'dark' ? 'Açık temaya geç' : 'Koyu temaya geç');
         });
     };

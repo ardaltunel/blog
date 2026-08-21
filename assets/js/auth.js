@@ -62,6 +62,15 @@
         };
     };
 
+    const getSessionUser = async () => {
+        if (!authClient) {
+            return null;
+        }
+
+        const { data, error } = await authClient.auth.getSession();
+        return error ? null : data.session?.user || null;
+    };
+
     const createNavItem = (label, href, className = '', itemClassName = '') => {
         const item = document.createElement('li');
         const link = document.createElement('a');
@@ -83,10 +92,13 @@
             return;
         }
 
+        const isDashboardPage = Boolean(document.querySelector('.dashboard'));
         let profileResult = { user: null, profile: null };
         if (authClient) {
             try {
-                profileResult = await getProfile();
+                profileResult = isDashboardPage
+                    ? await getProfile()
+                    : { user: await getSessionUser(), profile: null };
             } catch {
                 profileResult = { user: null, profile: null };
             }
@@ -98,7 +110,6 @@
             return;
         }
 
-        const isDashboardPage = Boolean(document.querySelector('.dashboard'));
         if (isDashboardPage) {
             const activeView = security.getQueryParam('view') || 'my-posts';
             const createAdminNavItem = (label, view) => createNavItem(

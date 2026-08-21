@@ -322,6 +322,22 @@ nav button {
     box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-white) 5%, transparent);
 }
 
+.theme__toggle .theme__icon--moon {
+    display: block;
+}
+
+.theme__toggle .theme__icon--sun {
+    display: none;
+}
+
+html[data-theme="dark"] .theme__toggle .theme__icon--moon {
+    display: none;
+}
+
+html[data-theme="dark"] .theme__toggle .theme__icon--sun {
+    display: block;
+}
+
 .theme__toggle:hover {
     color: var(--color-primary);
     border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-border));

@@ -256,17 +256,18 @@ const scripts = ({ article = false } = {}) => `
 <script src="${basePath}assets/js/supabase-config.js?v=8"></script>
 <script src="${basePath}assets/data/blog-data.js?v=9"></script>
 <script src="${basePath}assets/js/auth-storage.js?v=1"></script>
-<script src="${basePath}assets/js/auth.js?v=13"></script>
+<script src="${basePath}assets/js/auth.js?v=14"></script>
 ${article ? `<script src="${basePath}assets/js/content-enhancements.js?v=3"></script>` : ''}
 <script src="${basePath}assets/js/app.js?v=17"></script>
-<script src="${basePath}assets/js/main.js?v=16"></script>`;
+<script src="${basePath}assets/js/main.js?v=17"></script>`;
 
 const navigation = () => `<nav>
     <div class="container nav__container">
         <a href="${basePath}" class="nav__logo">ARDALTUNEL</a>
         <ul class="nav__items"></ul>
         <button class="theme__toggle" type="button" aria-label="Temayı değiştir">
-            <img class="ui-icon" src="${basePath}assets/vendor/lucide/icons/moon.svg" alt="" aria-hidden="true">
+            <img class="ui-icon theme__icon theme__icon--sun" src="${basePath}assets/vendor/lucide/icons/sun.svg" alt="" aria-hidden="true">
+            <img class="ui-icon theme__icon theme__icon--moon" src="${basePath}assets/vendor/lucide/icons/moon.svg" alt="" aria-hidden="true">
         </button>
         <button id="open__nav-btn" type="button" aria-label="Menüyü aç"><img class="ui-icon" src="${basePath}assets/vendor/lucide/icons/menu.svg" alt="" aria-hidden="true"></button>
         <button id="close__nav-btn" type="button" aria-label="Menüyü kapat" hidden><img class="ui-icon" src="${basePath}assets/vendor/lucide/icons/x.svg" alt="" aria-hidden="true"></button>
@@ -288,7 +289,7 @@ ${metadataTags({ title, description, canonical, type, image, published, section 
     <link rel="apple-touch-icon" href="${basePath}assets/favicon/apple-touch-icon.png">
     <link rel="icon" href="${basePath}assets/favicon/favicon.ico">
     <link rel="stylesheet" href="${basePath}assets/vendor/montserrat/montserrat.css">
-    <link rel="stylesheet" href="${basePath}assets/css/style.css?v=35">
+    <link rel="stylesheet" href="${basePath}assets/css/style.css?v=36">
     <script type="application/ld+json">${jsonForHtml(structuredData)}</script>
 </head>
 <body data-page="${pageName}">
