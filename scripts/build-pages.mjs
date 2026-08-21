@@ -254,11 +254,11 @@ const scripts = ({ article = false } = {}) => `
 <script src="${basePath}assets/js/security.js?v=16"></script>
 <script src="${basePath}assets/vendor/supabase/supabase.js"></script>
 <script src="${basePath}assets/js/supabase-config.js?v=8"></script>
-<script src="${basePath}assets/data/blog-data.js?v=9"></script>
+<script src="${basePath}assets/data/blog-data.js?v=10"></script>
 <script src="${basePath}assets/js/auth-storage.js?v=1"></script>
 <script src="${basePath}assets/js/auth.js?v=14"></script>
 ${article ? `<script src="${basePath}assets/js/content-enhancements.js?v=3"></script>` : ''}
-<script src="${basePath}assets/js/app.js?v=17"></script>
+<script src="${basePath}assets/js/app.js?v=18"></script>
 <script src="${basePath}assets/js/main.js?v=17"></script>`;
 
 const navigation = () => `<nav>
@@ -285,11 +285,11 @@ const page = ({ title, description, canonical, type, image, published, section, 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 ${siteVerification ? '    <meta name="google-site-verification" content="WhMumUYTcsUfTcXBMlek_AFSOMQFO66puERKoP0kpbE" />' : ''}
 ${metadataTags({ title, description, canonical, type, image, published, section })}
-    <script src="${basePath}assets/js/theme-bootstrap.js?v=8"></script>
+    <script src="${basePath}assets/js/theme-bootstrap.js?v=9"></script>
     <link rel="apple-touch-icon" href="${basePath}assets/favicon/apple-touch-icon.png">
     <link rel="icon" href="${basePath}assets/favicon/favicon.ico">
     <link rel="stylesheet" href="${basePath}assets/vendor/montserrat/montserrat.css">
-    <link rel="stylesheet" href="${basePath}assets/css/style.css?v=36">
+    <link rel="stylesheet" href="${basePath}assets/css/style.css?v=37">
     <script type="application/ld+json">${jsonForHtml(structuredData)}</script>
 </head>
 <body data-page="${pageName}">
@@ -689,6 +689,10 @@ if (!data.posts.length) {
 }
 
 await copySiteAssets();
+await writePage(
+    join('assets', 'data', 'blog-data.js'),
+    `window.BLOG_FALLBACK_DATA = ${jsonForHtml(data)};\n`
+);
 await writePage('index.html', renderHome(data));
 for (const [index, post] of data.posts.entries()) {
     await writePage(join(post.route_slug, 'index.html'), renderPost(post, index, data));

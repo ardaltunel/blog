@@ -11,4 +11,14 @@
         theme = 'dark';
     }
     document.documentElement.dataset.theme = theme;
+
+    try {
+        const requestedPage = window.location.search.match(/(?:^\?|&)page=([1-9]\d{0,5})(?:&|$)/)?.[1];
+        const pageNumber = Number(requestedPage);
+        if (pageNumber > 1 && pageNumber <= 100000) {
+            document.documentElement.dataset.paginationPending = 'true';
+        }
+    } catch {
+        delete document.documentElement.dataset.paginationPending;
+    }
 }());

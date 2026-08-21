@@ -377,6 +377,7 @@
             </section>
             ${renderCategoryButtons()}
         `);
+        delete document.documentElement.dataset.paginationPending;
     };
 
     const renderNotFound = () => {
@@ -524,22 +525,37 @@
         `);
     };
 
+    const renderCurrentPage = () => {
+        if (pageName === 'post') {
+            renderPost();
+        } else if (pageName === 'category') {
+            renderCategory();
+        } else {
+            renderHome();
+        }
+    };
+
     const init = async () => {
         if (!app || !security) {
             return;
         }
 
         try {
-            await loadData();
-            if (pageName === 'post') {
-                renderPost();
-            } else if (pageName === 'category') {
-                renderCategory();
-            } else {
+            let initialHomeState = null;
+            const requestedHomePage = pageName === 'home' ? security.getQueryParam('page') : null;
+            if (requestedHomePage && requestedHomePage > 1 && window.BLOG_FALLBACK_DATA) {
+                applyData(window.BLOG_FALLBACK_DATA);
+                initialHomeState = JSON.stringify(state);
                 renderHome();
+            }
+
+            await loadData();
+            if (initialHomeState === null || JSON.stringify(state) !== initialHomeState) {
+                renderCurrentPage();
             }
         } catch {
             renderSafeError('İçerik yüklenemedi.');
+            delete document.documentElement.dataset.paginationPending;
         }
     };
 

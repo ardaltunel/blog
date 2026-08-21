@@ -85,6 +85,10 @@ body {
     overflow-x: hidden;
 }
 
+html[data-pagination-pending="true"] body[data-page="home"] #app {
+    visibility: hidden;
+}
+
 body::-webkit-scrollbar {
     width: 8px;
 }
