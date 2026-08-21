@@ -289,7 +289,7 @@ ${metadataTags({ title, description, canonical, type, image, published, section 
     <link rel="apple-touch-icon" href="${basePath}assets/favicon/apple-touch-icon.png">
     <link rel="icon" href="${basePath}assets/favicon/favicon.ico">
     <link rel="stylesheet" href="${basePath}assets/vendor/montserrat/montserrat.css">
-    <link rel="stylesheet" href="${basePath}assets/css/style.css?v=37">
+    <link rel="stylesheet" href="${basePath}assets/css/style.css?v=38">
     <script type="application/ld+json">${jsonForHtml(structuredData)}</script>
 </head>
 <body data-page="${pageName}">
@@ -387,7 +387,11 @@ const renderHome = data => {
     const featured = data.posts.find(post => post.is_featured);
     const posts = data.posts.slice(0, 9);
     const featuredCategory = featured ? categoryFor(featured, data.categories) : null;
-    const main = `${featured ? `<section class="featured">
+    const main = `<section class="pagination__loading" role="status" aria-live="polite" aria-label="Yazılar yükleniyor">
+            <span class="pagination__loading-spinner" aria-hidden="true"></span>
+            <span class="pagination__loading-copy"><strong>Yazılar yükleniyor...</strong><small>Sonraki sayfa hazırlanıyor</small></span>
+        </section>
+        ${featured ? `<section class="featured">
             <div class="container featured__container">
                 <a href="${postPath(featured)}">
                     <div class="post__thumbnail">

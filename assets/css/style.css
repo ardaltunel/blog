@@ -85,10 +85,6 @@ body {
     overflow-x: hidden;
 }
 
-html[data-pagination-pending="true"] body[data-page="home"] #app {
-    visibility: hidden;
-}
-
 body::-webkit-scrollbar {
     width: 8px;
 }
@@ -1719,6 +1715,68 @@ p a {
     display: grid;
     place-content: center;
     margin: 0;
+}
+
+.pagination__loading {
+    min-height: calc(100vh - 4.75rem);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 2rem;
+    color: var(--color-muted);
+    text-align: left;
+}
+
+.pagination__loading-spinner {
+    width: 2.75rem;
+    height: 2.75rem;
+    flex: 0 0 auto;
+    border: 3px solid color-mix(in srgb, var(--color-primary) 18%, var(--color-border));
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: pagination-loading-spin 720ms linear infinite;
+}
+
+.pagination__loading-copy {
+    display: grid;
+    gap: 0.15rem;
+}
+
+.pagination__loading-copy strong {
+    color: var(--color-heading);
+    font-size: 1rem;
+}
+
+.pagination__loading-copy small {
+    font-size: 0.78rem;
+}
+
+html[data-pagination-pending="true"] body[data-page="home"] #app > * {
+    display: none;
+}
+
+html[data-pagination-pending="true"] body[data-page="home"] #app > .pagination__loading {
+    display: flex;
+}
+
+@keyframes pagination-loading-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pagination__loading-spinner {
+        animation-duration: 1.8s;
+    }
+}
+
+@media (max-width: 600px) {
+    .pagination__loading {
+        flex-direction: column;
+        text-align: center;
+    }
 }
 
 .not-found {
