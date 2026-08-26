@@ -19,6 +19,7 @@ const siteBaseUrl = siteUrl.href;
 const basePath = siteUrl.pathname;
 const siteOrigin = siteUrl.origin;
 const siteName = 'ARDALTUNEL';
+const assetVersion = '61';
 const homeDescription = 'Arda Altunel’in yazılım, teknoloji, tasarım, bilim ve yaşam üzerine blog yazıları.';
 const logoUrl = new URL('assets/logo/logo.png', siteBaseUrl).href;
 const fallbackAvatar = new URL('assets/images/no-user-photo.svg?v=2', siteBaseUrl).href;
@@ -255,15 +256,15 @@ const metadataTags = ({ title, description, canonical, type = 'website', image =
 
 const scripts = ({ article = false } = {}) => `
 <script src="${basePath}assets/vendor/dompurify/purify.min.js"></script>
-<script src="${basePath}assets/js/security.js?v=17"></script>
+<script src="${basePath}assets/js/security.js?v=${assetVersion}"></script>
 <script src="${basePath}assets/vendor/supabase/supabase.js"></script>
-<script src="${basePath}assets/js/supabase-config.js?v=8"></script>
-<script src="${basePath}assets/data/blog-data.js?v=10"></script>
-<script src="${basePath}assets/js/auth-storage.js?v=1"></script>
-<script src="${basePath}assets/js/auth.js?v=14"></script>
-${article ? `<script src="${basePath}assets/js/content-enhancements.js?v=3"></script>` : ''}
-<script src="${basePath}assets/js/app.js?v=19"></script>
-<script src="${basePath}assets/js/main.js?v=17"></script>`;
+<script src="${basePath}assets/js/supabase-config.js?v=${assetVersion}"></script>
+<script src="${basePath}assets/data/blog-data.js?v=${assetVersion}"></script>
+<script src="${basePath}assets/js/auth-storage.js?v=${assetVersion}"></script>
+<script src="${basePath}assets/js/auth.js?v=${assetVersion}"></script>
+${article ? `<script src="${basePath}assets/js/content-enhancements.js?v=${assetVersion}"></script>` : ''}
+<script src="${basePath}assets/js/app.js?v=${assetVersion}"></script>
+<script src="${basePath}assets/js/main.js?v=${assetVersion}"></script>`;
 
 const navigation = () => `<nav>
     <div class="container nav__container">
@@ -289,11 +290,11 @@ const page = ({ title, description, canonical, type, image, published, section, 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 ${siteVerification ? '    <meta name="google-site-verification" content="WhMumUYTcsUfTcXBMlek_AFSOMQFO66puERKoP0kpbE" />' : ''}
 ${metadataTags({ title, description, canonical, type, image, published, section })}
-    <script src="${basePath}assets/js/theme-bootstrap.js?v=10"></script>
+    <script src="${basePath}assets/js/theme-bootstrap.js?v=${assetVersion}"></script>
     <link rel="apple-touch-icon" href="${basePath}assets/favicon/apple-touch-icon.png">
     <link rel="icon" href="${basePath}assets/favicon/favicon.ico">
     <link rel="stylesheet" href="${basePath}assets/vendor/montserrat/montserrat.css">
-<link rel="stylesheet" href="${basePath}assets/css/style.css?v=41">
+<link rel="stylesheet" href="${basePath}assets/css/style.css?v=${assetVersion}">
     <script type="application/ld+json">${jsonForHtml(structuredData)}</script>
 </head>
 <body data-page="${pageName}">

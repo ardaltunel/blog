@@ -4,6 +4,7 @@
   "private": true,
   "description": "Static GitHub Pages blog with Supabase-backed content and authentication.",
   "scripts": {
+    "dev": "node scripts/serve.mjs",
     "build": "node scripts/vendor.mjs && node scripts/build-pages.mjs",
     "lint": "eslint assets/js scripts tests",
     "test": "node --test",

@@ -229,19 +229,20 @@ https://username.github.io/repository-name/
 
 # 💻 Local Development
 
-To start a local development server with PHP, run:
+Install the pinned dependencies and start the cache-safe development server:
 
-```powershell
-C:\xampp\php\php.exe -S 127.0.0.1:4173 -t .
+```bash
+npm ci
+npm run dev
 ```
 
 Then open the following address in your browser:
 
 ```text
-http://127.0.0.1:4173/
+http://127.0.0.1:5500/
 ```
 
-PHP is used only to start a local web server. The application itself does not require a PHP backend.
+The bundled development server disables browser caching so CSS and JavaScript changes are visible immediately.
 
 You may also use another static development server, such as:
 

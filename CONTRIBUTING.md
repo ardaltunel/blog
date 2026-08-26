@@ -96,9 +96,13 @@ Use only a development Supabase project while contributing.
 
 ### 3. Start a Local Server
 
-You can run the project with any static development server.
+Use the bundled cache-safe development server while editing CSS or JavaScript:
 
-Using Python:
+```bash
+npm run dev
+```
+
+You can also use another static development server. Using Python:
 
 ```bash
 python -m http.server 4173
@@ -116,10 +120,10 @@ Using PHP:
 php -S 127.0.0.1:4173 -t .
 ```
 
-Then open:
+For the bundled server, open:
 
 ```text
-http://127.0.0.1:4173/
+http://127.0.0.1:5500/
 ```
 
 Do not open the HTML files directly with the `file://` protocol, because browser security restrictions may prevent some features from working correctly.

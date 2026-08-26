@@ -1,0 +1,59 @@
+const assert = require('node:assert/strict');
+const { readFileSync } = require('node:fs');
+const { join } = require('node:path');
+const test = require('node:test');
+
+const ROOT = join(__dirname, '..');
+const RELEASE_VERSION = '61';
+const HTML_FILES = [
+    '404.html',
+    'add-post.html',
+    'admin.html',
+    'category.html',
+    'index.html',
+    'post.html',
+    'privacy.html',
+    'signin.html',
+    'signup.html',
+    join('yeni-blog-ekle', 'index.html')
+];
+
+test('keeps every page viewport-aware and first-party assets cache-safe', () => {
+    for (const file of HTML_FILES) {
+        const html = readFileSync(join(ROOT, file), 'utf8');
+        assert.match(html, /<meta\s+name="viewport"\s+content="width=device-width,\s*initial-scale=1\.0">/i, `${file} needs a responsive viewport`);
+
+        const assetReferences = [...html.matchAll(/(?:src|href)="[^"]*assets\/(?:css|js|data)\/[^\"]+"/g)];
+        assert.ok(assetReferences.length > 0, `${file} needs versioned first-party assets`);
+        for (const [reference] of assetReferences) {
+            assert.ok(reference.endsWith(`?v=${RELEASE_VERSION}"`), `${file} contains an unversioned or stale asset`);
+        }
+    }
+});
+
+test('keeps the critical responsive breakpoints and overflow safeguards', () => {
+    const css = readFileSync(join(ROOT, 'assets', 'css', 'style.css'), 'utf8');
+    const breakpoints = new Map([
+        ['1024px', /@media\s+screen\s+and\s+\(max-width:\s*1024px\)/],
+        ['900px', /@media\s+screen\s+and\s+\(max-width:\s*900px\)/],
+        ['640px', /@media\s+screen\s+and\s+\(max-width:\s*640px\)/],
+        ['360px', /@media\s+screen\s+and\s+\(max-width:\s*360px\)/]
+    ]);
+    for (const [width, pattern] of breakpoints) {
+        assert.match(css, pattern, `Missing ${width} breakpoint`);
+    }
+    assert.match(css, /nav\s*\{[^}]*width:\s*100%;/s);
+    assert.match(css, /\.article-content table\s*\{[^}]*overflow-x:\s*auto;/s);
+    assert.match(css, /input\[type="file"\]\s*\{[^}]*max-width:\s*100%;/s);
+});
+
+test('keeps generated pages and local clean routes on the current assets', () => {
+    const builder = readFileSync(join(ROOT, 'scripts', 'build-pages.mjs'), 'utf8');
+    const server = readFileSync(join(ROOT, 'scripts', 'serve.mjs'), 'utf8');
+
+    assert.match(builder, /const assetVersion = '61';/);
+    assert.match(builder, /style\.css\?v=\$\{assetVersion\}/);
+    assert.match(builder, /app\.js\?v=\$\{assetVersion\}/);
+    assert.match(server, /pathname\.startsWith\('\/blog\/'\)/);
+    assert.match(server, /'Cache-Control': 'no-store, max-age=0'/);
+});
