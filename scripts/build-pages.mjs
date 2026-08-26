@@ -251,7 +251,7 @@ const metadataTags = ({ title, description, canonical, type = 'website', image =
 
 const scripts = ({ article = false } = {}) => `
 <script src="${basePath}assets/vendor/dompurify/purify.min.js"></script>
-<script src="${basePath}assets/js/security.js?v=16"></script>
+<script src="${basePath}assets/js/security.js?v=17"></script>
 <script src="${basePath}assets/vendor/supabase/supabase.js"></script>
 <script src="${basePath}assets/js/supabase-config.js?v=8"></script>
 <script src="${basePath}assets/data/blog-data.js?v=10"></script>
