@@ -60,6 +60,16 @@
 
     const currentBaseUrl = () => global.location?.href || 'https://example.invalid/';
     const currentOrigin = () => new URL(currentBaseUrl()).origin;
+    const usesLocalQueryRoutes = () => {
+        try {
+            const url = new URL(currentBaseUrl());
+            return url.protocol === 'file:'
+                || ['localhost', '0.0.0.0', '[::1]'].includes(url.hostname.toLowerCase())
+                || url.hostname.startsWith('127.');
+        } catch {
+            return false;
+        }
+    };
     const normalizeString = value => typeof value === 'string' ? value : '';
     const createSlug = value => normalizeString(value)
         .trim()
@@ -398,6 +408,9 @@
             if (id === null) {
                 return ROUTES.home;
             }
+            if (usesLocalQueryRoutes()) {
+                return `${route}?id=${id}`;
+            }
             if (!createSlug(values.title)) {
                 return `${route}?id=${id}`;
             }
@@ -409,6 +422,9 @@
             const id = toSafeId(values.id);
             if (id === null) {
                 return ROUTES.home;
+            }
+            if (usesLocalQueryRoutes()) {
+                return `${route}?id=${id}`;
             }
             if (!createSlug(values.title)) {
                 params.set('id', String(id));

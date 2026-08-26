@@ -58,6 +58,38 @@ test('uses the GitHub Pages project root for clean routes and local assets in br
     );
 });
 
+test('uses dynamic post and category pages on local development servers', () => {
+    const window = {
+        document: {
+            currentScript: {
+                src: 'http://127.0.0.1:5500/assets/js/security.js?v=21'
+            }
+        },
+        location: {
+            href: 'http://127.0.0.1:5500/index.html',
+            pathname: '/index.html',
+            search: ''
+        },
+        SUPABASE_CONFIG: global.SUPABASE_CONFIG
+    };
+    const context = vm.createContext({
+        URL,
+        URLSearchParams,
+        window
+    });
+    const source = readFileSync(require.resolve('../assets/js/security.js'), 'utf8');
+    vm.runInContext(source, context);
+
+    assert.equal(
+        window.SecurityUtils.buildRoute('post', { id: 1, title: 'Dijital Dönüşümde Tasarımın Rolü' }),
+        '/post.html?id=1'
+    );
+    assert.equal(
+        window.SecurityUtils.buildRoute('category', { id: 4, title: 'Yazılım' }),
+        '/category.html?id=4'
+    );
+});
+
 test('localizes built-in category titles without changing custom categories', () => {
     assert.equal(security.localizeCategoryTitle('Science & Technology'), 'Bilim ve Teknoloji');
     assert.equal(security.localizeCategoryTitle('software'), 'Yazılım');
