@@ -3053,18 +3053,21 @@ body.modal-open {
     border-radius: 10px;
     background: linear-gradient(135deg, var(--color-primary), var(--color-primary-strong));
     box-shadow: 0 10px 24px color-mix(in srgb, var(--color-primary) 20%, transparent);
+    transition: border-color 180ms ease, box-shadow 180ms ease, filter 180ms ease;
 }
 
 .dashboard__editor button.dashboard__editor-submit::after {
     content: '→';
     font-size: 1.15rem;
     line-height: 1;
-    transition: transform var(--transition);
 }
 
-.dashboard__editor button.dashboard__editor-submit:hover::after,
-.dashboard__editor button.dashboard__editor-submit:focus-visible::after {
-    transform: translateX(4px);
+.dashboard__editor button.dashboard__editor-submit:hover,
+.dashboard__editor button.dashboard__editor-submit:focus-visible {
+    border-color: color-mix(in srgb, var(--color-primary) 75%, var(--color-white));
+    box-shadow: 0 12px 28px color-mix(in srgb, var(--color-primary) 26%, transparent);
+    filter: brightness(1.04);
+    transform: none;
 }
 
 .dashboard__editor button.dashboard__editor-submit:disabled {
