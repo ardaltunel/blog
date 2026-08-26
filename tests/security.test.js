@@ -12,7 +12,7 @@ global.SUPABASE_CONFIG = {
 const security = require('../assets/js/security.js');
 
 test('uses a neutral placeholder when an avatar is missing', () => {
-    assert.match(security.DEFAULT_AVATAR, /\/assets\/images\/no-user-photo\.svg$/);
+    assert.match(security.DEFAULT_AVATAR, /\/assets\/images\/no-user-photo\.svg\?v=2$/);
     assert.equal(security.safeImageUrl(''), security.safeImageUrl(security.DEFAULT_AVATAR));
 });
 

@@ -18,7 +18,7 @@
     };
     const SITE_BASE_PATH = resolveSiteBasePath();
     const sitePath = value => `${SITE_BASE_PATH}${String(value || '').replace(/^\/+/, '')}`;
-    const DEFAULT_AVATAR = sitePath('assets/images/no-user-photo.svg');
+    const DEFAULT_AVATAR = sitePath('assets/images/no-user-photo.svg?v=2');
     const ADMIN_VIEWS = Object.freeze([
         'profile',
         'my-posts',
@@ -327,6 +327,8 @@
             raw = fallback;
         } else if (/^[^\\/]+\.(?:png|jpe?g|webp|gif)$/i.test(raw)) {
             raw = sitePath(`assets/images/${raw}`);
+        } else if (raw === 'images/no-user-photo.svg') {
+            raw = DEFAULT_AVATAR;
         } else if (raw.startsWith('images/')) {
             raw = sitePath(`assets/${raw}`);
         }
