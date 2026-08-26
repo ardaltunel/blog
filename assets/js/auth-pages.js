@@ -980,7 +980,7 @@
                         <label for="edit-editor">Yazı içeriği</label>
                         <textarea name="body" id="edit-editor" rows="10" maxlength="200000" required>${security.escapeHtml(body)}</textarea>
                     </div>
-                    <button type="submit" class="btn">Değişiklikleri kaydet</button>
+                    <button type="submit" class="btn dashboard__editor-submit">Değişiklikleri kaydet</button>
                 </form>
             </div>
         `);
