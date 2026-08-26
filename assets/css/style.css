@@ -3014,23 +3014,90 @@ body.modal-open {
     color: var(--color-muted);
 }
 
-.dashboard__profile-editor {
+.dashboard__profile-settings {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
     width: 100%;
-    max-width: 36rem;
+}
+
+.dashboard__settings-card {
+    min-width: 0;
+    padding: 1.35rem;
+    border: 1px solid var(--color-border);
+    border-radius: 18px;
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+}
+
+.dashboard__settings-card--avatar {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 1rem;
+}
+
+.dashboard__settings-card--avatar form {
+    display: grid;
+    grid-column: 1 / -1;
+    gap: 0.75rem;
+}
+
+.dashboard__settings-card h3 {
+    margin: 0.22rem 0 0.35rem;
+    font-size: 1.15rem;
+}
+
+.dashboard__settings-card p {
+    margin: 0 0 1rem;
+    color: var(--color-muted);
+    font-size: 0.78rem;
+    line-height: 1.65;
+}
+
+.dashboard__settings-kicker {
+    color: var(--color-primary);
+    font-size: 0.65rem;
+    font-weight: 900;
+    letter-spacing: 0.09em;
+}
+
+.dashboard__settings-form {
+    display: grid;
+    gap: 0.65rem;
+}
+
+.dashboard__settings-form label {
+    margin-top: 0.25rem;
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
+.dashboard__settings-form .btn,
+.dashboard__settings-card--avatar .btn {
+    justify-self: start;
+    margin-top: 0.35rem;
 }
 
 .dashboard__profile-avatar {
     width: 7rem;
     aspect-ratio: 1;
-    margin-bottom: 1rem;
     overflow: hidden;
     border-radius: 50%;
+    border: 3px solid color-mix(in srgb, var(--color-primary) 30%, var(--color-border));
+    box-shadow: var(--shadow-sm);
 }
 
 .dashboard__profile-avatar img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+}
+
+@media screen and (max-width: 900px) {
+    .dashboard__profile-settings {
+        grid-template-columns: 1fr;
+    }
 }
 
 .dashboard__table-scroll {

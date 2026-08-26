@@ -557,16 +557,191 @@
     };
 
     const renderProfile = (container, user, profile, refresh) => {
+        const currentEmail = security.validateEmail(user.email) || '';
         security.renderUi(container, `
-            <div class="form__section-container dashboard__profile-editor">
-                <div class="dashboard__profile-avatar"><img src="${security.escapeHtml(profile.avatar)}" alt="${security.escapeHtml(profile.firstname)}"></div>
-                <form id="profile-avatar-form">
-                    <label for="profile-avatar">Profil fotoğrafı</label>
-                    <input type="file" name="avatar" id="profile-avatar" accept="image/png,image/jpeg,image/webp" required>
-                    <button type="submit" class="btn">Fotoğrafı güncelle</button>
-                </form>
+            <div class="dashboard__profile-settings">
+                <section class="dashboard__settings-card dashboard__settings-card--avatar">
+                    <div class="dashboard__profile-avatar"><img src="${security.escapeHtml(profile.avatar)}" alt="${security.escapeHtml(profile.firstname)}"></div>
+                    <div>
+                        <span class="dashboard__settings-kicker">PROFİL GÖRSELİ</span>
+                        <h3>Profil fotoğrafı</h3>
+                        <p>PNG, JPEG veya WebP biçiminde, en fazla 2 MB.</p>
+                    </div>
+                    <form id="profile-avatar-form">
+                        <input type="file" name="avatar" id="profile-avatar" accept="image/png,image/jpeg,image/webp" required>
+                        <button type="submit" class="btn">Fotoğrafı güncelle</button>
+                    </form>
+                </section>
+
+                <section class="dashboard__settings-card">
+                    <span class="dashboard__settings-kicker">KİŞİSEL BİLGİLER</span>
+                    <h3>Ad ve soyad</h3>
+                    <p>Yazılarınızda ve profilinizde gösterilecek bilgileri düzenleyin.</p>
+                    <form id="profile-details-form" class="dashboard__settings-form">
+                        <label for="profile-firstname">Ad</label>
+                        <input type="text" name="firstname" id="profile-firstname" minlength="1" maxlength="80" value="${security.escapeHtml(profile.firstname)}" required>
+                        <label for="profile-lastname">Soyad</label>
+                        <input type="text" name="lastname" id="profile-lastname" minlength="1" maxlength="80" value="${security.escapeHtml(profile.lastname)}" required>
+                        <button type="submit" class="btn">Bilgileri kaydet</button>
+                    </form>
+                </section>
+
+                <section class="dashboard__settings-card">
+                    <span class="dashboard__settings-kicker">HESAP</span>
+                    <h3>E-posta adresi</h3>
+                    <p>Değişiklik, yeni adresinize gönderilen doğrulama bağlantısından sonra tamamlanır.</p>
+                    <form id="profile-email-form" class="dashboard__settings-form">
+                        <label for="profile-email">E-posta</label>
+                        <input type="email" name="email" id="profile-email" maxlength="254" value="${security.escapeHtml(currentEmail)}" required>
+                        <button type="submit" class="btn">E-postayı güncelle</button>
+                    </form>
+                </section>
+
+                <section class="dashboard__settings-card">
+                    <span class="dashboard__settings-kicker">GÜVENLİK</span>
+                    <h3>Şifreyi değiştir</h3>
+                    <p>8–128 karakter uzunluğunda yeni bir şifre belirleyin.</p>
+                    <form id="profile-password-form" class="dashboard__settings-form">
+                        <label for="profile-password">Yeni şifre</label>
+                        <div class="password__field">
+                            <input type="password" name="password" id="profile-password" minlength="8" maxlength="128" required>
+                            <button type="button" class="password__toggle" aria-controls="profile-password" aria-pressed="false">Göster</button>
+                        </div>
+                        <label for="profile-password-confirmation">Yeni şifreyi doğrula</label>
+                        <div class="password__field">
+                            <input type="password" name="password_confirmation" id="profile-password-confirmation" minlength="8" maxlength="128" required>
+                            <button type="button" class="password__toggle" aria-controls="profile-password-confirmation" aria-pressed="false">Göster</button>
+                        </div>
+                        <button type="submit" class="btn">Şifreyi güncelle</button>
+                    </form>
+                </section>
             </div>
         `);
+
+        const detailsForm = container.querySelector('#profile-details-form');
+        detailsForm?.addEventListener('submit', async event => {
+            event.preventDefault();
+            clearMessage();
+            const form = event.currentTarget;
+            const formData = new FormData(form);
+            const firstname = readName(formData.get('firstname'));
+            const lastname = readName(formData.get('lastname'));
+            if (!firstname || !lastname) {
+                showMessage('Ad ve soyad alanları 1–80 karakter uzunluğunda olmalıdır.');
+                return;
+            }
+            if (firstname === profile.firstname && lastname === profile.lastname) {
+                showMessage('Ad ve soyad bilgilerinizde değişiklik bulunmuyor.');
+                return;
+            }
+            const button = form.querySelector('button[type="submit"]');
+            setSubmitting(button, true, 'Kaydediliyor...');
+            try {
+                const { data: updated, error } = await client.from('authors')
+                    .update({ firstname, lastname })
+                    .eq('id', profile.id)
+                    .eq('user_id', user.id)
+                    .select('id');
+                if (error || !updated?.length) {
+                    throw new Error('PROFILE_UPDATE_FAILED');
+                }
+                showMessage('Ad ve soyad bilgileriniz güncellendi.', 'success');
+                await refresh();
+            } catch {
+                showMessage('Profil bilgileriniz güncellenemedi. Lütfen tekrar deneyin.');
+            } finally {
+                setSubmitting(button, false, 'Bilgileri kaydet');
+            }
+        });
+
+        const emailForm = container.querySelector('#profile-email-form');
+        emailForm?.addEventListener('submit', async event => {
+            event.preventDefault();
+            clearMessage();
+            const form = event.currentTarget;
+            const email = security.validateEmail(new FormData(form).get('email'));
+            if (!email) {
+                showMessage('Geçerli bir e-posta adresi girin.');
+                return;
+            }
+            if (email.toLowerCase() === currentEmail.toLowerCase()) {
+                showMessage('Bu e-posta adresi zaten hesabınıza bağlı.');
+                return;
+            }
+            const button = form.querySelector('button[type="submit"]');
+            setSubmitting(button, true, 'Gönderiliyor...');
+            try {
+                const emailRedirectTo = new URL(
+                    security.buildRoute('admin', { view: 'profile' }),
+                    window.location.href
+                ).href;
+                const { error } = await client.auth.updateUser({ email }, { emailRedirectTo });
+                if (error) {
+                    const isRateLimited = error.code === 'over_email_send_rate_limit' || Number(error.status) === 429;
+                    showMessage(isRateLimited
+                        ? 'E-posta gönderme sınırına ulaşıldı. Lütfen daha sonra tekrar deneyin.'
+                        : 'E-posta adresi güncellenemedi. Adresin kullanılabilir olduğunu kontrol edin.');
+                    return;
+                }
+                showMessage('Doğrulama e-postası gönderildi. Değişikliği tamamlamak için gelen bağlantıyı onaylayın.', 'success');
+            } catch {
+                showMessage('E-posta adresi güncellenemedi. Lütfen tekrar deneyin.');
+            } finally {
+                setSubmitting(button, false, 'E-postayı güncelle');
+            }
+        });
+
+        const passwordForm = container.querySelector('#profile-password-form');
+        if (passwordForm) {
+            setupPasswordToggles(passwordForm);
+            passwordForm.addEventListener('submit', async event => {
+                event.preventDefault();
+                clearMessage();
+                const form = event.currentTarget;
+                const formData = new FormData(form);
+                const password = security.validatePassword(formData.get('password'));
+                const confirmation = security.validatePassword(formData.get('password_confirmation'));
+                if (!password || !confirmation) {
+                    showMessage('Yeni şifre 8–128 karakter uzunluğunda olmalıdır.');
+                    return;
+                }
+                if (!Object.is(password, confirmation)) {
+                    showMessage('Yeni şifreler eşleşmiyor.');
+                    return;
+                }
+                const button = form.querySelector('button[type="submit"]');
+                setSubmitting(button, true, 'Güncelleniyor...');
+                try {
+                    const { error } = await client.auth.updateUser({ password });
+                    if (error) {
+                        const needsRecentLogin = ['reauthentication_needed', 'reauthentication_not_valid']
+                            .includes(String(error.code || ''));
+                        showMessage(needsRecentLogin
+                            ? 'Güvenlik nedeniyle önce çıkış yapıp yeniden giriş yapın, ardından şifrenizi değiştirin.'
+                            : error.code === 'same_password'
+                                ? 'Yeni şifreniz mevcut şifrenizden farklı olmalıdır.'
+                                : 'Şifre güncellenemedi. Daha güçlü ve farklı bir şifre deneyin.');
+                        return;
+                    }
+                    form.reset();
+                    form.querySelectorAll('input[type="text"]').forEach(input => {
+                        if (['password', 'password_confirmation'].includes(input.name)) {
+                            input.type = 'password';
+                        }
+                    });
+                    form.querySelectorAll('.password__toggle').forEach(toggle => {
+                        toggle.textContent = 'Göster';
+                        toggle.setAttribute('aria-pressed', 'false');
+                    });
+                    showMessage('Şifreniz başarıyla güncellendi.', 'success');
+                } catch {
+                    showMessage('Şifre güncellenemedi. Lütfen tekrar deneyin.');
+                } finally {
+                    setSubmitting(button, false, 'Şifreyi güncelle');
+                }
+            });
+        }
+
         container.querySelector('#profile-avatar-form')?.addEventListener('submit', async event => {
             event.preventDefault();
             clearMessage();
