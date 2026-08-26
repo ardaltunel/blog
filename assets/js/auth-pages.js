@@ -860,7 +860,13 @@
                         ${showsAuthor ? `<td class="dashboard__post-author" data-label="Yazar">${security.escapeHtml(post.authorName)}</td>` : ''}
                         <td class="dashboard__post-action" data-label="Düzenle"><button type="button" class="btn sm edit-post" data-id="${post.id}">Düzenle</button></td>
                         ${profile.is_admin ? `
-                            <td class="dashboard__post-action" data-label="Yayın durumu"><button type="button" class="btn sm toggle-post" data-id="${post.id}" data-verified="${post.is_verified === true}">${post.is_verified === true ? 'Yayından kaldır' : 'Yayınla'}</button></td>
+                            <td class="dashboard__post-action" data-label="Yayın durumu">
+                                <label class="dashboard__publish-control">
+                                    <input type="checkbox" class="toggle-post" data-id="${post.id}" data-verified="${post.is_verified === true}" ${post.is_verified === true ? 'checked' : ''} aria-label="${post.is_verified === true ? 'Yazı yayında' : 'Yazı yayında değil'}">
+                                    <span class="dashboard__publish-check" aria-hidden="true"></span>
+                                    <span class="dashboard__publish-label">${post.is_verified === true ? 'Yayında' : 'Yayında değil'}</span>
+                                </label>
+                            </td>
                             <td class="dashboard__post-action" data-label="Sil"><button type="button" class="btn sm danger delete-post" data-id="${post.id}">Sil</button></td>
                         ` : ''}
                     </tr>
@@ -869,23 +875,36 @@
             </div>
         `);
 
-        container.querySelectorAll('.toggle-post').forEach(button => {
-            button.addEventListener('click', async () => {
-                const id = safeId(button.dataset.id);
+        container.querySelectorAll('.toggle-post').forEach(checkbox => {
+            checkbox.addEventListener('change', async () => {
+                const id = safeId(checkbox.dataset.id);
                 if (!id) {
                     return;
                 }
                 clearMessage();
-                button.disabled = true;
-                const nextValue = button.dataset.verified !== 'true';
-                const { data: updated, error: updateError } = await client.from('posts')
-                    .update({ is_verified: nextValue }).eq('id', id).select('id');
-                if (updateError || !updated?.length) {
+                const previousValue = checkbox.dataset.verified === 'true';
+                const nextValue = checkbox.checked === true;
+                const statusLabel = checkbox.closest('.dashboard__publish-control')
+                    ?.querySelector('.dashboard__publish-label');
+                checkbox.disabled = true;
+                try {
+                    const { data: updated, error: updateError } = await client.from('posts')
+                        .update({ is_verified: nextValue }).eq('id', id).select('id');
+                    if (updateError || !updated?.length) {
+                        throw new Error('POST_STATUS_UPDATE_FAILED');
+                    }
+                    checkbox.dataset.verified = String(nextValue);
+                    checkbox.setAttribute('aria-label', nextValue ? 'Yazı yayında' : 'Yazı yayında değil');
+                    if (statusLabel) {
+                        statusLabel.textContent = nextValue ? 'Yayında' : 'Yayında değil';
+                    }
+                    showMessage(nextValue ? 'Yazı yayına alındı.' : 'Yazı yayından kaldırıldı.', 'success');
+                } catch {
+                    checkbox.checked = previousValue;
                     showMessage('Yazının yayın durumu güncellenemedi.');
-                    button.disabled = false;
-                    return;
+                } finally {
+                    checkbox.disabled = false;
                 }
-                await refresh();
             });
         });
         container.querySelectorAll('.delete-post').forEach(button => {

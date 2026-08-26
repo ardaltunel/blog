@@ -3216,8 +3216,80 @@ body.modal-open {
     background: color-mix(in srgb, var(--color-primary-light) 72%, var(--color-surface-2));
 }
 
-.dashboard__table .toggle-post {
-    min-width: 6.9rem;
+.dashboard__publish-control {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-width: 7.3rem;
+    color: var(--color-muted);
+    font-size: 0.7rem;
+    font-weight: 800;
+    cursor: pointer;
+    user-select: none;
+}
+
+.dashboard__publish-control .toggle-post {
+    position: absolute;
+    width: 1px;
+    min-width: 1px !important;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+.dashboard__publish-check {
+    display: grid;
+    width: 1.55rem;
+    height: 1.55rem;
+    flex: 0 0 auto;
+    place-items: center;
+    border: 1px solid color-mix(in srgb, var(--color-muted) 45%, var(--color-border));
+    border-radius: 7px;
+    background: var(--color-bg);
+    transition: var(--transition);
+}
+
+.dashboard__publish-check::after {
+    content: '✓';
+    color: var(--color-white);
+    font-size: 0.9rem;
+    font-weight: 900;
+    opacity: 0;
+    transform: scale(0.55);
+    transition: var(--transition);
+}
+
+.dashboard__publish-control .toggle-post:checked + .dashboard__publish-check {
+    border-color: var(--color-primary);
+    background: var(--color-primary);
+    box-shadow: 0 6px 14px color-mix(in srgb, var(--color-primary) 24%, transparent);
+}
+
+.dashboard__publish-control .toggle-post:checked + .dashboard__publish-check::after {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.dashboard__publish-control .toggle-post:focus-visible + .dashboard__publish-check {
+    outline: 3px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
+    outline-offset: 2px;
+}
+
+.dashboard__publish-control .toggle-post:disabled ~ * {
+    opacity: 0.55;
+    cursor: wait;
+}
+
+.dashboard__publish-control:has(.toggle-post:disabled) {
+    cursor: wait;
+}
+
+.dashboard__publish-control:has(.toggle-post:checked) .dashboard__publish-label {
+    color: var(--color-primary);
 }
 
 .dashboard__table .btn.danger {
@@ -3631,7 +3703,8 @@ body.modal-open {
         white-space: normal;
     }
 
-    .dashboard main .dashboard__table--posts .toggle-post {
+    .dashboard main .dashboard__table--posts .dashboard__publish-control {
+        width: 100%;
         min-width: 0;
     }
 }
