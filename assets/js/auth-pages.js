@@ -1084,8 +1084,7 @@
     };
 
     const renderManageUsers = async (container, currentProfile, refresh) => {
-        const { data, error } = await client.from('authors')
-            .select('id,firstname,lastname,avatar,is_admin,user_id').order('id', { ascending: false }).limit(2000);
+        const { data, error } = await client.rpc('list_admin_users');
         if (error || !Array.isArray(data)) {
             showMessage('Kullanıcı profilleri yüklenemedi.');
             return;
@@ -1094,13 +1093,15 @@
             const id = safeId(user.id);
             const firstname = readName(user.firstname);
             const lastname = security.validateText(user.lastname || '', { max: 80 });
-            if (!id || !firstname || lastname === null || !security.validateUuid(user.user_id)) {
+            const email = security.validateEmail(user.email);
+            if (!id || !firstname || lastname === null || !email || !security.validateUuid(user.user_id)) {
                 return null;
             }
             return {
                 id,
                 userId: user.user_id,
                 name: `${firstname} ${lastname}`.trim(),
+                email,
                 avatar: security.safeImageUrl(user.avatar),
                 isAdmin: user.is_admin === true,
                 isCurrent: id === currentProfile.id
@@ -1109,12 +1110,12 @@
         security.renderUi(container, `
             <div class="dashboard__table-scroll">
             <table class="dashboard__table dashboard__table--users">
-                <thead><tr><th scope="col">Fotoğraf</th><th scope="col">Ad soyad</th><th scope="col">Yönetici</th><th scope="col">Yetki</th><th scope="col">Profili sil</th></tr></thead>
+                <thead><tr><th scope="col">Fotoğraf</th><th scope="col">Ad soyad</th><th scope="col">E-posta</th><th scope="col">Yetki</th><th scope="col">Profili sil</th></tr></thead>
                 <tbody>${users.map(user => `
                     <tr>
                         <td data-label="Fotoğraf"><div class="post__author-avatar"><img src="${security.escapeHtml(user.avatar)}" alt="${security.escapeHtml(user.name)}"></div></td>
                         <td data-label="Ad soyad">${security.escapeHtml(user.name)}</td>
-                        <td data-label="Yönetici">${user.isAdmin ? 'Evet' : 'Hayır'}</td>
+                        <td data-label="E-posta">${security.escapeHtml(user.email)}</td>
                         <td data-label="Yetki"><button type="button" class="btn sm toggle-admin" data-id="${user.id}" data-admin="${user.isAdmin}" ${user.isCurrent ? 'disabled' : ''}>${user.isCurrent ? 'Mevcut yönetici' : user.isAdmin ? 'Yetkiyi kaldır' : 'Yönetici yap'}</button></td>
                         <td data-label="Profili sil"><button type="button" class="btn sm danger delete-author" data-id="${user.id}" ${user.isCurrent ? 'disabled' : ''}>Sil</button></td>
                     </tr>

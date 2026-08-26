@@ -2938,6 +2938,10 @@ select:focus {
     margin-bottom: 0;
 }
 
+.dashboard[data-view="manage-users"] .dashboard__new-post {
+    margin-bottom: 0.75rem;
+}
+
 .dashboard__eyebrow {
     display: block;
     margin-bottom: 0.3rem;
