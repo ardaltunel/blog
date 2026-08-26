@@ -4,7 +4,7 @@ const { join } = require('node:path');
 const test = require('node:test');
 
 const ROOT = join(__dirname, '..');
-const RELEASE_VERSION = '61';
+const RELEASE_VERSION = '62';
 const HTML_FILES = [
     '404.html',
     'add-post.html',
@@ -51,9 +51,20 @@ test('keeps generated pages and local clean routes on the current assets', () =>
     const builder = readFileSync(join(ROOT, 'scripts', 'build-pages.mjs'), 'utf8');
     const server = readFileSync(join(ROOT, 'scripts', 'serve.mjs'), 'utf8');
 
-    assert.match(builder, /const assetVersion = '61';/);
+    assert.match(builder, /const assetVersion = '62';/);
     assert.match(builder, /style\.css\?v=\$\{assetVersion\}/);
     assert.match(builder, /app\.js\?v=\$\{assetVersion\}/);
     assert.match(server, /pathname\.startsWith\('\/blog\/'\)/);
     assert.match(server, /'Cache-Control': 'no-store, max-age=0'/);
+});
+
+test('preserves and normalizes the home pagination query', () => {
+    const main = readFileSync(join(ROOT, 'assets', 'js', 'main.js'), 'utf8');
+    const app = readFileSync(join(ROOT, 'assets', 'js', 'app.js'), 'utf8');
+
+    assert.match(main, /canonicalRoute === 'home' \? security\.getQueryParam\('page'\) : null/);
+    assert.match(main, /security\.buildRoute\(canonicalRoute, canonicalValues\)/);
+    assert.match(app, /security\.buildRoute\('home', safePage > 1 \? \{ page: safePage \} : \{\}\)/);
+    assert.match(app, /window\.history\.replaceState\(null, '', `\$\{homeUrl\.pathname\}\$\{homeUrl\.search\}/);
+    assert.match(app, /document\.querySelector\('#posts'\)\?\.scrollIntoView\(\{ block: 'start' \}\)/);
 });

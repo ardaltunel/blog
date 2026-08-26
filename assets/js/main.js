@@ -14,7 +14,9 @@
 
     const canonicalRoute = document.body.dataset.route;
     if (canonicalRoute && security) {
-        const canonicalUrl = new URL(security.buildRoute(canonicalRoute), window.location.href);
+        const requestedPage = canonicalRoute === 'home' ? security.getQueryParam('page') : null;
+        const canonicalValues = requestedPage ? { page: requestedPage } : {};
+        const canonicalUrl = new URL(security.buildRoute(canonicalRoute, canonicalValues), window.location.href);
         if (`${window.location.pathname}${window.location.search}` !== `${canonicalUrl.pathname}${canonicalUrl.search}`) {
             window.history.replaceState(null, '', `${canonicalUrl.pathname}${canonicalUrl.search}${window.location.hash}`);
         }

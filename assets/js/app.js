@@ -366,6 +366,9 @@
         const safePage = Math.min(currentPage, totalPages);
         const pagePosts = state.posts.slice((safePage - 1) * POSTS_PER_PAGE, safePage * POSTS_PER_PAGE);
         const homeUrl = new URL(security.buildRoute('home', safePage > 1 ? { page: safePage } : {}), window.location.href);
+        if (`${window.location.pathname}${window.location.search}` !== `${homeUrl.pathname}${homeUrl.search}`) {
+            window.history.replaceState(null, '', `${homeUrl.pathname}${homeUrl.search}${window.location.hash}`);
+        }
         const homeTitle = safePage > 1 ? `Blog Yazıları – Sayfa ${safePage} | Arda Altunel` : 'Blog Yazıları | Arda Altunel';
         updatePageMetadata({
             title: homeTitle,
@@ -403,6 +406,11 @@
             ${renderCategoryButtons()}
         `);
         finishPaginationLoading();
+        if (window.location.hash === '#posts') {
+            window.requestAnimationFrame(() => {
+                document.querySelector('#posts')?.scrollIntoView({ block: 'start' });
+            });
+        }
     };
 
     const renderNotFound = () => {
