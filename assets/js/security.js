@@ -18,7 +18,7 @@
     };
     const SITE_BASE_PATH = resolveSiteBasePath();
     const sitePath = value => `${SITE_BASE_PATH}${String(value || '').replace(/^\/+/, '')}`;
-    const DEFAULT_AVATAR = sitePath('assets/images/1663704007ardaltunel-pp.png');
+    const DEFAULT_AVATAR = sitePath('assets/images/no-user-photo.svg');
     const ADMIN_VIEWS = Object.freeze([
         'profile',
         'my-posts',

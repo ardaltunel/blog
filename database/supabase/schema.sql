@@ -200,7 +200,7 @@ begin
     );
 
     insert into public.authors (user_id, firstname, lastname, avatar, is_admin)
-    values (new.id, safe_firstname, safe_lastname, '1663704007ardaltunel-pp.png', false)
+    values (new.id, safe_firstname, safe_lastname, 'images/no-user-photo.svg', false)
     on conflict (user_id) do nothing;
     return new;
 end;

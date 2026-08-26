@@ -60,6 +60,7 @@
         const storedAvatar = security.safeImageUrl(rawAvatar, '');
         const usesDefaultAvatar = !storedAvatar
             || rawAvatar === '1663704007ardaltunel-pp.png'
+            || rawAvatar === 'images/no-user-photo.svg'
             || storedAvatar === security.safeImageUrl(security.DEFAULT_AVATAR, '');
         let avatar = security.safeImageUrl(data.avatar);
 

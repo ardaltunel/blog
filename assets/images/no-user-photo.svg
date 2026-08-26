@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title description">
+  <title id="title">Kullanıcı fotoğrafı yok</title>
+  <desc id="description">Nötr kullanıcı silüeti</desc>
+  <defs>
+    <linearGradient id="background" x1="32" y1="20" x2="224" y2="236" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1f3243"/>
+      <stop offset="1" stop-color="#101a25"/>
+    </linearGradient>
+    <linearGradient id="silhouette" x1="128" y1="50" x2="128" y2="202" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#b9c8d5"/>
+      <stop offset="1" stop-color="#71879a"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="248" height="248" rx="124" fill="url(#background)"/>
+  <circle cx="128" cy="92" r="42" fill="url(#silhouette)"/>
+  <path d="M50 202c7-49 36-74 78-74s71 25 78 74H50Z" fill="url(#silhouette)"/>
+  <path d="M70 207h116" stroke="#08b7c6" stroke-width="5" stroke-linecap="round" opacity=".88"/>
+  <text x="128" y="229" fill="#d8e6ef" font-family="Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="2" text-anchor="middle">NO PHOTO</text>
+  <circle cx="128" cy="128" r="123" fill="none" stroke="#2b5266" stroke-width="6"/>
+</svg>

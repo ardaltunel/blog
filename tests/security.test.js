@@ -11,6 +11,11 @@ global.SUPABASE_CONFIG = {
 
 const security = require('../assets/js/security.js');
 
+test('uses a neutral placeholder when an avatar is missing', () => {
+    assert.match(security.DEFAULT_AVATAR, /\/assets\/images\/no-user-photo\.svg$/);
+    assert.equal(security.safeImageUrl(''), security.safeImageUrl(security.DEFAULT_AVATAR));
+});
+
 test('uses the GitHub Pages project root for clean routes and local assets in browsers', () => {
     const window = {
         document: {
