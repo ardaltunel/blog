@@ -148,9 +148,12 @@ test('keeps the dashboard and privileged links hidden until authorization resolv
 
 test('keeps the Google avatar action visible in the profile photo card', () => {
     const authPagesSource = readFileSync(require.resolve('../assets/js/auth-pages.js'), 'utf8');
+    const stylesheetSource = readFileSync(require.resolve('../assets/css/style.css'), 'utf8');
     assert.match(authPagesSource, /id="use-google-avatar"/);
     assert.doesNotMatch(authPagesSource, /const googleAvatarAction = googleAvatar \?/);
     assert.match(authPagesSource, /auth\.signInWithOAuth\(\{[\s\S]*?provider: 'google'/);
+    assert.match(stylesheetSource, /\.dashboard__google-avatar-button\s*\{[\s\S]*?height:\s*2\.45rem;[\s\S]*?padding:\s*0 1rem;/);
+    assert.match(stylesheetSource, /\.dashboard__settings-card--avatar \.dashboard__avatar-actions \.btn\s*\{\s*margin-top:\s*0;/);
 });
 
 test('shows a clear empty state when the current user has no posts', () => {

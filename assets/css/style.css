@@ -3137,8 +3137,10 @@ body.modal-open {
 
 .dashboard__google-avatar-button {
     width: fit-content;
+    height: 2.45rem;
     min-height: 2.45rem;
-    padding: 0.65rem 1rem;
+    padding: 0 1rem;
+    line-height: 1;
 }
 
 .dashboard__google-avatar-button:disabled {
@@ -3189,6 +3191,10 @@ body.modal-open {
 .dashboard__settings-card--avatar .btn {
     justify-self: start;
     margin-top: 0.35rem;
+}
+
+.dashboard__settings-card--avatar .dashboard__avatar-actions .btn {
+    margin-top: 0;
 }
 
 .dashboard__profile-avatar {
