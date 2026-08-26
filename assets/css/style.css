@@ -3149,6 +3149,12 @@ body.modal-open {
     cursor: wait;
 }
 
+.dashboard__google-avatar-note {
+    color: var(--color-muted);
+    font-size: 0.72rem;
+    line-height: 1.5;
+}
+
 .dashboard__settings-card h3 {
     margin: 0.22rem 0 0.35rem;
     font-size: 1.15rem;
@@ -3251,6 +3257,29 @@ body.modal-open {
 
 .dashboard main table tbody tr:last-child td {
     border-bottom: 0;
+}
+
+.dashboard__empty-posts {
+    display: grid;
+    min-height: 8.5rem;
+    place-content: center;
+    justify-items: center;
+    gap: 0.45rem;
+    padding: 1.75rem 1rem;
+    text-align: center;
+}
+
+.dashboard__empty-posts span {
+    color: var(--color-heading);
+    font-size: 0.95rem;
+    font-weight: 800;
+}
+
+.dashboard__empty-posts small {
+    max-width: 30rem;
+    color: var(--color-muted);
+    font-size: 0.75rem;
+    line-height: 1.55;
 }
 
 .dashboard__table--posts th:nth-last-child(-n + 3),
@@ -3614,6 +3643,15 @@ body.modal-open {
         border-radius: 0;
         background: transparent;
         box-shadow: none;
+    }
+
+    .dashboard__empty-posts {
+        min-height: 8rem;
+        padding: 1.5rem 1rem;
+        border: 1px solid var(--color-border);
+        border-radius: 16px;
+        background: var(--color-surface);
+        box-shadow: var(--shadow-sm);
     }
 
     .dashboard main .dashboard__table {

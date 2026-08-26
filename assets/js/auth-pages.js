@@ -601,12 +601,15 @@
         const usesGoogleAvatar = Boolean(
             googleAvatar && googleAvatar === security.safeImageUrl(profile.avatar, '')
         );
-        const googleAvatarAction = googleAvatar ? `
+        const googleAvatarAction = `
             <button type="button" class="oauth__button dashboard__google-avatar-button" id="use-google-avatar" ${usesGoogleAvatar ? 'disabled' : ''}>
                 <img src="./assets/vendor/google/google-g.svg" alt="" aria-hidden="true">
                 <span>${usesGoogleAvatar ? 'Google fotoğrafı kullanılıyor' : 'Google fotoğrafımı kullan'}</span>
             </button>
-        ` : '';
+        `;
+        const googleAvatarHelp = googleAvatar ? '' : `
+            <small class="dashboard__google-avatar-note">Devam ederken bu hesabın e-posta adresiyle aynı Google hesabını seçin.</small>
+        `;
         security.renderUi(container, `
             <div class="dashboard__profile-settings">
                 <section class="dashboard__settings-card">
@@ -665,6 +668,7 @@
                             <button type="submit" class="btn">Fotoğrafı güncelle</button>
                             ${googleAvatarAction}
                         </div>
+                        ${googleAvatarHelp}
                     </form>
                 </section>
             </div>
@@ -801,9 +805,23 @@
             button.disabled = true;
             button.setAttribute('aria-busy', 'true');
             if (label) {
-                label.textContent = 'Uygulanıyor...';
+                label.textContent = googleAvatar ? 'Uygulanıyor...' : 'Google hesabına yönlendiriliyor...';
             }
             try {
+                if (!googleAvatar) {
+                    const redirectTo = new URL(
+                        security.buildRoute('admin', { view: 'profile' }),
+                        window.location.href
+                    ).href;
+                    const { error } = await client.auth.signInWithOAuth({
+                        provider: 'google',
+                        options: { redirectTo }
+                    });
+                    if (error) {
+                        throw new Error('GOOGLE_OAUTH_FAILED');
+                    }
+                    return;
+                }
                 const { data: updated, error } = await client.from('authors')
                     .update({ avatar: googleAvatar })
                     .eq('id', profile.id)
@@ -821,7 +839,9 @@
                 if (label) {
                     label.textContent = 'Google fotoğrafımı kullan';
                 }
-                showMessage('Google profil fotoğrafı uygulanamadı. Lütfen tekrar deneyin.');
+                showMessage(googleAvatar
+                    ? 'Google profil fotoğrafı uygulanamadı. Lütfen tekrar deneyin.'
+                    : 'Google hesabına bağlanılamadı. Lütfen tekrar deneyin.');
             }
         });
 
@@ -892,6 +912,12 @@
         }).filter(Boolean);
         const isAdminTable = profile.is_admin === true;
         const showsAuthor = isAdminTable && view === 'all-posts';
+        const emptyPostsState = posts.length === 0 ? `
+            <div class="dashboard__empty-posts">
+                <span>${view === 'all-posts' ? 'Henüz bir yazı bulunmuyor.' : 'Henüz bir yazı yazmadınız.'}</span>
+                <small>İlk yazıyı oluşturmak için “Yeni blog yazısı” butonunu kullanabilirsiniz.</small>
+            </div>
+        ` : '';
         security.renderUi(container, `
             <div class="dashboard__table-scroll">
             <table class="dashboard__table dashboard__table--posts${isAdminTable ? ' dashboard__table--admin-posts' : ''}${showsAuthor ? ' dashboard__table--with-author' : ''}">
@@ -918,6 +944,7 @@
                     </tr>
                 `).join('')}</tbody>
             </table>
+            ${emptyPostsState}
             </div>
         `);
 

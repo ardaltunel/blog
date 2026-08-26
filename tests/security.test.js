@@ -146,6 +146,20 @@ test('keeps the dashboard and privileged links hidden until authorization resolv
     privilegedLinks.forEach(link => assert.match(link, /\bhidden\b/));
 });
 
+test('keeps the Google avatar action visible in the profile photo card', () => {
+    const authPagesSource = readFileSync(require.resolve('../assets/js/auth-pages.js'), 'utf8');
+    assert.match(authPagesSource, /id="use-google-avatar"/);
+    assert.doesNotMatch(authPagesSource, /const googleAvatarAction = googleAvatar \?/);
+    assert.match(authPagesSource, /auth\.signInWithOAuth\(\{[\s\S]*?provider: 'google'/);
+});
+
+test('shows a clear empty state when the current user has no posts', () => {
+    const authPagesSource = readFileSync(require.resolve('../assets/js/auth-pages.js'), 'utf8');
+    assert.match(authPagesSource, /posts\.length === 0/);
+    assert.match(authPagesSource, /Henüz bir yazı yazmadınız\./);
+    assert.match(authPagesSource, /dashboard__empty-posts/);
+});
+
 test('builds routes only from the fixed route and parameter allowlists', () => {
     assert.equal(
         security.buildRoute('post', { id: 122, title: 'Dijital Dönüşümde Tasarımın Rolü' }),
