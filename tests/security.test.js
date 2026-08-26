@@ -152,7 +152,7 @@ test('keeps the Google avatar action visible in the profile photo card', () => {
     assert.match(authPagesSource, /id="use-google-avatar"/);
     assert.doesNotMatch(authPagesSource, /const googleAvatarAction = googleAvatar \?/);
     assert.match(authPagesSource, /auth\.signInWithOAuth\(\{[\s\S]*?provider: 'google'/);
-    assert.match(stylesheetSource, /\.dashboard__google-avatar-button\s*\{[\s\S]*?height:\s*2\.45rem;[\s\S]*?padding:\s*0 1rem;/);
+    assert.match(stylesheetSource, /\.dashboard__settings-card--avatar \.dashboard__avatar-actions > button\s*\{[\s\S]*?height:\s*2\.5rem;[\s\S]*?max-height:\s*2\.5rem;/);
     assert.match(stylesheetSource, /\.dashboard__settings-card--avatar \.dashboard__avatar-actions \.btn\s*\{\s*margin-top:\s*0;/);
 });
 
