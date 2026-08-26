@@ -669,6 +669,7 @@ const copySiteAssets = async () => {
         'category.html',
         'index.html',
         'post.html',
+        'privacy.html',
         'signin.html',
         'signup.html',
         'yeni-blog-ekle'

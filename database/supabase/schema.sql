@@ -161,18 +161,41 @@ security definer
 set search_path = ''
 as $$
 declare
+    provider_fullname text;
     safe_firstname text;
     safe_lastname text;
 begin
+    provider_fullname := regexp_replace(
+        coalesce(
+            nullif(btrim(new.raw_user_meta_data->>'full_name'), ''),
+            nullif(btrim(new.raw_user_meta_data->>'name'), ''),
+            ''
+        ),
+        '[[:cntrl:]]', '', 'g'
+    );
     safe_firstname := left(
         regexp_replace(
-            coalesce(nullif(btrim(new.raw_user_meta_data->>'firstname'), ''), nullif(split_part(new.email, '@', 1), ''), 'User'),
+            coalesce(
+                nullif(btrim(new.raw_user_meta_data->>'firstname'), ''),
+                nullif(btrim(new.raw_user_meta_data->>'given_name'), ''),
+                nullif(split_part(provider_fullname, ' ', 1), ''),
+                nullif(split_part(new.email, '@', 1), ''),
+                'User'
+            ),
             '[[:cntrl:]]', '', 'g'
         ),
         80
     );
     safe_lastname := left(
-        regexp_replace(coalesce(new.raw_user_meta_data->>'lastname', ''), '[[:cntrl:]]', '', 'g'),
+        regexp_replace(
+            coalesce(
+                nullif(btrim(new.raw_user_meta_data->>'lastname'), ''),
+                nullif(btrim(new.raw_user_meta_data->>'family_name'), ''),
+                nullif(btrim(substr(provider_fullname, length(split_part(provider_fullname, ' ', 1)) + 1)), ''),
+                ''
+            ),
+            '[[:cntrl:]]', '', 'g'
+        ),
         80
     );
 

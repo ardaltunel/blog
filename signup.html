@@ -11,7 +11,7 @@
     <link rel="apple-touch-icon" href="./assets/favicon/apple-touch-icon.png">
     <link rel="icon" href="./assets/favicon/favicon.ico">
     <link rel="stylesheet" href="./assets/vendor/montserrat/montserrat.css">
-<link rel="stylesheet" href="./assets/css/style.css?v=42">
+<link rel="stylesheet" href="./assets/css/style.css?v=45">
 </head>
 <body>
 <nav>
@@ -27,7 +27,12 @@
     <div class="container form__section-container">
         <h2>Hesap oluştur</h2>
         <div class="alert__message error" id="auth-message" hidden></div>
-        <form id="signup-form">
+        <form class="auth__form" id="signup-form">
+            <button class="oauth__button" type="button" data-google-oauth>
+                <img src="./assets/vendor/google/google-g.svg" alt="" aria-hidden="true">
+                <span class="oauth__button-label">Google ile kayıt ol</span>
+            </button>
+            <div class="auth__divider" aria-hidden="true"><span>veya</span></div>
             <input type="text" name="firstname" maxlength="80" autocomplete="given-name" placeholder="Ad" required>
             <input type="text" name="lastname" maxlength="80" autocomplete="family-name" placeholder="Soyad" required>
             <input type="email" name="email" maxlength="254" autocomplete="email" placeholder="E-posta" required>
@@ -43,8 +48,8 @@
                 <label class="form__label--single-line" for="avatar">Profil fotoğrafı <small>(isteğe bağlı)</small></label>
                 <input type="file" name="avatar" id="avatar" accept="image/png,image/jpeg,image/webp">
             </div>
-            <button type="submit" class="btn">Kayıt ol</button>
-            <small>Zaten hesabınız var mı? <a href="./signin.html">Giriş yapın</a></small>
+            <button type="submit" class="btn auth__submit">Kayıt ol</button>
+            <p class="auth__switch">Zaten hesabınız var mı? <a href="./signin.html">Giriş yapın</a></p>
         </form>
     </div>
 </section>
@@ -55,7 +60,7 @@
 <script src="./assets/js/auth-storage.js?v=1"></script>
 <script src="./assets/js/auth.js?v=14"></script>
 <script src="./assets/js/auth-errors.js?v=1"></script>
-<script src="./assets/js/auth-pages.js?v=18"></script>
+<script src="./assets/js/auth-pages.js?v=20"></script>
 <script src="./assets/js/main.js?v=17"></script>
 </body>
 </html>

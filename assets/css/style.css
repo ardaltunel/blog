@@ -2052,6 +2052,74 @@ html[data-pagination-pending="true"] body[data-page="home"] #app > .pagination__
     box-shadow: var(--shadow-md);
 }
 
+.form__section-container > h2 {
+    margin-bottom: 1.5rem;
+}
+
+.legal__section {
+    min-height: 100vh;
+    padding: 7.5rem 0 4rem;
+}
+
+.legal__container {
+    width: min(780px, 92vw);
+    padding: clamp(1.5rem, 4vw, 3rem);
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    background: var(--color-surface);
+    box-shadow: var(--shadow-md);
+}
+
+.legal__header {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.legal__header span {
+    color: var(--color-primary);
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+}
+
+.legal__header h1 {
+    margin: 0.45rem 0;
+    font-size: clamp(2rem, 5vw, 3rem);
+}
+
+.legal__header p,
+.legal__container section p {
+    color: var(--color-muted);
+}
+
+.legal__container section + section {
+    margin-top: 1.5rem;
+}
+
+.legal__container section h2 {
+    margin-bottom: 0.55rem;
+    font-size: 1.05rem;
+}
+
+.legal__container section p {
+    line-height: 1.8;
+}
+
+.legal__container section a {
+    color: var(--color-primary);
+    font-weight: 800;
+}
+
+.legal__back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 2rem;
+    color: var(--color-primary);
+    font-weight: 800;
+}
+
 .authoring__container {
     width: min(920px, 92vw);
     padding: clamp(1.4rem, 4vw, 2.75rem);
@@ -2122,6 +2190,10 @@ form.search__bar-container {
     flex-direction: row;
 }
 
+.auth__form {
+    gap: 0.9rem;
+}
+
 .form__control {
     display: flex;
     flex-direction: column;
@@ -2150,9 +2222,9 @@ form.search__bar-container {
 
 .signin__remember {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 0.75rem;
-    padding: 0.85rem 0.95rem;
+    padding: 0.72rem 0.9rem;
     border: 1px solid var(--color-border);
     border-radius: 10px;
     background: var(--color-bg-soft);
@@ -2160,12 +2232,14 @@ form.search__bar-container {
 
 .signin__remember input {
     flex: 0 0 auto;
-    margin-top: 0.22rem;
+    margin: 0;
 }
 
 .signin__remember label {
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.15rem 0.5rem;
     color: var(--color-heading);
     font-size: 0.82rem;
     font-weight: 800;
@@ -2173,7 +2247,7 @@ form.search__bar-container {
 }
 
 .signin__remember label small {
-    margin: 0.12rem 0 0;
+    margin: 0;
     color: var(--color-muted);
     font-size: 0.7rem;
     font-weight: 500;
@@ -2186,6 +2260,115 @@ form.search__bar-container {
 
 .signin__remember:has(input:disabled) {
     opacity: 0.6;
+}
+
+.oauth__button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 3rem;
+    padding: 0.7rem 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-bg);
+    color: var(--color-heading);
+    font: inherit;
+    font-weight: 800;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.oauth__button img {
+    flex: 0 0 auto;
+    width: 1.15rem !important;
+    height: 1.15rem;
+    margin-right: 0.7rem;
+    object-fit: contain;
+}
+
+.oauth__button:hover {
+    border-color: color-mix(in srgb, var(--color-primary) 55%, var(--color-border));
+    background: var(--color-bg-soft);
+    transform: translateY(-1px);
+}
+
+.oauth__button:focus-visible {
+    border-color: color-mix(in srgb, var(--color-primary) 55%, var(--color-border));
+    box-shadow: 0 0 0 4px var(--color-primary-light);
+}
+
+.oauth__button:disabled {
+    cursor: wait;
+    opacity: 0.65;
+    transform: none;
+}
+
+.auth__divider {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    color: var(--color-muted);
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.auth__divider::before,
+.auth__divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--color-border);
+}
+
+.auth__form .auth__submit {
+    position: relative;
+    width: 100%;
+    min-height: 3.15rem;
+    margin-top: 0.15rem;
+    padding-inline: 2.8rem;
+    font-size: 0.88rem;
+    box-shadow: 0 10px 24px color-mix(in srgb, var(--color-primary) 18%, transparent);
+}
+
+.auth__form .auth__submit::after {
+    content: "\2192";
+    position: absolute;
+    right: 1.15rem;
+    font-size: 1.15rem;
+    line-height: 1;
+    transition: transform var(--transition);
+}
+
+.auth__form .auth__submit:hover::after {
+    transform: translateX(0.2rem);
+}
+
+.auth__form .auth__submit:disabled::after {
+    opacity: 0;
+}
+
+.auth__switch {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.4rem;
+    margin: 0.25rem 0 0;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-border);
+    color: var(--color-muted);
+    font-size: 0.78rem;
+    text-align: center;
+}
+
+.auth__switch a {
+    color: var(--color-primary);
+    font-weight: 800;
+}
+
+.auth__switch a:hover {
+    color: var(--color-primary-strong);
 }
 
 .password__field {

@@ -135,17 +135,71 @@
         }
     };
     const setupPasswordToggles = form => {
-        form.querySelectorAll('.password__toggle').forEach(toggle => {
-            const inputId = toggle.getAttribute('aria-controls');
-            const input = inputId ? form.querySelector(`#${inputId}`) : null;
+        const toggles = Array.from(form.querySelectorAll('.password__toggle'));
+        const fields = toggles
+            .map(toggle => {
+                const inputId = toggle.getAttribute('aria-controls');
+                return inputId ? form.querySelector(`#${inputId}`) : null;
+            })
+            .filter(Boolean);
+        toggles.forEach(toggle => {
             toggle.addEventListener('click', () => {
-                const isVisible = input?.type === 'text';
-                if (input) {
-                    input.type = isVisible ? 'password' : 'text';
-                }
-                toggle.textContent = isVisible ? 'Göster' : 'Gizle';
-                toggle.setAttribute('aria-pressed', String(!isVisible));
+                const makeVisible = fields.some(input => input.type === 'password');
+                fields.forEach(input => {
+                    input.type = makeVisible ? 'text' : 'password';
+                });
+                toggles.forEach(groupToggle => {
+                    groupToggle.textContent = makeVisible ? 'Gizle' : 'Göster';
+                    groupToggle.setAttribute('aria-pressed', String(makeVisible));
+                });
             });
+        });
+    };
+    const setupGoogleOAuth = (form, idleLabel) => {
+        const button = form.querySelector('[data-google-oauth]');
+        const label = button?.querySelector('.oauth__button-label');
+        if (!button || !label) {
+            return;
+        }
+        button.addEventListener('click', async () => {
+            clearMessage();
+            if (!requireSupabase()) {
+                return;
+            }
+
+            const rememberInput = form.querySelector('input[name="remember"]');
+            if (rememberInput) {
+                const rememberMe = rememberInput.checked;
+                if (rememberMe && authSessionManager?.setRememberMe(true) !== true) {
+                    showMessage('Bu tarayıcı kalıcı oturum saklamayı desteklemiyor.');
+                    return;
+                }
+                if (!rememberMe) {
+                    authSessionManager?.setRememberMe(false);
+                }
+            }
+
+            button.disabled = true;
+            label.textContent = 'Google’a yönlendiriliyor...';
+            try {
+                const redirectTo = new URL(
+                    security.buildRoute('admin', { view: 'profile' }),
+                    window.location.href
+                ).href;
+                const { error } = await client.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: { redirectTo }
+                });
+                if (error) {
+                    showMessage('Google ile devam edilemedi. Lütfen tekrar deneyin.');
+                    button.disabled = false;
+                    label.textContent = idleLabel;
+                }
+            } catch {
+                showMessage('Google ile devam edilemedi. Lütfen tekrar deneyin.');
+                button.disabled = false;
+                label.textContent = idleLabel;
+            }
         });
     };
     const getBody = (editor, fallback = '') => {
@@ -206,6 +260,7 @@
             rememberInput.disabled = authSessionManager?.canRemember() === false;
         }
         setupPasswordToggles(form);
+        setupGoogleOAuth(form, 'Google ile giriş yap');
         form.addEventListener('submit', async event => {
             event.preventDefault();
             clearMessage();
@@ -250,6 +305,7 @@
             return;
         }
         setupPasswordToggles(form);
+        setupGoogleOAuth(form, 'Google ile kayıt ol');
         form.addEventListener('submit', async event => {
             event.preventDefault();
             clearMessage();
