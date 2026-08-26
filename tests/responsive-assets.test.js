@@ -4,7 +4,7 @@ const { join } = require('node:path');
 const test = require('node:test');
 
 const ROOT = join(__dirname, '..');
-const RELEASE_VERSION = '63';
+const RELEASE_VERSION = '64';
 const HTML_FILES = [
     '404.html',
     'add-post.html',
@@ -51,7 +51,7 @@ test('keeps generated pages and local clean routes on the current assets', () =>
     const builder = readFileSync(join(ROOT, 'scripts', 'build-pages.mjs'), 'utf8');
     const server = readFileSync(join(ROOT, 'scripts', 'serve.mjs'), 'utf8');
 
-    assert.match(builder, /const assetVersion = '63';/);
+    assert.match(builder, /const assetVersion = '64';/);
     assert.match(builder, /style\.css\?v=\$\{assetVersion\}/);
     assert.match(builder, /app\.js\?v=\$\{assetVersion\}/);
     assert.match(server, /pathname\.startsWith\('\/blog\/'\)/);
@@ -69,5 +69,6 @@ test('preserves and normalizes the home pagination query', () => {
     assert.match(app, /security\.buildRoute\('home', safePage > 1 \? \{ page: safePage \} : \{\}\)/);
     assert.match(app, /window\.history\.replaceState\(null, '', `\$\{homeUrl\.pathname\}\$\{homeUrl\.search\}/);
     assert.match(app, /document\.querySelector\('#posts'\)\?\.scrollIntoView\(\{ block: 'start' \}\)/);
+    assert.match(app, /paginationRevealTimer = null;\s*scrollToRequestedPosts\(\);/);
     assert.match(builder, /pageName === 'home' \? ' data-route="home"' : ''/);
 });

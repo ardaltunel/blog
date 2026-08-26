@@ -340,9 +340,19 @@
         `;
     };
 
+    const scrollToRequestedPosts = () => {
+        if (window.location.hash !== '#posts') {
+            return;
+        }
+        window.requestAnimationFrame(() => {
+            document.querySelector('#posts')?.scrollIntoView({ block: 'start' });
+        });
+    };
+
     const finishPaginationLoading = () => {
         const root = document.documentElement;
         if (root.dataset.paginationPending !== 'true') {
+            scrollToRequestedPosts();
             return;
         }
 
@@ -356,6 +366,7 @@
             delete root.dataset.paginationPending;
             delete root.dataset.paginationStartedAt;
             paginationRevealTimer = null;
+            scrollToRequestedPosts();
         }, remaining);
     };
 
@@ -406,11 +417,6 @@
             ${renderCategoryButtons()}
         `);
         finishPaginationLoading();
-        if (window.location.hash === '#posts') {
-            window.requestAnimationFrame(() => {
-                document.querySelector('#posts')?.scrollIntoView({ block: 'start' });
-            });
-        }
     };
 
     const renderNotFound = () => {
