@@ -496,7 +496,22 @@
     const renderDashboard = async () => {
         const container = document.querySelector('#dashboard-content');
         const title = document.querySelector('#dashboard-title');
-        if (!container || !requireSupabase()) {
+        const shell = document.querySelector('#dashboard-shell');
+        const loading = document.querySelector('#dashboard-loading');
+        const revealDashboard = () => {
+            if (shell) {
+                shell.hidden = false;
+                shell.setAttribute('aria-busy', 'false');
+            }
+            if (loading) {
+                loading.hidden = true;
+            }
+        };
+        if (!container) {
+            return;
+        }
+        if (!requireSupabase()) {
+            revealDashboard();
             return;
         }
         let profileResult;
@@ -518,6 +533,17 @@
         document.querySelectorAll('[data-view-link]').forEach(link => {
             link.classList.toggle('active', link.dataset.viewLink === safeView);
         });
+        const viewTitles = {
+            'profile': 'Profil',
+            'my-posts': 'Yazılarım',
+            'all-posts': 'Tüm yazılar',
+            'add-user': 'Kullanıcı ekle',
+            'manage-users': 'Kullanıcıları yönet',
+            'add-category': 'Kategori ekle',
+            'manage-categories': 'Kategorileri yönet'
+        };
+        title.textContent = viewTitles[safeView] || 'Yazılarım';
+        revealDashboard();
         const refresh = () => renderDashboard();
         const adminOnly = () => {
             if (profile.is_admin) {

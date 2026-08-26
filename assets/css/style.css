@@ -2771,6 +2771,39 @@ select:focus {
     margin-top: 6.75rem;
 }
 
+.dashboard__loading {
+    display: flex;
+    min-height: 65vh;
+    align-items: center;
+    justify-content: center;
+    gap: 0.7rem;
+    padding-top: 5rem;
+    color: var(--color-muted);
+    font-size: 0.8rem;
+    font-weight: 750;
+}
+
+.dashboard__loading-spinner {
+    width: 1.1rem;
+    height: 1.1rem;
+    border: 2px solid var(--color-border);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: dashboard-loading-spin 0.7s linear infinite;
+}
+
+@keyframes dashboard-loading-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dashboard__loading-spinner {
+        animation: none;
+    }
+}
+
 .dashboard__container {
     display: grid;
     grid-template-columns: 14rem minmax(0, 1fr);

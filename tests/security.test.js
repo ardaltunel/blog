@@ -99,6 +99,16 @@ test('allows members to open their profile while keeping admin views protected',
     assert.equal(security.resolveDashboardView('invalid-view', true), 'my-posts');
 });
 
+test('keeps the dashboard and privileged links hidden until authorization resolves', () => {
+    const adminHtml = readFileSync(require.resolve('../admin.html'), 'utf8');
+    assert.match(adminHtml, /<section\b[^>]*id="dashboard-shell"[^>]*\bhidden\b[^>]*>/);
+    assert.match(adminHtml, /<div\b[^>]*id="dashboard-loading"[^>]*>/);
+
+    const privilegedLinks = adminHtml.match(/<a\b[^>]*data-admin-only[^>]*>/g) || [];
+    assert.equal(privilegedLinks.length, 5);
+    privilegedLinks.forEach(link => assert.match(link, /\bhidden\b/));
+});
+
 test('builds routes only from the fixed route and parameter allowlists', () => {
     assert.equal(
         security.buildRoute('post', { id: 122, title: 'Dijital Dönüşümde Tasarımın Rolü' }),

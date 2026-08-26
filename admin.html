@@ -11,7 +11,7 @@
     <link rel="apple-touch-icon" href="./assets/favicon/apple-touch-icon.png">
     <link rel="icon" href="./assets/favicon/favicon.ico">
     <link rel="stylesheet" href="./assets/vendor/montserrat/montserrat.css">
-<link rel="stylesheet" href="./assets/css/style.css?v=43">
+<link rel="stylesheet" href="./assets/css/style.css?v=44">
 </head>
 <body>
 <nav>
@@ -23,7 +23,11 @@
         <button id="close__nav-btn" type="button" aria-label="Menüyü kapat" hidden><img class="ui-icon" src="./assets/vendor/lucide/icons/x.svg" alt="" aria-hidden="true"></button>
     </div>
 </nav>
-<section class="dashboard">
+<div class="dashboard__loading" id="dashboard-loading" role="status" aria-live="polite">
+    <span class="dashboard__loading-spinner" aria-hidden="true"></span>
+    <span>Panel hazırlanıyor...</span>
+</div>
+<section class="dashboard" id="dashboard-shell" aria-busy="true" hidden>
     <div class="container dashboard__container">
         <aside id="dashboard-sidebar" aria-label="Yönetim paneli menüsü">
             <div class="dashboard__sidebar-header">
@@ -36,11 +40,11 @@
             <a href="./yeni-blog-ekle/" aria-label="Yazı ekle" title="Yazı ekle"><img class="ui-icon" src="./assets/vendor/lucide/icons/pen-line.svg" alt="" aria-hidden="true"><h5>Yazı ekle</h5></a>
             <a href="./admin.html?view=profile" data-view-link="profile" aria-label="Profil" title="Profil"><img class="ui-icon" src="./assets/vendor/lucide/icons/users.svg" alt="" aria-hidden="true"><h5>Profil</h5></a>
             <a href="./admin.html?view=my-posts" data-view-link="my-posts" aria-label="Yazılarım" title="Yazılarım"><img class="ui-icon" src="./assets/vendor/lucide/icons/files.svg" alt="" aria-hidden="true"><h5>Yazılarım</h5></a>
-            <a href="./admin.html?view=all-posts" data-admin-only data-view-link="all-posts" aria-label="Tüm yazılar" title="Tüm yazılar"><img class="ui-icon" src="./assets/vendor/lucide/icons/layout-list.svg" alt="" aria-hidden="true"><h5>Tüm yazılar</h5></a>
-            <a href="./admin.html?view=add-user" data-admin-only data-view-link="add-user" aria-label="Kullanıcı ekle" title="Kullanıcı ekle"><img class="ui-icon" src="./assets/vendor/lucide/icons/user-plus.svg" alt="" aria-hidden="true"><h5>Kullanıcı ekle</h5></a>
-            <a href="./admin.html?view=manage-users" data-admin-only data-view-link="manage-users" aria-label="Kullanıcıları yönet" title="Kullanıcıları yönet"><img class="ui-icon" src="./assets/vendor/lucide/icons/users.svg" alt="" aria-hidden="true"><h5>Kullanıcıları yönet</h5></a>
-            <a href="./admin.html?view=add-category" data-admin-only data-view-link="add-category" aria-label="Kategori ekle" title="Kategori ekle"><img class="ui-icon" src="./assets/vendor/lucide/icons/folder-plus.svg" alt="" aria-hidden="true"><h5>Kategori ekle</h5></a>
-            <a href="./admin.html?view=manage-categories" data-admin-only data-view-link="manage-categories" aria-label="Kategorileri yönet" title="Kategorileri yönet"><img class="ui-icon" src="./assets/vendor/lucide/icons/files.svg" alt="" aria-hidden="true"><h5>Kategorileri yönet</h5></a>
+            <a href="./admin.html?view=all-posts" data-admin-only data-view-link="all-posts" aria-label="Tüm yazılar" title="Tüm yazılar" hidden><img class="ui-icon" src="./assets/vendor/lucide/icons/layout-list.svg" alt="" aria-hidden="true"><h5>Tüm yazılar</h5></a>
+            <a href="./admin.html?view=add-user" data-admin-only data-view-link="add-user" aria-label="Kullanıcı ekle" title="Kullanıcı ekle" hidden><img class="ui-icon" src="./assets/vendor/lucide/icons/user-plus.svg" alt="" aria-hidden="true"><h5>Kullanıcı ekle</h5></a>
+            <a href="./admin.html?view=manage-users" data-admin-only data-view-link="manage-users" aria-label="Kullanıcıları yönet" title="Kullanıcıları yönet" hidden><img class="ui-icon" src="./assets/vendor/lucide/icons/users.svg" alt="" aria-hidden="true"><h5>Kullanıcıları yönet</h5></a>
+            <a href="./admin.html?view=add-category" data-admin-only data-view-link="add-category" aria-label="Kategori ekle" title="Kategori ekle" hidden><img class="ui-icon" src="./assets/vendor/lucide/icons/folder-plus.svg" alt="" aria-hidden="true"><h5>Kategori ekle</h5></a>
+            <a href="./admin.html?view=manage-categories" data-admin-only data-view-link="manage-categories" aria-label="Kategorileri yönet" title="Kategorileri yönet" hidden><img class="ui-icon" src="./assets/vendor/lucide/icons/files.svg" alt="" aria-hidden="true"><h5>Kategorileri yönet</h5></a>
         </aside>
         <main>
             <header class="dashboard__page-header">
@@ -80,7 +84,7 @@
 <script src="./assets/js/auth-storage.js?v=1"></script>
 <script src="./assets/js/auth.js?v=14"></script>
 <script src="./assets/js/rich-editor.js?v=11"></script>
-<script src="./assets/js/auth-pages.js?v=23"></script>
+<script src="./assets/js/auth-pages.js?v=24"></script>
 <script src="./assets/js/main.js?v=17"></script>
 </body>
 </html>
