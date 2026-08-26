@@ -504,7 +504,7 @@
             item.hidden = !profile.is_admin;
         });
         const requestedView = security.getQueryParam('view') || 'my-posts';
-        const safeView = profile.is_admin ? requestedView : 'my-posts';
+        const safeView = security.resolveDashboardView(requestedView, profile.is_admin);
         document.querySelectorAll('[data-view-link]').forEach(link => {
             link.classList.toggle('active', link.dataset.viewLink === safeView);
         });

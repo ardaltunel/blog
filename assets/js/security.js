@@ -28,6 +28,7 @@
         'add-category',
         'manage-categories'
     ]);
+    const MEMBER_DASHBOARD_VIEWS = Object.freeze(['profile', 'my-posts']);
     const ROUTES = Object.freeze({
         home: sitePath(''),
         post: sitePath('post.html'),
@@ -76,6 +77,12 @@
     const localizeCategoryTitle = value => {
         const title = normalizeString(value).trim();
         return CATEGORY_TRANSLATIONS[title.toLocaleLowerCase('en-US')] || title;
+    };
+    const resolveDashboardView = (requestedView, isAdmin = false) => {
+        const normalizedView = ADMIN_VIEWS.includes(requestedView) ? requestedView : 'my-posts';
+        return isAdmin || MEMBER_DASHBOARD_VIEWS.includes(normalizedView)
+            ? normalizedView
+            : 'my-posts';
     };
     const containsControlCharacters = value => /[\u0000-\u001F\u007F]/.test(value);
     const containsTraversalEncoding = value => /(?:^|[\\/])\.\.(?:[\\/]|$)|%00|%2e|%2f|%5c|%25|\\/i.test(value);
@@ -725,6 +732,7 @@
         parsePositiveInteger,
         parseYouTubeUrl,
         renderUi,
+        resolveDashboardView,
         safeContentUrl,
         safeImageUrl,
         safeInternalPath,

@@ -91,6 +91,14 @@ test('validates page and dashboard view parameters by schema', () => {
     assert.equal(security.getQueryParam('redirect', '?redirect=./admin.html'), null);
 });
 
+test('allows members to open their profile while keeping admin views protected', () => {
+    assert.equal(security.resolveDashboardView('profile', false), 'profile');
+    assert.equal(security.resolveDashboardView('my-posts', false), 'my-posts');
+    assert.equal(security.resolveDashboardView('manage-users', false), 'my-posts');
+    assert.equal(security.resolveDashboardView('manage-users', true), 'manage-users');
+    assert.equal(security.resolveDashboardView('invalid-view', true), 'my-posts');
+});
+
 test('builds routes only from the fixed route and parameter allowlists', () => {
     assert.equal(
         security.buildRoute('post', { id: 122, title: 'Dijital Dönüşümde Tasarımın Rolü' }),
