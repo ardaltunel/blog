@@ -3052,7 +3052,7 @@ body.modal-open {
     max-width: none;
     align-self: stretch;
     min-height: 3rem;
-    justify-content: center;
+    justify-content: flex-start;
     padding-inline: 1.15rem;
     border: 1px solid color-mix(in srgb, var(--color-primary) 55%, transparent);
     border-radius: 10px;
