@@ -12,6 +12,7 @@
         ? window.location.pathname.split('/').filter(Boolean).at(-2) === 'kategori' ? 'category' : 'post'
         : declaredPageName;
     const security = window.SecurityUtils;
+    const requestedHomePage = pageName === 'home' ? security?.getQueryParam('page') : null;
     const config = security?.getSafeSupabaseConfig();
     const state = {
         categories: [],
@@ -360,8 +361,7 @@
 
     const renderHome = () => {
         const featured = state.posts.find(post => post.is_featured);
-        const requestedPage = security.getQueryParam('page');
-        const currentPage = requestedPage || 1;
+        const currentPage = requestedHomePage || 1;
         const totalPages = Math.max(1, Math.ceil(state.posts.length / POSTS_PER_PAGE));
         const safePage = Math.min(currentPage, totalPages);
         const pagePosts = state.posts.slice((safePage - 1) * POSTS_PER_PAGE, safePage * POSTS_PER_PAGE);
@@ -575,7 +575,6 @@
 
         try {
             let initialHomeState = null;
-            const requestedHomePage = pageName === 'home' ? security.getQueryParam('page') : null;
             if (requestedHomePage && requestedHomePage > 1 && window.BLOG_FALLBACK_DATA) {
                 applyData(window.BLOG_FALLBACK_DATA);
                 initialHomeState = JSON.stringify(state);
