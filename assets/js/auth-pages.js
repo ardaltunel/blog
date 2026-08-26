@@ -597,6 +597,16 @@
 
     const renderProfile = (container, user, profile, refresh) => {
         const currentEmail = security.validateEmail(user.email) || '';
+        const googleAvatar = security.safeImageUrl(profile.googleAvatar, '');
+        const usesGoogleAvatar = Boolean(
+            googleAvatar && googleAvatar === security.safeImageUrl(profile.avatar, '')
+        );
+        const googleAvatarAction = googleAvatar ? `
+            <button type="button" class="oauth__button dashboard__google-avatar-button" id="use-google-avatar" ${usesGoogleAvatar ? 'disabled' : ''}>
+                <img src="./assets/vendor/google/google-g.svg" alt="" aria-hidden="true">
+                <span>${usesGoogleAvatar ? 'Google fotoğrafı kullanılıyor' : 'Google fotoğrafımı kullan'}</span>
+            </button>
+        ` : '';
         security.renderUi(container, `
             <div class="dashboard__profile-settings">
                 <section class="dashboard__settings-card">
@@ -651,7 +661,10 @@
                     </div>
                     <form id="profile-avatar-form">
                         <input type="file" name="avatar" id="profile-avatar" accept="image/png,image/jpeg,image/webp" required>
-                        <button type="submit" class="btn">Fotoğrafı güncelle</button>
+                        <div class="dashboard__avatar-actions">
+                            <button type="submit" class="btn">Fotoğrafı güncelle</button>
+                            ${googleAvatarAction}
+                        </div>
                     </form>
                 </section>
             </div>
@@ -780,6 +793,37 @@
                 }
             });
         }
+
+        container.querySelector('#use-google-avatar')?.addEventListener('click', async event => {
+            clearMessage();
+            const button = event.currentTarget;
+            const label = button.querySelector('span');
+            button.disabled = true;
+            button.setAttribute('aria-busy', 'true');
+            if (label) {
+                label.textContent = 'Uygulanıyor...';
+            }
+            try {
+                const { data: updated, error } = await client.from('authors')
+                    .update({ avatar: googleAvatar })
+                    .eq('id', profile.id)
+                    .eq('user_id', user.id)
+                    .select('avatar')
+                    .maybeSingle();
+                if (error || security.safeImageUrl(updated?.avatar, '') !== googleAvatar) {
+                    throw new Error('PROFILE_UPDATE_FAILED');
+                }
+                showMessage('Google profil fotoğrafınız kullanılıyor.', 'success');
+                await refresh();
+            } catch {
+                button.disabled = false;
+                button.removeAttribute('aria-busy');
+                if (label) {
+                    label.textContent = 'Google fotoğrafımı kullan';
+                }
+                showMessage('Google profil fotoğrafı uygulanamadı. Lütfen tekrar deneyin.');
+            }
+        });
 
         container.querySelector('#profile-avatar-form')?.addEventListener('submit', async event => {
             event.preventDefault();

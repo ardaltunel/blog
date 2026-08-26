@@ -43,19 +43,7 @@
             return { user, profile: null };
         }
 
-        const googleIdentity = Array.isArray(user.identities)
-            ? user.identities.find(identity => identity?.provider === 'google')
-            : null;
-        const googleIdentityData = googleIdentity?.identity_data || {};
-        const googleAvatar = googleIdentity
-            ? security.safeImageUrl(
-                googleIdentityData.avatar_url
-                    || googleIdentityData.picture
-                    || user.user_metadata?.avatar_url
-                    || user.user_metadata?.picture,
-                ''
-            )
-            : null;
+        const googleAvatar = security.getGoogleAvatar(user);
         const rawAvatar = typeof data.avatar === 'string' ? data.avatar.trim() : '';
         const storedAvatar = security.safeImageUrl(rawAvatar, '');
         const usesDefaultAvatar = !storedAvatar
@@ -91,6 +79,7 @@
                 firstname,
                 lastname,
                 avatar,
+                googleAvatar,
                 is_admin: data.is_admin === true
             }
         };

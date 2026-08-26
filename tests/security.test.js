@@ -227,6 +227,20 @@ test('restricts image URLs to local assets, configured Storage and Google profil
         .forEach(value => assert.equal(security.safeImageUrl(value, '', base), null, value));
 });
 
+test('reads a trusted Google avatar only from a linked Google identity', () => {
+    const googleAvatar = 'https://lh3.googleusercontent.com/a/example-profile=s96-c';
+    assert.equal(security.getGoogleAvatar({
+        identities: [{ provider: 'google', identity_data: { picture: googleAvatar } }]
+    }), googleAvatar);
+    assert.equal(security.getGoogleAvatar({
+        identities: [{ provider: 'email', identity_data: {} }],
+        user_metadata: { avatar_url: googleAvatar }
+    }), null);
+    assert.equal(security.getGoogleAvatar({
+        identities: [{ provider: 'google', identity_data: { avatar_url: 'https://evil.example/avatar.png' } }]
+    }), null);
+});
+
 test('validates text, credentials and upload metadata without trusting file names', () => {
     assert.equal(security.validateText('  title  ', { min: 1, max: 20 }), 'title');
     assert.equal(security.validateText('bad\u0000value', { max: 20 }), null);

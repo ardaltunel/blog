@@ -364,6 +364,28 @@
         return parsed.href;
     };
 
+    const getGoogleAvatar = user => {
+        if (!user || typeof user !== 'object') {
+            return null;
+        }
+        const googleIdentity = Array.isArray(user.identities)
+            ? user.identities.find(identity => identity?.provider === 'google')
+            : null;
+        if (!googleIdentity) {
+            return null;
+        }
+        const identityData = googleIdentity.identity_data && typeof googleIdentity.identity_data === 'object'
+            ? googleIdentity.identity_data
+            : {};
+        return safeImageUrl(
+            identityData.avatar_url
+                || identityData.picture
+                || user.user_metadata?.avatar_url
+                || user.user_metadata?.picture,
+            ''
+        );
+    };
+
     const buildRoute = (routeName, values = {}) => {
         const route = ROUTES[routeName];
         if (!route || !values || typeof values !== 'object' || Array.isArray(values)) {
@@ -724,6 +746,7 @@
         createUploadPath,
         escapeHtml,
         getCategorySlug,
+        getGoogleAvatar,
         getPostId,
         getPostSlug,
         getQueryParam,

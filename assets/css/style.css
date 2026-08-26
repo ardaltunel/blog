@@ -3124,6 +3124,31 @@ body.modal-open {
     gap: 0.75rem;
 }
 
+.dashboard__avatar-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.dashboard__avatar-actions .btn {
+    margin-top: 0;
+}
+
+.dashboard__google-avatar-button {
+    width: fit-content;
+    min-height: 2.45rem;
+    padding: 0.65rem 1rem;
+}
+
+.dashboard__google-avatar-button:disabled {
+    cursor: not-allowed;
+}
+
+.dashboard__google-avatar-button[aria-busy="true"] {
+    cursor: wait;
+}
+
 .dashboard__settings-card h3 {
     margin: 0.22rem 0 0.35rem;
     font-size: 1.15rem;
