@@ -16,19 +16,29 @@
     let editPostEditor = null;
     let editPostRequestId = 0;
     let editPostTrigger = null;
+    let messageDismissTimer = null;
 
+    const clearMessage = () => {
+        if (messageDismissTimer !== null) {
+            window.clearTimeout(messageDismissTimer);
+            messageDismissTimer = null;
+        }
+        if (messageBox) {
+            messageBox.hidden = true;
+            messageBox.textContent = '';
+        }
+    };
     const showMessage = (message, type = 'error') => {
         if (!messageBox) {
             return;
         }
+        clearMessage();
+        const isSuccess = type === 'success';
         messageBox.hidden = false;
-        messageBox.className = `alert__message ${type === 'success' ? 'success' : 'error'}`;
+        messageBox.className = `alert__message ${isSuccess ? 'success' : 'error'}`;
         messageBox.textContent = String(message).slice(0, 300);
-    };
-    const clearMessage = () => {
-        if (messageBox) {
-            messageBox.hidden = true;
-            messageBox.textContent = '';
+        if (isSuccess) {
+            messageDismissTimer = window.setTimeout(clearMessage, 2000);
         }
     };
     const showEditPostMessage = message => {
@@ -560,19 +570,6 @@
         const currentEmail = security.validateEmail(user.email) || '';
         security.renderUi(container, `
             <div class="dashboard__profile-settings">
-                <section class="dashboard__settings-card dashboard__settings-card--avatar">
-                    <div class="dashboard__profile-avatar"><img src="${security.escapeHtml(profile.avatar)}" alt="${security.escapeHtml(profile.firstname)}"></div>
-                    <div>
-                        <span class="dashboard__settings-kicker">PROFİL GÖRSELİ</span>
-                        <h3>Profil fotoğrafı</h3>
-                        <p>PNG, JPEG veya WebP biçiminde, en fazla 2 MB.</p>
-                    </div>
-                    <form id="profile-avatar-form">
-                        <input type="file" name="avatar" id="profile-avatar" accept="image/png,image/jpeg,image/webp" required>
-                        <button type="submit" class="btn">Fotoğrafı güncelle</button>
-                    </form>
-                </section>
-
                 <section class="dashboard__settings-card">
                     <span class="dashboard__settings-kicker">KİŞİSEL BİLGİLER</span>
                     <h3>Ad ve soyad</h3>
@@ -583,17 +580,6 @@
                         <label for="profile-lastname">Soyad</label>
                         <input type="text" name="lastname" id="profile-lastname" minlength="1" maxlength="80" value="${security.escapeHtml(profile.lastname)}" required>
                         <button type="submit" class="btn">Bilgileri kaydet</button>
-                    </form>
-                </section>
-
-                <section class="dashboard__settings-card">
-                    <span class="dashboard__settings-kicker">HESAP</span>
-                    <h3>E-posta adresi</h3>
-                    <p>Değişiklik, yeni adresinize gönderilen doğrulama bağlantısından sonra tamamlanır.</p>
-                    <form id="profile-email-form" class="dashboard__settings-form">
-                        <label for="profile-email">E-posta</label>
-                        <input type="email" name="email" id="profile-email" maxlength="254" value="${security.escapeHtml(currentEmail)}" required>
-                        <button type="submit" class="btn">E-postayı güncelle</button>
                     </form>
                 </section>
 
@@ -613,6 +599,30 @@
                             <button type="button" class="password__toggle" aria-controls="profile-password-confirmation" aria-pressed="false">Göster</button>
                         </div>
                         <button type="submit" class="btn">Şifreyi güncelle</button>
+                    </form>
+                </section>
+
+                <section class="dashboard__settings-card">
+                    <span class="dashboard__settings-kicker">HESAP</span>
+                    <h3>E-posta adresi</h3>
+                    <p>Değişiklik, yeni adresinize gönderilen doğrulama bağlantısından sonra tamamlanır.</p>
+                    <form id="profile-email-form" class="dashboard__settings-form">
+                        <label for="profile-email">E-posta</label>
+                        <input type="email" name="email" id="profile-email" maxlength="254" value="${security.escapeHtml(currentEmail)}" required>
+                        <button type="submit" class="btn">E-postayı güncelle</button>
+                    </form>
+                </section>
+
+                <section class="dashboard__settings-card dashboard__settings-card--avatar">
+                    <div class="dashboard__profile-avatar"><img src="${security.escapeHtml(profile.avatar)}" alt="${security.escapeHtml(profile.firstname)}"></div>
+                    <div>
+                        <span class="dashboard__settings-kicker">PROFİL GÖRSELİ</span>
+                        <h3>Profil fotoğrafı</h3>
+                        <p>PNG, JPEG veya WebP biçiminde, en fazla 2 MB.</p>
+                    </div>
+                    <form id="profile-avatar-form">
+                        <input type="file" name="avatar" id="profile-avatar" accept="image/png,image/jpeg,image/webp" required>
+                        <button type="submit" class="btn">Fotoğrafı güncelle</button>
                     </form>
                 </section>
             </div>
