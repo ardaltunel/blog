@@ -863,7 +863,7 @@
                             <td class="dashboard__post-action" data-label="Yayın durumu">
                                 <label class="dashboard__publish-control">
                                     <input type="checkbox" class="toggle-post" data-id="${post.id}" data-verified="${post.is_verified === true}" ${post.is_verified === true ? 'checked' : ''} aria-label="${post.is_verified === true ? 'Yazı yayında' : 'Yazı yayında değil'}">
-                                    <span class="dashboard__publish-check" aria-hidden="true"></span>
+                                    <span class="dashboard__publish-switch" aria-hidden="true"></span>
                                     <span class="dashboard__publish-label">${post.is_verified === true ? 'Yayında' : 'Yayında değil'}</span>
                                 </label>
                             </td>
