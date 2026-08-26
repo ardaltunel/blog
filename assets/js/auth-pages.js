@@ -864,7 +864,6 @@
                                 <label class="dashboard__publish-control">
                                     <input type="checkbox" class="toggle-post" data-id="${post.id}" data-verified="${post.is_verified === true}" ${post.is_verified === true ? 'checked' : ''} aria-label="${post.is_verified === true ? 'Yazı yayında' : 'Yazı yayında değil'}">
                                     <span class="dashboard__publish-switch" aria-hidden="true"></span>
-                                    <span class="dashboard__publish-label">${post.is_verified === true ? 'Yayında' : 'Yayında değil'}</span>
                                 </label>
                             </td>
                             <td class="dashboard__post-action" data-label="Sil"><button type="button" class="btn sm danger delete-post" data-id="${post.id}">Sil</button></td>
@@ -884,8 +883,6 @@
                 clearMessage();
                 const previousValue = checkbox.dataset.verified === 'true';
                 const nextValue = checkbox.checked === true;
-                const statusLabel = checkbox.closest('.dashboard__publish-control')
-                    ?.querySelector('.dashboard__publish-label');
                 checkbox.disabled = true;
                 try {
                     const { data: updated, error: updateError } = await client.from('posts')
@@ -895,9 +892,6 @@
                     }
                     checkbox.dataset.verified = String(nextValue);
                     checkbox.setAttribute('aria-label', nextValue ? 'Yazı yayında' : 'Yazı yayında değil');
-                    if (statusLabel) {
-                        statusLabel.textContent = nextValue ? 'Yayında' : 'Yayında değil';
-                    }
                     showMessage(nextValue ? 'Yazı yayına alındı.' : 'Yazı yayından kaldırıldı.', 'success');
                 } catch {
                     checkbox.checked = previousValue;

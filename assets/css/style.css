@@ -3251,8 +3251,7 @@ body.modal-open {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
-    min-width: 7.3rem;
+    min-width: 2.75rem;
     color: var(--color-muted);
     font-size: 0.7rem;
     font-weight: 800;
@@ -3320,10 +3319,6 @@ body.modal-open {
 
 .dashboard__publish-control:has(.toggle-post:disabled) {
     cursor: wait;
-}
-
-.dashboard__publish-control:has(.toggle-post:checked) .dashboard__publish-label {
-    color: var(--color-primary);
 }
 
 .dashboard__table .btn.danger {
