@@ -2,6 +2,7 @@
     'use strict';
 
     const POSTS_PER_PAGE = 9;
+    const PAGINATION_CACHE_VERSION = '65';
     const MAX_CATEGORIES = 500;
     const MAX_AUTHORS = 2000;
     const MAX_POSTS = 2000;
@@ -319,8 +320,9 @@
             return '';
         }
 
-        const previous = security.buildRoute('home', { page: currentPage - 1 });
-        const next = security.buildRoute('home', { page: currentPage + 1 });
+        const withCacheVersion = route => `${route}${route.includes('?') ? '&' : '?'}v=${PAGINATION_CACHE_VERSION}`;
+        const previous = withCacheVersion(security.buildRoute('home', { page: currentPage - 1 }));
+        const next = withCacheVersion(security.buildRoute('home', { page: currentPage + 1 }));
         return `
             <div class="container pagination__container">
                 ${currentPage > 1 ? `

@@ -66,6 +66,8 @@ test('preserves and normalizes the home pagination query', () => {
     assert.match(main, /canonicalRoute === 'home' \? security\.getQueryParam\('page'\) : null/);
     assert.match(main, /security\.buildRoute\(canonicalRoute, canonicalValues\)/);
     assert.match(app, /const requestedHomePage = pageName === 'home' \? security\?\.getQueryParam\('page'\) : null/);
+    assert.match(app, /const PAGINATION_CACHE_VERSION = '65';/);
+    assert.match(app, /route\.includes\('\?'\) \? '&' : '\?'/);
     assert.match(app, /security\.buildRoute\('home', safePage > 1 \? \{ page: safePage \} : \{\}\)/);
     assert.match(app, /window\.history\.replaceState\(null, '', `\$\{homeUrl\.pathname\}\$\{homeUrl\.search\}/);
     assert.match(app, /document\.querySelector\('#posts'\)\?\.scrollIntoView\(\{ block: 'start' \}\)/);
