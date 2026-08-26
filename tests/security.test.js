@@ -146,6 +146,16 @@ test('keeps the dashboard and privileged links hidden until authorization resolv
     privilegedLinks.forEach(link => assert.match(link, /\bhidden\b/));
 });
 
+test('shows the signed-in profile avatar in the dashboard sidebar', () => {
+    const adminHtml = readFileSync(require.resolve('../admin.html'), 'utf8');
+    const authPagesSource = readFileSync(require.resolve('../assets/js/auth-pages.js'), 'utf8');
+    const stylesheetSource = readFileSync(require.resolve('../assets/css/style.css'), 'utf8');
+    assert.match(adminHtml, /id="dashboard-sidebar-avatar"/);
+    assert.doesNotMatch(adminHtml, /dashboard__sidebar-mark"[^>]*>AA</);
+    assert.match(authPagesSource, /sidebarAvatar\.src = security\.safeImageUrl\(profile\.avatar\)/);
+    assert.match(stylesheetSource, /\.dashboard__sidebar-mark img\s*\{[\s\S]*?object-fit:\s*cover;/);
+});
+
 test('keeps the Google avatar action visible in the profile photo card', () => {
     const authPagesSource = readFileSync(require.resolve('../assets/js/auth-pages.js'), 'utf8');
     const stylesheetSource = readFileSync(require.resolve('../assets/css/style.css'), 'utf8');

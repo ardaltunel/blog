@@ -2859,13 +2859,21 @@ select:focus {
     height: 2.45rem;
     flex: 0 0 auto;
     place-items: center;
-    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid color-mix(in srgb, var(--color-primary) 42%, var(--color-border));
+    border-radius: 50%;
     color: var(--color-white);
     background: linear-gradient(135deg, var(--color-primary), var(--color-primary-strong));
     font-size: 0.68rem;
     font-weight: 900;
     letter-spacing: 0.04em;
     box-shadow: 0 8px 18px color-mix(in srgb, var(--color-primary) 24%, transparent);
+}
+
+.dashboard__sidebar-mark img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .dashboard aside a {

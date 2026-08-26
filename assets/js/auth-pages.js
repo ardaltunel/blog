@@ -525,6 +525,10 @@
             security.navigate('signin');
             return;
         }
+        const sidebarAvatar = document.querySelector('#dashboard-sidebar-avatar');
+        if (sidebarAvatar) {
+            sidebarAvatar.src = security.safeImageUrl(profile.avatar);
+        }
         document.querySelectorAll('[data-admin-only]').forEach(item => {
             item.hidden = !profile.is_admin;
         });
