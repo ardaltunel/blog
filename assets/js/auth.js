@@ -43,6 +43,39 @@
             return { user, profile: null };
         }
 
+        const googleIdentity = Array.isArray(user.identities)
+            ? user.identities.find(identity => identity?.provider === 'google')
+            : null;
+        const googleIdentityData = googleIdentity?.identity_data || {};
+        const googleAvatar = googleIdentity
+            ? security.safeImageUrl(
+                googleIdentityData.avatar_url
+                    || googleIdentityData.picture
+                    || user.user_metadata?.avatar_url
+                    || user.user_metadata?.picture,
+                ''
+            )
+            : null;
+        const rawAvatar = typeof data.avatar === 'string' ? data.avatar.trim() : '';
+        const storedAvatar = security.safeImageUrl(rawAvatar, '');
+        const usesDefaultAvatar = !storedAvatar
+            || rawAvatar === '1663704007ardaltunel-pp.png'
+            || storedAvatar === security.safeImageUrl(security.DEFAULT_AVATAR, '');
+        let avatar = security.safeImageUrl(data.avatar);
+
+        if (googleAvatar && usesDefaultAvatar) {
+            const { data: updatedProfile, error: avatarError } = await authClient
+                .from('authors')
+                .update({ avatar: googleAvatar })
+                .eq('id', data.id)
+                .eq('user_id', user.id)
+                .select('avatar')
+                .maybeSingle();
+            if (!avatarError && updatedProfile?.avatar) {
+                avatar = security.safeImageUrl(updatedProfile.avatar);
+            }
+        }
+
         const firstname = security.validateText(data.firstname, { min: 1, max: 80 });
         const lastname = security.validateText(data.lastname || '', { max: 80 });
         if (firstname === null || lastname === null) {
@@ -56,7 +89,7 @@
                 user_id: data.user_id,
                 firstname,
                 lastname,
-                avatar: security.safeImageUrl(data.avatar),
+                avatar,
                 is_admin: data.is_admin === true
             }
         };

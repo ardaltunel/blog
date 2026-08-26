@@ -208,15 +208,17 @@ test('accepts supported YouTube URLs and creates privacy-enhanced embed URLs', (
     ].forEach(value => assert.equal(security.parseYouTubeUrl(value, base), null, value));
 });
 
-test('restricts image URLs to local assets and the configured Storage bucket', () => {
+test('restricts image URLs to local assets, configured Storage and Google profile images', () => {
     const base = 'https://ardaltunel.github.io/blog/post.html?id=122';
     const storage = 'https://project-ref.supabase.co/storage/v1/object/public/blog-images/uploads/user/avatar.png';
+    const googleAvatar = 'https://lh3.googleusercontent.com/a/example-profile=s96-c';
     assert.equal(security.safeImageUrl(storage, '', base), storage);
+    assert.equal(security.safeImageUrl(googleAvatar, '', base), googleAvatar);
     assert.equal(
         security.safeImageUrl('./assets/images/photo.jpg', '', base),
         'https://ardaltunel.github.io/blog/assets/images/photo.jpg'
     );
-    ['https://evil.example/tracker.png', 'data:image/svg+xml,test', 'blob:https://evil.example/id', '../photo.jpg', '..%2Fphoto.jpg']
+    ['https://evil.example/tracker.png', 'https://lh3.googleusercontent.com/not-a-profile/image.png', 'https://lh3.googleusercontent.com.evil.example/a/image', 'data:image/svg+xml,test', 'blob:https://evil.example/id', '../photo.jpg', '..%2Fphoto.jpg']
         .forEach(value => assert.equal(security.safeImageUrl(value, '', base), null, value));
 });
 

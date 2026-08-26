@@ -352,8 +352,10 @@
         const bucket = encodeURIComponent(normalizeString(global.SUPABASE_CONFIG?.storageBucket) || 'blog-images');
         const trustedStorage = parsed.origin === supabaseOrigin
             && parsed.pathname.startsWith(`/storage/v1/object/public/${bucket}/`);
+        const trustedGoogleAvatar = parsed.origin === 'https://lh3.googleusercontent.com'
+            && parsed.pathname.startsWith('/a/');
 
-        if (!localAsset && !trustedStorage) {
+        if (!localAsset && !trustedStorage && !trustedGoogleAvatar) {
             return fallback === raw ? null : safeImageUrl(fallback, fallback, baseUrl);
         }
 

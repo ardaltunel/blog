@@ -23,7 +23,7 @@ const homeDescription = 'Arda Altunel’in yazılım, teknoloji, tasarım, bilim
 const logoUrl = new URL('assets/logo/logo.png', siteBaseUrl).href;
 const fallbackAvatar = new URL('assets/images/1663704007ardaltunel-pp.png', siteBaseUrl).href;
 const reservedPostSlugs = ['assets', 'kategori', 'yazi', 'yeni-blog-ekle'];
-const csp = "default-src 'self'; base-uri 'none'; object-src 'none'; frame-src https://www.youtube-nocookie.com; form-action 'self'; script-src 'self'; style-src 'self'; img-src 'self' https://bdadbqlkmdwzzkrwetrf.supabase.co; font-src 'self'; connect-src 'self' https://bdadbqlkmdwzzkrwetrf.supabase.co; media-src 'none'; worker-src 'none'; manifest-src 'self'; upgrade-insecure-requests";
+const csp = "default-src 'self'; base-uri 'none'; object-src 'none'; frame-src https://www.youtube-nocookie.com; form-action 'self'; script-src 'self'; style-src 'self'; img-src 'self' https://bdadbqlkmdwzzkrwetrf.supabase.co https://lh3.googleusercontent.com; font-src 'self'; connect-src 'self' https://bdadbqlkmdwzzkrwetrf.supabase.co; media-src 'none'; worker-src 'none'; manifest-src 'self'; upgrade-insecure-requests";
 
 const escapeHtml = value => String(value ?? '')
     .replace(/&/g, '&amp;')
@@ -184,7 +184,11 @@ const normalizeImage = value => {
     if (/^https:\/\//i.test(raw)) {
         try {
             const parsed = new URL(raw);
-            return parsed.origin === siteOrigin || parsed.hostname.endsWith('.supabase.co') ? parsed.href : fallbackAvatar;
+            const trustedGoogleAvatar = parsed.origin === 'https://lh3.googleusercontent.com'
+                && parsed.pathname.startsWith('/a/');
+            return parsed.origin === siteOrigin || parsed.hostname.endsWith('.supabase.co') || trustedGoogleAvatar
+                ? parsed.href
+                : fallbackAvatar;
         } catch {
             return fallbackAvatar;
         }
