@@ -11,7 +11,7 @@
     <link rel="apple-touch-icon" href="./assets/favicon/apple-touch-icon.png">
     <link rel="icon" href="./assets/favicon/favicon.ico">
     <link rel="stylesheet" href="./assets/vendor/montserrat/montserrat.css">
-<link rel="stylesheet" href="./assets/css/style.css?v=41">
+<link rel="stylesheet" href="./assets/css/style.css?v=42">
 </head>
 <body>
 <nav>
@@ -31,9 +31,16 @@
             <input type="text" name="firstname" maxlength="80" autocomplete="given-name" placeholder="Ad" required>
             <input type="text" name="lastname" maxlength="80" autocomplete="family-name" placeholder="Soyad" required>
             <input type="email" name="email" maxlength="254" autocomplete="email" placeholder="E-posta" required>
-            <input type="password" name="password" minlength="8" maxlength="128" autocomplete="new-password" placeholder="Şifre" required>
+            <div class="password__field">
+                <input id="signup-password" type="password" name="password" minlength="8" maxlength="128" autocomplete="new-password" placeholder="Şifre" required>
+                <button class="password__toggle" type="button" aria-controls="signup-password" aria-pressed="false">Göster</button>
+            </div>
+            <div class="password__field">
+                <input id="signup-password-confirmation" type="password" name="password_confirmation" minlength="8" maxlength="128" autocomplete="new-password" placeholder="Şifreyi doğrula" required>
+                <button class="password__toggle" type="button" aria-controls="signup-password-confirmation" aria-pressed="false">Göster</button>
+            </div>
             <div class="form__control">
-                <label for="avatar">Profil fotoğrafı <small>(isteğe bağlı)</small></label>
+                <label class="form__label--single-line" for="avatar">Profil fotoğrafı <small>(isteğe bağlı)</small></label>
                 <input type="file" name="avatar" id="avatar" accept="image/png,image/jpeg,image/webp">
             </div>
             <button type="submit" class="btn">Kayıt ol</button>
@@ -47,7 +54,8 @@
 <script src="./assets/js/supabase-config.js?v=8"></script>
 <script src="./assets/js/auth-storage.js?v=1"></script>
 <script src="./assets/js/auth.js?v=14"></script>
-<script src="./assets/js/auth-pages.js?v=15"></script>
+<script src="./assets/js/auth-errors.js?v=1"></script>
+<script src="./assets/js/auth-pages.js?v=18"></script>
 <script src="./assets/js/main.js?v=17"></script>
 </body>
 </html>

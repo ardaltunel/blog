@@ -185,6 +185,14 @@ $$;
 
 revoke all on function private.handle_new_user() from public;
 
+-- Explicit IDs from imports can leave the identity sequence behind the table.
+-- Keep signup-trigger inserts on the first unused author ID when this schema is reapplied.
+select setval(
+    pg_get_serial_sequence('public.authors', 'id'),
+    coalesce((select max(id) from public.authors), 1),
+    exists (select 1 from public.authors)
+);
+
 drop trigger if exists prevent_author_role_escalation on public.authors;
 drop trigger if exists protect_author_admin_role on public.authors;
 create trigger protect_author_admin_role

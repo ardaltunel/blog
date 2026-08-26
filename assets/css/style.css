@@ -2134,6 +2134,15 @@ form.search__bar-container {
     font-weight: 800;
 }
 
+.form__control > .form__label--single-line {
+    white-space: nowrap;
+}
+
+.form__section .form__label--single-line small {
+    display: inline;
+    margin-top: 0;
+}
+
 .form__control.inline {
     flex-direction: row;
     align-items: center;

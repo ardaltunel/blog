@@ -4,6 +4,7 @@
     const security = window.SecurityUtils;
     const client = window.authClient;
     const config = window.authConfig;
+    const authErrorMessages = window.AuthErrorMessages;
     const authSessionManager = window.authSessionManager;
     const getCurrentProfile = window.getProfile;
     const messageBox = document.querySelector('#auth-message');
@@ -133,6 +134,20 @@
             button.textContent = label;
         }
     };
+    const setupPasswordToggles = form => {
+        form.querySelectorAll('.password__toggle').forEach(toggle => {
+            const inputId = toggle.getAttribute('aria-controls');
+            const input = inputId ? form.querySelector(`#${inputId}`) : null;
+            toggle.addEventListener('click', () => {
+                const isVisible = input?.type === 'text';
+                if (input) {
+                    input.type = isVisible ? 'password' : 'text';
+                }
+                toggle.textContent = isVisible ? 'Göster' : 'Gizle';
+                toggle.setAttribute('aria-pressed', String(!isVisible));
+            });
+        });
+    };
     const getBody = (editor, fallback = '') => {
         const raw = editor ? editor.getData() : String(fallback || '');
         const sanitized = security.sanitizeBlogHtml(raw).trim();
@@ -190,16 +205,7 @@
             rememberInput.checked = authSessionManager?.isRemembered() === true;
             rememberInput.disabled = authSessionManager?.canRemember() === false;
         }
-        const passwordInput = form.querySelector('input[name="password"]');
-        const passwordToggle = form.querySelector('.password__toggle');
-        passwordToggle?.addEventListener('click', () => {
-            const isVisible = passwordInput?.type === 'text';
-            if (passwordInput) {
-                passwordInput.type = isVisible ? 'password' : 'text';
-            }
-            passwordToggle.textContent = isVisible ? 'Göster' : 'Gizle';
-            passwordToggle.setAttribute('aria-pressed', String(!isVisible));
-        });
+        setupPasswordToggles(form);
         form.addEventListener('submit', async event => {
             event.preventDefault();
             clearMessage();
@@ -243,6 +249,7 @@
         if (!form) {
             return;
         }
+        setupPasswordToggles(form);
         form.addEventListener('submit', async event => {
             event.preventDefault();
             clearMessage();
@@ -254,10 +261,15 @@
             const lastname = readName(formData.get('lastname'));
             const email = security.validateEmail(formData.get('email'));
             const password = security.validatePassword(formData.get('password'));
+            const passwordConfirmation = security.validatePassword(formData.get('password_confirmation'));
             const avatarFile = formData.get('avatar');
             const hasAvatar = avatarFile && avatarFile.name;
-            if (!firstname || !lastname || !email || !password) {
+            if (!firstname || !lastname || !email || !password || !passwordConfirmation) {
                 showMessage('Ad, soyad, e-posta ve şifre alanlarını kontrol edin. Şifre 8–128 karakter uzunluğunda olmalıdır.');
+                return;
+            }
+            if (!Object.is(password, passwordConfirmation)) {
+                showMessage('Şifreler eşleşmiyor. Lütfen iki alana da aynı şifreyi girin.');
                 return;
             }
             if (hasAvatar && !security.validateImageFile(avatarFile, 2 * 1024 * 1024)) {
@@ -278,7 +290,8 @@
                     options: { data: { firstname, lastname }, emailRedirectTo }
                 });
                 if (error || !data.user) {
-                    showMessage('Hesap oluşturulamadı. Bilgilerinizi kontrol edip tekrar deneyin.');
+                    showMessage(authErrorMessages?.signup(error)
+                        || 'Hesap oluşturulamadı. Bilgilerinizi kontrol edip tekrar deneyin.');
                     return;
                 }
 
