@@ -530,6 +530,9 @@
         });
         const requestedView = security.getQueryParam('view') || 'my-posts';
         const safeView = security.resolveDashboardView(requestedView, profile.is_admin);
+        if (shell) {
+            shell.dataset.view = safeView;
+        }
         document.querySelectorAll('[data-view-link]').forEach(link => {
             link.classList.toggle('active', link.dataset.viewLink === safeView);
         });

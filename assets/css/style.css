@@ -2934,6 +2934,10 @@ select:focus {
     margin-bottom: 1.25rem;
 }
 
+.dashboard[data-view="manage-users"] .dashboard__page-header {
+    margin-bottom: 0;
+}
+
 .dashboard__eyebrow {
     display: block;
     margin-bottom: 0.3rem;
