@@ -4,7 +4,7 @@ const { join } = require('node:path');
 const test = require('node:test');
 
 const ROOT = join(__dirname, '..');
-const RELEASE_VERSION = '65';
+const RELEASE_VERSION = '66';
 const HTML_FILES = [
     '404.html',
     'add-post.html',
@@ -47,13 +47,15 @@ test('keeps the critical responsive breakpoints and overflow safeguards', () => 
     assert.match(css, /input\[type="file"\]\s*\{[^}]*max-width:\s*100%;/s);
     assert.match(css, /\.dashboard main \.dashboard__table--posts td\s*\{[^}]*min-height:\s*0;/s);
     assert.match(css, /\.dashboard main \.dashboard__table--admin-posts \.dashboard__post-action\s*\{[^}]*grid-column:\s*span 2;/s);
+    assert.match(css, /\.dashboard main \.dashboard__table--posts \.dashboard__publish-control\s*\{[^}]*min-height:\s*2\.5rem;[^}]*border-radius:\s*10px;/s);
+    assert.match(css, /\.dashboard main \.dashboard__table--posts \.dashboard__publish-switch\s*\{[^}]*width:\s*3rem;[^}]*height:\s*1\.65rem;/s);
 });
 
 test('keeps generated pages and local clean routes on the current assets', () => {
     const builder = readFileSync(join(ROOT, 'scripts', 'build-pages.mjs'), 'utf8');
     const server = readFileSync(join(ROOT, 'scripts', 'serve.mjs'), 'utf8');
 
-    assert.match(builder, /const assetVersion = '65';/);
+    assert.match(builder, /const assetVersion = '66';/);
     assert.match(builder, /style\.css\?v=\$\{assetVersion\}/);
     assert.match(builder, /app\.js\?v=\$\{assetVersion\}/);
     assert.match(server, /pathname\.startsWith\('\/blog\/'\)/);
@@ -68,7 +70,7 @@ test('preserves and normalizes the home pagination query', () => {
     assert.match(main, /canonicalRoute === 'home' \? security\.getQueryParam\('page'\) : null/);
     assert.match(main, /security\.buildRoute\(canonicalRoute, canonicalValues\)/);
     assert.match(app, /const requestedHomePage = pageName === 'home' \? security\?\.getQueryParam\('page'\) : null/);
-    assert.match(app, /const PAGINATION_CACHE_VERSION = '65';/);
+    assert.match(app, /const PAGINATION_CACHE_VERSION = '66';/);
     assert.match(app, /route\.includes\('\?'\) \? '&' : '\?'/);
     assert.match(app, /security\.buildRoute\('home', safePage > 1 \? \{ page: safePage \} : \{\}\)/);
     assert.match(app, /window\.history\.replaceState\(null, '', `\$\{homeUrl\.pathname\}\$\{homeUrl\.search\}/);
