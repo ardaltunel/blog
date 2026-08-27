@@ -3780,6 +3780,7 @@ body.modal-open {
         align-content: start;
         gap: 0.3rem;
         min-width: 0;
+        min-height: 0;
         padding: 0.65rem 0.4rem;
         border-top: 0;
     }
@@ -3792,7 +3793,7 @@ body.modal-open {
     .dashboard main .dashboard__table--posts .dashboard__post-title {
         grid-column: 1 / -1;
         min-width: 0;
-        padding: 0.2rem 0.4rem 0.85rem;
+        padding: 0.2rem 0.4rem 0.7rem;
         border-bottom: 1px solid var(--color-border);
         font-size: 0.95rem;
         line-height: 1.45;
@@ -3801,7 +3802,8 @@ body.modal-open {
     .dashboard main .dashboard__table--posts .dashboard__post-category,
     .dashboard main .dashboard__table--posts .dashboard__post-author {
         grid-column: span 3;
-        padding-top: 0.8rem;
+        padding-top: 0.65rem;
+        padding-bottom: 0.55rem;
         color: var(--color-text);
         font-size: 0.8rem;
         line-height: 1.4;
@@ -3814,9 +3816,9 @@ body.modal-open {
     .dashboard main .dashboard__table--posts .dashboard__post-action {
         display: flex;
         grid-column: span 3;
-        align-items: stretch;
+        align-items: center;
         justify-content: stretch;
-        padding: 0.75rem 0.25rem 0.1rem;
+        padding: 0.55rem 0.25rem 0.15rem;
         border-top: 1px solid var(--color-border);
     }
 
@@ -3831,6 +3833,7 @@ body.modal-open {
     .dashboard main .dashboard__table--posts .dashboard__post-action > .btn {
         width: 100%;
         min-width: 0;
+        min-height: 2.5rem;
         max-width: none;
         justify-content: center;
         justify-self: stretch;
@@ -3841,6 +3844,7 @@ body.modal-open {
     .dashboard main .dashboard__table--posts .dashboard__publish-control {
         width: 100%;
         min-width: 0;
+        min-height: 2.5rem;
     }
 }
 
@@ -4194,7 +4198,7 @@ body.modal-open {
     }
 
     .dashboard main .dashboard__table--posts .dashboard__post-action > .btn {
-        min-height: 2.3rem;
+        min-height: 2.5rem;
         padding: 0.4rem 0.35rem;
         font-size: 0.64rem;
     }
@@ -4252,11 +4256,4 @@ body.modal-open {
         width: 100%;
     }
 
-    .dashboard main .dashboard__table--admin-posts .dashboard__post-action {
-        grid-column: span 3;
-    }
-
-    .dashboard main .dashboard__table--admin-posts .dashboard__post-action:last-child {
-        grid-column: 1 / -1;
-    }
 }

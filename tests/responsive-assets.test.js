@@ -4,7 +4,7 @@ const { join } = require('node:path');
 const test = require('node:test');
 
 const ROOT = join(__dirname, '..');
-const RELEASE_VERSION = '64';
+const RELEASE_VERSION = '65';
 const HTML_FILES = [
     '404.html',
     'add-post.html',
@@ -45,13 +45,15 @@ test('keeps the critical responsive breakpoints and overflow safeguards', () => 
     assert.match(css, /nav\s*\{[^}]*width:\s*100%;/s);
     assert.match(css, /\.article-content table\s*\{[^}]*overflow-x:\s*auto;/s);
     assert.match(css, /input\[type="file"\]\s*\{[^}]*max-width:\s*100%;/s);
+    assert.match(css, /\.dashboard main \.dashboard__table--posts td\s*\{[^}]*min-height:\s*0;/s);
+    assert.match(css, /\.dashboard main \.dashboard__table--admin-posts \.dashboard__post-action\s*\{[^}]*grid-column:\s*span 2;/s);
 });
 
 test('keeps generated pages and local clean routes on the current assets', () => {
     const builder = readFileSync(join(ROOT, 'scripts', 'build-pages.mjs'), 'utf8');
     const server = readFileSync(join(ROOT, 'scripts', 'serve.mjs'), 'utf8');
 
-    assert.match(builder, /const assetVersion = '64';/);
+    assert.match(builder, /const assetVersion = '65';/);
     assert.match(builder, /style\.css\?v=\$\{assetVersion\}/);
     assert.match(builder, /app\.js\?v=\$\{assetVersion\}/);
     assert.match(server, /pathname\.startsWith\('\/blog\/'\)/);
