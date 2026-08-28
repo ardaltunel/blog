@@ -2194,6 +2194,47 @@ form.search__bar-container {
     flex-direction: row;
 }
 
+.image-upload-preview {
+    display: grid;
+    grid-template-columns: minmax(7.5rem, 10rem) minmax(0, 1fr);
+    align-items: center;
+    gap: 0.9rem;
+    margin: 0.8rem 0 0;
+    padding: 0.7rem;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    background: var(--color-surface-2);
+}
+
+.image-upload-preview[hidden] {
+    display: none;
+}
+
+.image-upload-preview img {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: 7px;
+    background: var(--color-bg);
+}
+
+.image-upload-preview figcaption {
+    min-width: 0;
+    color: var(--color-muted);
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+@media screen and (max-width: 640px) {
+    .image-upload-preview {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .image-upload-preview img {
+        max-width: 12rem;
+    }
+}
+
 .auth__form {
     gap: 0.9rem;
 }

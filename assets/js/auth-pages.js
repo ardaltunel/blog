@@ -14,6 +14,7 @@
     const editPostCloseButton = document.querySelector('#close-edit-post-modal');
     let activeEditor = null;
     let editPostEditor = null;
+    let editThumbnailPreviewCleanup = null;
     let editPostRequestId = 0;
     let editPostTrigger = null;
     let messageDismissTimer = null;
@@ -54,6 +55,8 @@
         }
     };
     const destroyEditPostEditor = async () => {
+        editThumbnailPreviewCleanup?.();
+        editThumbnailPreviewCleanup = null;
         if (!editPostEditor) {
             return;
         }
@@ -265,6 +268,71 @@
         }
         return { path, publicUrl };
     };
+    const storagePathFromPublicUrl = value => {
+        const safeUrl = security.safeImageUrl(value, '');
+        if (!safeUrl || !config) {
+            return null;
+        }
+        try {
+            const publicRoot = new URL(
+                `/storage/v1/object/public/${encodeURIComponent(config.storageBucket)}/`,
+                config.url
+            );
+            const candidate = new URL(safeUrl, window.location.href);
+            if (candidate.origin !== publicRoot.origin || !candidate.pathname.startsWith(publicRoot.pathname)) {
+                return null;
+            }
+            const path = decodeURIComponent(candidate.pathname.slice(publicRoot.pathname.length));
+            return /^uploads\/[0-9a-f-]{36}\/posts\/[0-9a-f-]{36}\.(?:jpg|png|webp)$/i.test(path)
+                ? path
+                : null;
+        } catch {
+            return null;
+        }
+    };
+    const setupImagePreview = (input, preview, { initialUrl = '', maxBytes = 5 * 1024 * 1024 } = {}) => {
+        const image = preview?.querySelector('img');
+        const label = preview?.querySelector('.image-upload-preview__label');
+        if (!input || !preview || !image) {
+            return () => {};
+        }
+        const initialImage = security.safeImageUrl(initialUrl, '');
+        let objectUrl = null;
+        const clearObjectUrl = () => {
+            if (objectUrl) {
+                URL.revokeObjectURL(objectUrl);
+                objectUrl = null;
+            }
+        };
+        const render = (src, text) => {
+            if (!src) {
+                image.removeAttribute('src');
+                preview.hidden = true;
+                return;
+            }
+            image.src = src;
+            if (label) {
+                label.textContent = text;
+            }
+            preview.hidden = false;
+        };
+        render(initialImage, 'Mevcut kapak görseli');
+        const handleChange = () => {
+            clearObjectUrl();
+            const file = input.files?.[0];
+            if (!security.validateImageFile(file, maxBytes)) {
+                render(initialImage, 'Mevcut kapak görseli');
+                return;
+            }
+            objectUrl = URL.createObjectURL(file);
+            render(objectUrl, 'Seçilen kapak görseli');
+        };
+        input.addEventListener('change', handleChange);
+        return () => {
+            input.removeEventListener('change', handleChange);
+            clearObjectUrl();
+        };
+    };
     const createEditor = (element) => {
         if (!window.SafeRichEditor?.create) {
             throw new Error('EDITOR_UNAVAILABLE');
@@ -458,6 +526,11 @@
             return;
         }
         await loadCategoriesIntoSelect();
+        const thumbnailPreviewCleanup = setupImagePreview(
+            form.querySelector('#thumbnail'),
+            form.querySelector('#thumbnail-preview')
+        );
+        window.addEventListener('pagehide', thumbnailPreviewCleanup, { once: true });
         form.addEventListener('submit', async event => {
             event.preventDefault();
             clearMessage();
@@ -501,6 +574,7 @@
                 }
                 showMessage('Yazı yönetici incelemesine gönderildi.', 'success');
                 form.reset();
+                form.querySelector('#thumbnail')?.dispatchEvent(new Event('change'));
                 activeEditor?.setData('');
             } catch {
                 await cleanupUpload(uploadedPath);
@@ -1016,12 +1090,17 @@
             });
         });
         container.querySelectorAll('.edit-post').forEach(button => {
-            button.addEventListener('click', () => renderEditPostPanel(safeId(button.dataset.id), refresh, button));
+            button.addEventListener('click', () => renderEditPostPanel(
+                safeId(button.dataset.id),
+                profile.user_id,
+                refresh,
+                button
+            ));
         });
     };
 
-    const renderEditPostPanel = async (postId, refresh, trigger) => {
-        if (!editPostPanel || !postId) {
+    const renderEditPostPanel = async (postId, userId, refresh, trigger) => {
+        if (!editPostPanel || !postId || !security.validateUuid(userId)) {
             return;
         }
         await destroyEditPostEditor();
@@ -1030,7 +1109,7 @@
         }
         const requestId = ++editPostRequestId;
         const [postResult, categoryResult] = await Promise.all([
-            client.from('posts').select('id,title,body,category_id').eq('id', postId).maybeSingle(),
+            client.from('posts').select('id,title,body,thumbnail,category_id').eq('id', postId).maybeSingle(),
             client.from('categories').select('id,title').order('title').limit(500)
         ]);
         if (requestId !== editPostRequestId || editPostModal?.hidden) {
@@ -1043,6 +1122,7 @@
         }
         const postTitle = readTitle(postResult.data.title);
         const body = security.sanitizeBlogHtml(postResult.data.body || '');
+        const thumbnail = security.safeImageUrl(postResult.data.thumbnail, '');
         const categoryId = safeId(postResult.data.category_id);
         const categories = categoryResult.data.map(category => ({
             id: safeId(category.id),
@@ -1070,6 +1150,15 @@
                         <label for="edit-editor">Yazı içeriği</label>
                         <textarea id="edit-editor" rows="10" maxlength="200000" required>${security.escapeHtml(body)}</textarea>
                     </div>
+                    <div class="form__control">
+                        <label for="edit-post-thumbnail">Kapak görseli</label>
+                        <input type="file" id="edit-post-thumbnail" accept="image/png,image/jpeg,image/webp">
+                        <small>Yeni bir görsel seçmezseniz mevcut kapak görseli korunur.</small>
+                        <figure class="image-upload-preview" id="edit-thumbnail-preview" ${thumbnail ? '' : 'hidden'}>
+                            <img src="${security.escapeHtml(thumbnail)}" alt="Kapak görseli önizlemesi">
+                            <figcaption class="image-upload-preview__label">Mevcut kapak görseli</figcaption>
+                        </figure>
+                    </div>
                     <button type="submit" class="btn dashboard__editor-submit">Değişiklikleri kaydet</button>
                 </form>
             </div>
@@ -1083,6 +1172,11 @@
             showEditPostMessage('Düzenleyici yüklenemedi.');
             return;
         }
+        editThumbnailPreviewCleanup = setupImagePreview(
+            editPostPanel.querySelector('#edit-post-thumbnail'),
+            editPostPanel.querySelector('#edit-thumbnail-preview'),
+            { initialUrl: thumbnail }
+        );
         editPostPanel.querySelector('#edit-post-form')?.addEventListener('submit', async event => {
             event.preventDefault();
             clearEditPostMessage();
@@ -1090,6 +1184,7 @@
             const title = readTitle(form.querySelector('#edit-post-title')?.value);
             const updatedBody = getBody(editPostEditor, form.querySelector('#edit-editor')?.value);
             const updatedCategoryId = safeId(form.querySelector('#edit-post-category')?.value);
+            const thumbnailFile = form.querySelector('#edit-post-thumbnail')?.files?.[0] || null;
             if (!title || !updatedCategoryId) {
                 showEditPostMessage('Yazı başlığı ve kategori alanları zorunludur.');
                 return;
@@ -1099,21 +1194,43 @@
                 editPostPanel.querySelector('.safe-editor__editable')?.focus();
                 return;
             }
-            const button = event.currentTarget.querySelector('button[type="submit"]');
-            setSubmitting(button, true, 'Kaydediliyor...');
-            const { data: updated, error } = await client.from('posts').update({
-                title,
-                body: updatedBody,
-                category_id: updatedCategoryId
-            }).eq('id', postId).select('id');
-            if (error || !updated?.length) {
-                showEditPostMessage('Yazı güncellenemedi.');
-                setSubmitting(button, false, 'Değişiklikleri kaydet');
+            if (thumbnailFile && !security.validateImageFile(thumbnailFile, 5 * 1024 * 1024)) {
+                showEditPostMessage('Kapak görseli PNG, JPEG veya WebP biçiminde ve en fazla 5 MB olmalıdır.');
                 return;
             }
-            showMessage('Yazı güncellendi.', 'success');
-            await refresh();
-            await closeEditPostModal();
+            const button = event.currentTarget.querySelector('button[type="submit"]');
+            setSubmitting(button, true, 'Kaydediliyor...');
+            let uploadedPath = null;
+            try {
+                const updates = {
+                    title,
+                    body: updatedBody,
+                    category_id: updatedCategoryId
+                };
+                if (thumbnailFile) {
+                    const upload = await uploadImage(thumbnailFile, userId, 'posts', 5 * 1024 * 1024);
+                    uploadedPath = upload.path;
+                    updates.thumbnail = upload.publicUrl;
+                }
+                const { data: updated, error } = await client.from('posts')
+                    .update(updates).eq('id', postId).select('id,thumbnail').maybeSingle();
+                if (error || !updated?.id) {
+                    throw new Error('POST_UPDATE_FAILED');
+                }
+                if (uploadedPath) {
+                    const oldThumbnailPath = storagePathFromPublicUrl(thumbnail);
+                    if (oldThumbnailPath && oldThumbnailPath !== uploadedPath) {
+                        await cleanupUpload(oldThumbnailPath);
+                    }
+                }
+                showMessage('Yazı güncellendi.', 'success');
+                await refresh();
+                await closeEditPostModal();
+            } catch {
+                await cleanupUpload(uploadedPath);
+                showEditPostMessage('Yazı güncellenemedi.');
+                setSubmitting(button, false, 'Değişiklikleri kaydet');
+            }
         });
     };
 

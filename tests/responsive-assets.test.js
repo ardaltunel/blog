@@ -4,7 +4,7 @@ const { join } = require('node:path');
 const test = require('node:test');
 
 const ROOT = join(__dirname, '..');
-const RELEASE_VERSION = '69';
+const RELEASE_VERSION = '70';
 const HTML_FILES = [
     '404.html',
     'add-post.html',
@@ -49,13 +49,15 @@ test('keeps the critical responsive breakpoints and overflow safeguards', () => 
     assert.match(css, /\.dashboard main \.dashboard__table--admin-posts \.dashboard__post-action\s*\{[^}]*grid-column:\s*span 2;/s);
     assert.match(css, /\.dashboard main \.dashboard__table--posts \.dashboard__publish-control\s*\{[^}]*min-height:\s*2\.5rem;[^}]*border-radius:\s*10px;/s);
     assert.match(css, /\.dashboard main \.dashboard__table--posts \.dashboard__publish-switch\s*\{[^}]*width:\s*3rem;[^}]*height:\s*1\.65rem;/s);
+    assert.match(css, /\.image-upload-preview\s*\{[^}]*grid-template-columns:\s*minmax\(7\.5rem, 10rem\) minmax\(0, 1fr\);/s);
+    assert.match(css, /\.image-upload-preview img\s*\{[^}]*aspect-ratio:\s*16 \/ 9;[^}]*object-fit:\s*cover;/s);
 });
 
 test('keeps generated pages and local clean routes on the current assets', () => {
     const builder = readFileSync(join(ROOT, 'scripts', 'build-pages.mjs'), 'utf8');
     const server = readFileSync(join(ROOT, 'scripts', 'serve.mjs'), 'utf8');
 
-    assert.match(builder, /const assetVersion = '69';/);
+    assert.match(builder, /const assetVersion = '70';/);
     assert.match(builder, /style\.css\?v=\$\{assetVersion\}/);
     assert.match(builder, /app\.js\?v=\$\{assetVersion\}/);
     assert.match(server, /pathname\.startsWith\('\/blog\/'\)/);
@@ -70,7 +72,7 @@ test('preserves and normalizes the home pagination query', () => {
     assert.match(main, /canonicalRoute === 'home' \? security\.getQueryParam\('page'\) : null/);
     assert.match(main, /security\.buildRoute\(canonicalRoute, canonicalValues\)/);
     assert.match(app, /const requestedHomePage = pageName === 'home' \? security\?\.getQueryParam\('page'\) : null/);
-    assert.match(app, /const PAGINATION_CACHE_VERSION = '69';/);
+    assert.match(app, /const PAGINATION_CACHE_VERSION = '70';/);
     assert.match(app, /route\.includes\('\?'\) \? '&' : '\?'/);
     assert.match(app, /security\.buildRoute\('home', safePage > 1 \? \{ page: safePage \} : \{\}\)/);
     assert.match(app, /window\.history\.replaceState\(null, '', `\$\{homeUrl\.pathname\}\$\{homeUrl\.search\}/);
@@ -93,11 +95,18 @@ test('keeps rich editor fields out of hidden native validation', () => {
     assert.match(authPages, /if \(!updatedBody\) \{\s*showEditPostMessage\('Yazı içeriği zorunludur\.'\);\s*editPostPanel\.querySelector\('\.safe-editor__editable'\)\?\.focus\(\);/);
     assert.match(authPages, /const form = event\.currentTarget;\s*const title = readTitle\(form\.querySelector\('#edit-post-title'\)\?\.value\);\s*const updatedBody = getBody\(editPostEditor, form\.querySelector\('#edit-editor'\)\?\.value\);\s*const updatedCategoryId = safeId\(form\.querySelector\('#edit-post-category'\)\?\.value\);/);
     assert.doesNotMatch(authPages, /new FormData\(event\.currentTarget\);\s*const title = readTitle\(formData\.get\('title'\)\);/);
+    assert.match(authPages, /client\.from\('posts'\)\.select\('id,title,body,thumbnail,category_id'\)/);
+    assert.match(authPages, /const thumbnailFile = form\.querySelector\('#edit-post-thumbnail'\)\?\.files\?\.\[0\] \|\| null;/);
+    assert.match(authPages, /updates\.thumbnail = upload\.publicUrl;/);
+    assert.match(authPages, /const oldThumbnailPath = storagePathFromPublicUrl\(thumbnail\);/);
+    assert.match(authPages, /const setupImagePreview = \(input, preview,/);
 
     for (const file of ['add-post.html', join('yeni-blog-ekle', 'index.html')]) {
         const html = readFileSync(join(ROOT, file), 'utf8');
         const form = html.match(/<form id="add-post-form">([\s\S]*?)<\/form>/)?.[1] || '';
         assert.match(form, /id="auth-message"/i, `${file} should show submission feedback beside the submit action`);
         assert.ok(form.indexOf('id="auth-message"') < form.indexOf('İncelemeye gönder'), `${file} should show feedback before the submit action`);
+        assert.match(form, /id="thumbnail-preview" hidden/, `${file} should include a cover image preview`);
+        assert.match(form, /class="image-upload-preview__label"/, `${file} should label the selected cover preview`);
     }
 });
