@@ -1058,17 +1058,17 @@
                 <form id="edit-post-form">
                     <div class="form__control">
                         <label for="edit-post-title">Yazı başlığı</label>
-                        <input type="text" id="edit-post-title" name="title" maxlength="160" value="${security.escapeHtml(postTitle)}" required>
+                        <input type="text" id="edit-post-title" maxlength="160" value="${security.escapeHtml(postTitle)}" required>
                     </div>
                     <div class="form__control">
                         <label for="edit-post-category">Kategori</label>
-                        <select id="edit-post-category" name="category" required>${categories.map(category => `
+                        <select id="edit-post-category" required>${categories.map(category => `
                         <option value="${category.id}" ${category.id === categoryId ? 'selected' : ''}>${security.escapeHtml(categoryTitle(category.title))}</option>
                         `).join('')}</select>
                     </div>
                     <div class="form__control">
                         <label for="edit-editor">Yazı içeriği</label>
-                        <textarea name="body" id="edit-editor" rows="10" maxlength="200000" required>${security.escapeHtml(body)}</textarea>
+                        <textarea id="edit-editor" rows="10" maxlength="200000" required>${security.escapeHtml(body)}</textarea>
                     </div>
                     <button type="submit" class="btn dashboard__editor-submit">Değişiklikleri kaydet</button>
                 </form>
@@ -1086,10 +1086,10 @@
         editPostPanel.querySelector('#edit-post-form')?.addEventListener('submit', async event => {
             event.preventDefault();
             clearEditPostMessage();
-            const formData = new FormData(event.currentTarget);
-            const title = readTitle(formData.get('title'));
-            const updatedBody = getBody(editPostEditor, formData.get('body'));
-            const updatedCategoryId = safeId(formData.get('category'));
+            const form = event.currentTarget;
+            const title = readTitle(form.querySelector('#edit-post-title')?.value);
+            const updatedBody = getBody(editPostEditor, form.querySelector('#edit-editor')?.value);
+            const updatedCategoryId = safeId(form.querySelector('#edit-post-category')?.value);
             if (!title || !updatedCategoryId) {
                 showEditPostMessage('Yazı başlığı ve kategori alanları zorunludur.');
                 return;
