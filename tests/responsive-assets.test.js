@@ -4,7 +4,7 @@ const { join } = require('node:path');
 const test = require('node:test');
 
 const ROOT = join(__dirname, '..');
-const RELEASE_VERSION = '70';
+const RELEASE_VERSION = '71';
 const HTML_FILES = [
     '404.html',
     'add-post.html',
@@ -22,6 +22,8 @@ test('keeps every page viewport-aware and first-party assets cache-safe', () => 
     for (const file of HTML_FILES) {
         const html = readFileSync(join(ROOT, file), 'utf8');
         assert.match(html, /<meta\s+name="viewport"\s+content="width=device-width,\s*initial-scale=1\.0">/i, `${file} needs a responsive viewport`);
+        assert.match(html, /img-src\s+'self'\s+blob:/i, `${file} must allow local image previews`);
+        assert.doesNotMatch(html, /default-src[^;]*blob:/i, `${file} must limit blob URLs to images`);
 
         const assetReferences = [...html.matchAll(/(?:src|href)="[^"]*assets\/(?:css|js|data)\/[^\"]+"/g)];
         assert.ok(assetReferences.length > 0, `${file} needs versioned first-party assets`);
@@ -57,7 +59,8 @@ test('keeps generated pages and local clean routes on the current assets', () =>
     const builder = readFileSync(join(ROOT, 'scripts', 'build-pages.mjs'), 'utf8');
     const server = readFileSync(join(ROOT, 'scripts', 'serve.mjs'), 'utf8');
 
-    assert.match(builder, /const assetVersion = '70';/);
+    assert.match(builder, /const assetVersion = '71';/);
+    assert.match(builder, /img-src 'self' blob:/);
     assert.match(builder, /style\.css\?v=\$\{assetVersion\}/);
     assert.match(builder, /app\.js\?v=\$\{assetVersion\}/);
     assert.match(server, /pathname\.startsWith\('\/blog\/'\)/);
@@ -72,7 +75,7 @@ test('preserves and normalizes the home pagination query', () => {
     assert.match(main, /canonicalRoute === 'home' \? security\.getQueryParam\('page'\) : null/);
     assert.match(main, /security\.buildRoute\(canonicalRoute, canonicalValues\)/);
     assert.match(app, /const requestedHomePage = pageName === 'home' \? security\?\.getQueryParam\('page'\) : null/);
-    assert.match(app, /const PAGINATION_CACHE_VERSION = '70';/);
+    assert.match(app, /const PAGINATION_CACHE_VERSION = '71';/);
     assert.match(app, /route\.includes\('\?'\) \? '&' : '\?'/);
     assert.match(app, /security\.buildRoute\('home', safePage > 1 \? \{ page: safePage \} : \{\}\)/);
     assert.match(app, /window\.history\.replaceState\(null, '', `\$\{homeUrl\.pathname\}\$\{homeUrl\.search\}/);

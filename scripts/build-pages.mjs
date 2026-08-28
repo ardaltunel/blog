@@ -19,12 +19,12 @@ const siteBaseUrl = siteUrl.href;
 const basePath = siteUrl.pathname;
 const siteOrigin = siteUrl.origin;
 const siteName = 'ARDALTUNEL';
-const assetVersion = '70';
+const assetVersion = '71';
 const homeDescription = 'Arda Altunel’in yazılım, teknoloji, tasarım, bilim ve yaşam üzerine blog yazıları.';
 const logoUrl = new URL('assets/logo/logo.png', siteBaseUrl).href;
 const fallbackAvatar = new URL('assets/images/no-user-photo.svg?v=2', siteBaseUrl).href;
 const reservedPostSlugs = ['assets', 'kategori', 'yazi', 'yeni-blog-ekle'];
-const csp = "default-src 'self'; base-uri 'none'; object-src 'none'; frame-src https://www.youtube-nocookie.com; form-action 'self'; script-src 'self'; style-src 'self'; img-src 'self' https://bdadbqlkmdwzzkrwetrf.supabase.co https://lh3.googleusercontent.com; font-src 'self'; connect-src 'self' https://bdadbqlkmdwzzkrwetrf.supabase.co; media-src 'none'; worker-src 'none'; manifest-src 'self'; upgrade-insecure-requests";
+const csp = "default-src 'self'; base-uri 'none'; object-src 'none'; frame-src https://www.youtube-nocookie.com; form-action 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: https://bdadbqlkmdwzzkrwetrf.supabase.co https://lh3.googleusercontent.com; font-src 'self'; connect-src 'self' https://bdadbqlkmdwzzkrwetrf.supabase.co; media-src 'none'; worker-src 'none'; manifest-src 'self'; upgrade-insecure-requests";
 
 const escapeHtml = value => String(value ?? '')
     .replace(/&/g, '&amp;')
