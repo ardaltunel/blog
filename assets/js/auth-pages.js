@@ -453,8 +453,13 @@
             const body = getBody(activeEditor, formData.get('body'));
             const categoryId = safeId(formData.get('category'));
             const thumbnailFile = formData.get('thumbnail');
-            if (!title || !body || !categoryId) {
-                showMessage('Yazı başlığı, kategori ve içerik alanları zorunludur.');
+            if (!title || !categoryId) {
+                showMessage('Yazı başlığı ve kategori alanları zorunludur.');
+                return;
+            }
+            if (!body) {
+                showMessage('Yazı içeriği zorunludur.');
+                document.querySelector('.safe-editor__editable')?.focus();
                 return;
             }
             if (!security.validateImageFile(thumbnailFile, 5 * 1024 * 1024)) {

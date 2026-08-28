@@ -248,6 +248,8 @@
         document.addEventListener('selectionchange', updateToolbarState);
 
         wrapper.append(toolbar, editable, footer);
+        const wasRequired = textarea.required;
+        textarea.required = false;
         textarea.hidden = true;
         textarea.insertAdjacentElement('afterend', wrapper);
 
@@ -259,6 +261,7 @@
         const destroy = async () => {
             document.removeEventListener('selectionchange', updateToolbarState);
             wrapper.remove();
+            textarea.required = wasRequired;
             textarea.hidden = false;
         };
 

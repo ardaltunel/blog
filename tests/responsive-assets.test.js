@@ -4,7 +4,7 @@ const { join } = require('node:path');
 const test = require('node:test');
 
 const ROOT = join(__dirname, '..');
-const RELEASE_VERSION = '66';
+const RELEASE_VERSION = '67';
 const HTML_FILES = [
     '404.html',
     'add-post.html',
@@ -55,7 +55,7 @@ test('keeps generated pages and local clean routes on the current assets', () =>
     const builder = readFileSync(join(ROOT, 'scripts', 'build-pages.mjs'), 'utf8');
     const server = readFileSync(join(ROOT, 'scripts', 'serve.mjs'), 'utf8');
 
-    assert.match(builder, /const assetVersion = '66';/);
+    assert.match(builder, /const assetVersion = '67';/);
     assert.match(builder, /style\.css\?v=\$\{assetVersion\}/);
     assert.match(builder, /app\.js\?v=\$\{assetVersion\}/);
     assert.match(server, /pathname\.startsWith\('\/blog\/'\)/);
@@ -70,11 +70,27 @@ test('preserves and normalizes the home pagination query', () => {
     assert.match(main, /canonicalRoute === 'home' \? security\.getQueryParam\('page'\) : null/);
     assert.match(main, /security\.buildRoute\(canonicalRoute, canonicalValues\)/);
     assert.match(app, /const requestedHomePage = pageName === 'home' \? security\?\.getQueryParam\('page'\) : null/);
-    assert.match(app, /const PAGINATION_CACHE_VERSION = '66';/);
+    assert.match(app, /const PAGINATION_CACHE_VERSION = '67';/);
     assert.match(app, /route\.includes\('\?'\) \? '&' : '\?'/);
     assert.match(app, /security\.buildRoute\('home', safePage > 1 \? \{ page: safePage \} : \{\}\)/);
     assert.match(app, /window\.history\.replaceState\(null, '', `\$\{homeUrl\.pathname\}\$\{homeUrl\.search\}/);
     assert.match(app, /document\.querySelector\('#posts'\)\?\.scrollIntoView\(\{ block: 'start' \}\)/);
     assert.match(app, /paginationRevealTimer = null;\s*scrollToRequestedPosts\(\);/);
     assert.match(builder, /pageName === 'home' \? ' data-route="home"' : ''/);
+});
+
+test('keeps rich editor fields out of hidden native validation', () => {
+    const editor = readFileSync(join(ROOT, 'assets', 'js', 'rich-editor.js'), 'utf8');
+    const authPages = readFileSync(join(ROOT, 'assets', 'js', 'auth-pages.js'), 'utf8');
+
+    assert.match(editor, /const wasRequired = textarea\.required;\s*textarea\.required = false;\s*textarea\.hidden = true;/);
+    assert.match(editor, /wrapper\.remove\(\);\s*textarea\.required = wasRequired;\s*textarea\.hidden = false;/);
+    assert.match(authPages, /if \(!body\) \{\s*showMessage\('Yazı içeriği zorunludur\.'\);\s*document\.querySelector\('\.safe-editor__editable'\)\?\.focus\(\);/);
+
+    for (const file of ['add-post.html', join('yeni-blog-ekle', 'index.html')]) {
+        const html = readFileSync(join(ROOT, file), 'utf8');
+        const form = html.match(/<form id="add-post-form">([\s\S]*?)<\/form>/)?.[1] || '';
+        assert.match(form, /id="auth-message"/i, `${file} should show submission feedback beside the submit action`);
+        assert.ok(form.indexOf('id="auth-message"') < form.indexOf('İncelemeye gönder'), `${file} should show feedback before the submit action`);
+    }
 });
