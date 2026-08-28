@@ -85,6 +85,11 @@
             counter.textContent = `${words.toLocaleString('tr-TR')} kelime · ${characters.toLocaleString('tr-TR')} karakter`;
         };
 
+        const syncTextarea = () => {
+            textarea.value = serializeChildren(editable);
+            return textarea.value;
+        };
+
         const notifyChange = () => {
             updateCounter();
             editable.dispatchEvent(new Event('change', { bubbles: true }));
@@ -230,7 +235,10 @@
             });
         };
 
-        editable.addEventListener('input', updateCounter);
+        editable.addEventListener('input', () => {
+            syncTextarea();
+            updateCounter();
+        });
         editable.addEventListener('keyup', updateToolbarState);
         editable.addEventListener('mouseup', updateToolbarState);
         editable.addEventListener('paste', event => {
@@ -255,11 +263,17 @@
 
         const setData = (html = '') => {
             editable.replaceChildren(global.SecurityUtils.sanitizeBlogFragment(html));
+            syncTextarea();
             updateCounter();
         };
-        const getData = () => global.SecurityUtils.sanitizeBlogHtml(serializeChildren(editable));
+        const getData = () => {
+            const sanitized = global.SecurityUtils.sanitizeBlogHtml(syncTextarea());
+            textarea.value = sanitized;
+            return sanitized;
+        };
         const destroy = async () => {
             document.removeEventListener('selectionchange', updateToolbarState);
+            getData();
             wrapper.remove();
             textarea.required = wasRequired;
             textarea.hidden = false;

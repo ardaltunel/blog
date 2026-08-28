@@ -213,10 +213,23 @@
         });
     };
     const getBody = (editor, fallback = '') => {
-        const raw = editor ? editor.getData() : String(fallback || '');
-        const sanitized = security.sanitizeBlogHtml(raw).trim();
-        const text = security.stripHtml(sanitized).trim();
-        return text && sanitized.length <= 200000 ? sanitized : null;
+        const candidates = [];
+        if (editor) {
+            try {
+                candidates.push(editor.getData());
+            } catch {
+                // The synchronized source field remains available as a safe fallback.
+            }
+        }
+        candidates.push(String(fallback || ''));
+        for (const raw of candidates) {
+            const sanitized = security.sanitizeBlogHtml(raw).trim();
+            const text = security.stripHtml(sanitized).trim();
+            if (text && sanitized.length <= 200000) {
+                return sanitized;
+            }
+        }
+        return null;
     };
     const cleanupUpload = async path => {
         if (!path || !client || !config) {
@@ -1077,8 +1090,13 @@
             const title = readTitle(formData.get('title'));
             const updatedBody = getBody(editPostEditor, formData.get('body'));
             const updatedCategoryId = safeId(formData.get('category'));
-            if (!title || !updatedBody || !updatedCategoryId) {
-                showEditPostMessage('Yazı başlığı, kategori ve içerik alanları zorunludur.');
+            if (!title || !updatedCategoryId) {
+                showEditPostMessage('Yazı başlığı ve kategori alanları zorunludur.');
+                return;
+            }
+            if (!updatedBody) {
+                showEditPostMessage('Yazı içeriği zorunludur.');
+                editPostPanel.querySelector('.safe-editor__editable')?.focus();
                 return;
             }
             const button = event.currentTarget.querySelector('button[type="submit"]');

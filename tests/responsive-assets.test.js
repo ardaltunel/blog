@@ -4,7 +4,7 @@ const { join } = require('node:path');
 const test = require('node:test');
 
 const ROOT = join(__dirname, '..');
-const RELEASE_VERSION = '67';
+const RELEASE_VERSION = '68';
 const HTML_FILES = [
     '404.html',
     'add-post.html',
@@ -55,7 +55,7 @@ test('keeps generated pages and local clean routes on the current assets', () =>
     const builder = readFileSync(join(ROOT, 'scripts', 'build-pages.mjs'), 'utf8');
     const server = readFileSync(join(ROOT, 'scripts', 'serve.mjs'), 'utf8');
 
-    assert.match(builder, /const assetVersion = '67';/);
+    assert.match(builder, /const assetVersion = '68';/);
     assert.match(builder, /style\.css\?v=\$\{assetVersion\}/);
     assert.match(builder, /app\.js\?v=\$\{assetVersion\}/);
     assert.match(server, /pathname\.startsWith\('\/blog\/'\)/);
@@ -70,7 +70,7 @@ test('preserves and normalizes the home pagination query', () => {
     assert.match(main, /canonicalRoute === 'home' \? security\.getQueryParam\('page'\) : null/);
     assert.match(main, /security\.buildRoute\(canonicalRoute, canonicalValues\)/);
     assert.match(app, /const requestedHomePage = pageName === 'home' \? security\?\.getQueryParam\('page'\) : null/);
-    assert.match(app, /const PAGINATION_CACHE_VERSION = '67';/);
+    assert.match(app, /const PAGINATION_CACHE_VERSION = '68';/);
     assert.match(app, /route\.includes\('\?'\) \? '&' : '\?'/);
     assert.match(app, /security\.buildRoute\('home', safePage > 1 \? \{ page: safePage \} : \{\}\)/);
     assert.match(app, /window\.history\.replaceState\(null, '', `\$\{homeUrl\.pathname\}\$\{homeUrl\.search\}/);
@@ -85,7 +85,12 @@ test('keeps rich editor fields out of hidden native validation', () => {
 
     assert.match(editor, /const wasRequired = textarea\.required;\s*textarea\.required = false;\s*textarea\.hidden = true;/);
     assert.match(editor, /wrapper\.remove\(\);\s*textarea\.required = wasRequired;\s*textarea\.hidden = false;/);
+    assert.match(editor, /const syncTextarea = \(\) => \{\s*textarea\.value = serializeChildren\(editable\);/);
+    assert.match(editor, /editable\.addEventListener\('input', \(\) => \{\s*syncTextarea\(\);\s*updateCounter\(\);/);
+    assert.match(editor, /const getData = \(\) => \{\s*const sanitized = global\.SecurityUtils\.sanitizeBlogHtml\(syncTextarea\(\)\);\s*textarea\.value = sanitized;/);
     assert.match(authPages, /if \(!body\) \{\s*showMessage\('Yazı içeriği zorunludur\.'\);\s*document\.querySelector\('\.safe-editor__editable'\)\?\.focus\(\);/);
+    assert.match(authPages, /const candidates = \[\];[\s\S]*candidates\.push\(String\(fallback \|\| ''\)\);/);
+    assert.match(authPages, /if \(!updatedBody\) \{\s*showEditPostMessage\('Yazı içeriği zorunludur\.'\);\s*editPostPanel\.querySelector\('\.safe-editor__editable'\)\?\.focus\(\);/);
 
     for (const file of ['add-post.html', join('yeni-blog-ekle', 'index.html')]) {
         const html = readFileSync(join(ROOT, file), 'utf8');
