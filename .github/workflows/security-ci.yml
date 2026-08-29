@@ -25,15 +25,20 @@ jobs:
           persist-credentials: false
 
       - name: Set up Node.js
+        if: github.event_name == 'pull_request'
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 24
           cache: npm
 
       - name: Install pinned dependencies
+        if: github.event_name == 'pull_request'
         run: npm ci --ignore-scripts
 
-      - name: Build and verify
+      # Main pushes are fully verified by the deployment workflow. Repeating the
+      # same command here made one defect generate two failed runs and two emails.
+      - name: Build and verify pull request
+        if: github.event_name == 'pull_request'
         run: npm run check
 
       - name: Scan repository history for secrets

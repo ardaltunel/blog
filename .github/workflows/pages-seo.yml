@@ -40,7 +40,18 @@ jobs:
       - name: Configure GitHub Pages
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
 
-      - name: Build and verify SEO pages
+      # A scheduled run only refreshes content from Supabase. The same commit was
+      # already fully checked when it was pushed, so repeating lint, unit tests and
+      # npm audit here turns one code/dependency failure into an email every 6 hours.
+      - name: Build and verify scheduled SEO refresh
+        if: github.event_name == 'schedule'
+        env:
+          SEO_REQUIRE_REMOTE: "1"
+          SITE_URL: "https://ardaltunel.github.io/blog/"
+        run: npm run check:seo-deploy
+
+      - name: Build and run full verification
+        if: github.event_name != 'schedule'
         env:
           SEO_REQUIRE_REMOTE: "1"
           SITE_URL: "https://ardaltunel.github.io/blog/"
