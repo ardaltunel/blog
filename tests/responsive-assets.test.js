@@ -4,7 +4,7 @@ const { join } = require('node:path');
 const test = require('node:test');
 
 const ROOT = join(__dirname, '..');
-const RELEASE_VERSION = '72';
+const RELEASE_VERSION = '73';
 const HTML_FILES = [
     '404.html',
     'add-post.html',
@@ -62,7 +62,7 @@ test('keeps generated pages and local clean routes on the current assets', () =>
     const builder = readFileSync(join(ROOT, 'scripts', 'build-pages.mjs'), 'utf8');
     const server = readFileSync(join(ROOT, 'scripts', 'serve.mjs'), 'utf8');
 
-    assert.match(builder, /const assetVersion = '72';/);
+    assert.match(builder, /const assetVersion = '73';/);
     assert.match(builder, /img-src 'self' blob:/);
     assert.match(builder, /data-prerendered="true"/);
     assert.match(builder, /rel="preload" as="image"/);
@@ -79,15 +79,20 @@ test('preserves and normalizes the home pagination query', () => {
 
     assert.match(main, /canonicalRoute === 'home' \? security\.getQueryParam\('page'\) : null/);
     assert.match(main, /security\.buildRoute\(canonicalRoute, canonicalValues\)/);
-    assert.match(app, /const requestedHomePage = pageName === 'home' \? security\?\.getQueryParam\('page'\) : null/);
-    assert.match(app, /const PAGINATION_CACHE_VERSION = '72';/);
+    assert.match(app, /const renderedHomePage = pageName === 'home'[\s\S]*document\.body\.dataset\.homePage/);
+    assert.match(app, /const requestedHomePage = pageName === 'home'[\s\S]*security\?\.getQueryParam\('page'\) \|\| renderedHomePage/);
+    assert.match(app, /const PAGINATION_CACHE_VERSION = '73';/);
     assert.match(app, /route\.includes\('\?'\) \? '&' : '\?'/);
     assert.match(app, /security\.buildRoute\('home', safePage > 1 \? \{ page: safePage \} : \{\}\)/);
     assert.match(app, /window\.history\.replaceState\(null, '', `\$\{homeUrl\.pathname\}\$\{homeUrl\.search\}/);
     assert.match(app, /document\.querySelector\('#posts'\)\?\.scrollIntoView\(\{ block: 'start' \}\)/);
     assert.match(app, /paginationRevealTimer = null;\s*scrollToRequestedPosts\(\);/);
-    assert.match(builder, /pageName === 'home' \? ' data-route="home"' : ''/);
+    assert.match(builder, /data-route="home" data-home-page="\$\{homePage\}"/);
+    assert.match(builder, /const homePagePath = pageNumber => pageNumber > 1 \? `\$\{basePath\}sayfa\/\$\{pageNumber\}\/` : basePath/);
+    assert.match(builder, /renderPagination\(currentPage, totalPages\)/);
+    assert.match(builder, /writePage\(join\('sayfa', String\(pageNumber\), 'index\.html'\), renderHome\(data, pageNumber\)\)/);
     assert.match(app, /if \(isPrerendered && window\.BLOG_FALLBACK_DATA\)/);
+    assert.doesNotMatch(app, /if \(pageName === 'home' && requestedHomePage && requestedHomePage > 1\) \{\s*renderHome\(\);/);
     assert.match(app, /postColumns = routeFallback[\s\S]*id,title,thumbnail,date_time,category_id,author_id,is_featured,is_verified/);
     assert.match(app, /\.in\('id', \[\.\.\.requiredPosts\]\)/);
 
