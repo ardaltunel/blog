@@ -90,6 +90,8 @@ test('preserves and normalizes the home pagination query', () => {
     assert.match(builder, /data-route="home" data-home-page="\$\{homePage\}"/);
     assert.match(builder, /const homePagePath = pageNumber => pageNumber > 1 \? `\$\{basePath\}sayfa\/\$\{pageNumber\}\/` : basePath/);
     assert.match(builder, /renderPagination\(currentPage, totalPages\)/);
+    assert.match(builder, /<div class="container pagination__container" role="navigation" aria-label="Blog sayfaları">/);
+    assert.doesNotMatch(builder, /<nav class="container pagination__container"/);
     assert.match(builder, /writePage\(join\('sayfa', String\(pageNumber\), 'index\.html'\), renderHome\(data, pageNumber\)\)/);
     assert.match(app, /if \(isPrerendered && window\.BLOG_FALLBACK_DATA\)/);
     assert.doesNotMatch(app, /if \(pageName === 'home' && requestedHomePage && requestedHomePage > 1\) \{\s*renderHome\(\);/);

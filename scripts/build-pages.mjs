@@ -402,7 +402,7 @@ const renderPagination = (currentPage, totalPages) => {
     }
 
     const versionedPage = pageNumber => `${homePagePath(pageNumber)}?v=${assetVersion}#posts`;
-    return `<nav class="container pagination__container" aria-label="Blog sayfaları">
+    return `<div class="container pagination__container" role="navigation" aria-label="Blog sayfaları">
                 ${currentPage > 1 ? `<a href="${versionedPage(currentPage - 1)}" rel="prev" class="pagination__button pagination__button--previous" aria-label="Önceki sayfaya git">
                     <span class="pagination__icon" aria-hidden="true">&larr;</span>
                     <span>Önceki <span class="pagination__label-suffix">sayfa</span></span>
@@ -412,7 +412,7 @@ const renderPagination = (currentPage, totalPages) => {
                     <span>Sonraki <span class="pagination__label-suffix">sayfa</span></span>
                     <span class="pagination__icon" aria-hidden="true">&rarr;</span>
                 </a>` : ''}
-            </nav>`;
+            </div>`;
 };
 
 const renderHome = (data, requestedPage = 1) => {
