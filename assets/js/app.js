@@ -389,14 +389,14 @@
         return `
             <div class="container pagination__container">
                 ${currentPage > 1 ? `
-                    <a href="${previous}#posts" class="pagination__button pagination__button--previous" aria-label="Önceki sayfaya git">
+                    <a href="${previous}" class="pagination__button pagination__button--previous" aria-label="Önceki sayfaya git">
                         <span class="pagination__icon" aria-hidden="true">&larr;</span>
                         <span>Önceki <span class="pagination__label-suffix">sayfa</span></span>
                     </a>
                 ` : ''}
                 <span class="pagination__status" aria-label="${currentPage}. sayfa, toplam ${totalPages} sayfa">${currentPage} / ${totalPages}</span>
                 ${currentPage < totalPages ? `
-                    <a href="${next}#posts" class="pagination__button pagination__button--next" aria-label="Sonraki sayfaya git">
+                    <a href="${next}" class="pagination__button pagination__button--next" aria-label="Sonraki sayfaya git">
                         <span>Sonraki <span class="pagination__label-suffix">sayfa</span></span>
                         <span class="pagination__icon" aria-hidden="true">&rarr;</span>
                     </a>

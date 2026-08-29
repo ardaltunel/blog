@@ -90,11 +90,14 @@ test('preserves and normalizes the home pagination query', () => {
     assert.match(builder, /data-route="home" data-home-page="\$\{homePage\}"/);
     assert.match(builder, /const homePagePath = pageNumber => pageNumber > 1 \? `\$\{basePath\}sayfa\/\$\{pageNumber\}\/` : basePath/);
     assert.match(builder, /renderPagination\(currentPage, totalPages\)/);
+    assert.match(builder, /const versionedPage = pageNumber => `\$\{homePagePath\(pageNumber\)\}\?v=\$\{assetVersion\}`/);
+    assert.doesNotMatch(builder, /versionedPage[^\n]+#posts/);
     assert.match(builder, /<div class="container pagination__container" role="navigation" aria-label="Blog sayfaları">/);
     assert.doesNotMatch(builder, /<nav class="container pagination__container"/);
     assert.match(builder, /writePage\(join\('sayfa', String\(pageNumber\), 'index\.html'\), renderHome\(data, pageNumber\)\)/);
     assert.match(app, /if \(isPrerendered && window\.BLOG_FALLBACK_DATA\)/);
     assert.doesNotMatch(app, /if \(pageName === 'home' && requestedHomePage && requestedHomePage > 1\) \{\s*renderHome\(\);/);
+    assert.doesNotMatch(app, /href="\$\{(?:previous|next)\}#posts"/);
     assert.match(app, /postColumns = routeFallback[\s\S]*id,title,thumbnail,date_time,category_id,author_id,is_featured,is_verified/);
     assert.match(app, /\.in\('id', \[\.\.\.requiredPosts\]\)/);
 
