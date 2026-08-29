@@ -591,6 +591,7 @@
     const renderDashboard = async () => {
         const container = document.querySelector('#dashboard-content');
         const title = document.querySelector('#dashboard-title');
+        const description = document.querySelector('#dashboard-description');
         const shell = document.querySelector('#dashboard-shell');
         const loading = document.querySelector('#dashboard-loading');
         const revealDashboard = () => {
@@ -644,7 +645,19 @@
             'add-category': 'Kategori ekle',
             'manage-categories': 'Kategorileri yönet'
         };
+        const viewDescriptions = {
+            'profile': 'Profil bilgilerinizi ve görünümünüzü güncelleyin.',
+            'my-posts': 'Yazılarınızı düzenleyin ve yayın durumlarını takip edin.',
+            'all-posts': 'Tüm yazarların içeriklerini tek yerden yönetin.',
+            'add-user': 'Yeni bir yazar hesabı oluşturun.',
+            'manage-users': 'Yazar hesaplarını ve yetkilerini düzenleyin.',
+            'add-category': 'İçerikler için yeni bir kategori oluşturun.',
+            'manage-categories': 'Mevcut kategorileri düzenleyin ve yönetin.'
+        };
         title.textContent = viewTitles[safeView] || 'Yazılarım';
+        if (description) {
+            description.textContent = viewDescriptions[safeView] || viewDescriptions['my-posts'];
+        }
         revealDashboard();
         const refresh = () => renderDashboard();
         const adminOnly = () => {
