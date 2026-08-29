@@ -4,7 +4,7 @@ const { join } = require('node:path');
 const test = require('node:test');
 
 const ROOT = join(__dirname, '..');
-const RELEASE_VERSION = '75';
+const RELEASE_VERSION = '76';
 const HTML_FILES = [
     '404.html',
     'add-post.html',
@@ -64,7 +64,7 @@ test('keeps generated pages and local clean routes on the current assets', () =>
     const builder = readFileSync(join(ROOT, 'scripts', 'build-pages.mjs'), 'utf8');
     const server = readFileSync(join(ROOT, 'scripts', 'serve.mjs'), 'utf8');
 
-    assert.match(builder, /const assetVersion = '75';/);
+    assert.match(builder, /const assetVersion = '76';/);
     assert.match(builder, /img-src 'self' blob:/);
     assert.match(builder, /data-prerendered="true"/);
     assert.match(builder, /rel="preload" as="image"/);
@@ -83,7 +83,7 @@ test('preserves and normalizes the home pagination query', () => {
     assert.match(main, /security\.buildRoute\(canonicalRoute, canonicalValues\)/);
     assert.match(app, /const renderedHomePage = pageName === 'home'[\s\S]*document\.body\.dataset\.homePage/);
     assert.match(app, /const requestedHomePage = pageName === 'home'[\s\S]*security\?\.getQueryParam\('page'\) \|\| renderedHomePage/);
-    assert.match(app, /const PAGINATION_CACHE_VERSION = '75';/);
+    assert.match(app, /const PAGINATION_CACHE_VERSION = '76';/);
     assert.match(app, /route\.includes\('\?'\) \? '&' : '\?'/);
     assert.match(app, /security\.buildRoute\('home', safePage > 1 \? \{ page: safePage \} : \{\}\)/);
     assert.match(app, /window\.history\.replaceState\(null, '', `\$\{homeUrl\.pathname\}\$\{homeUrl\.search\}/);
@@ -163,5 +163,9 @@ test('paginates and filters dashboard posts without changing the URL', () => {
     assert.doesNotMatch(tableSource, /window\.history|window\.location|security\.navigate|security\.buildRoute/);
     assert.match(css, /\.dashboard__posts-toolbar\s*\{[^}]*display:\s*flex;[^}]*scroll-margin-top:\s*6rem;/s);
     assert.match(css, /\.dashboard__posts-pagination,\s*\.dashboard__posts-page-list\s*\{[^}]*display:\s*flex;/s);
+    assert.match(css, /@media\s+screen\s+and\s+\(max-width:\s*640px\)[\s\S]*\.dashboard__posts-pagination\s*\{[^}]*display:\s*flex;[^}]*flex-wrap:\s*nowrap;[^}]*border-radius:\s*15px;/s);
+    assert.match(css, /\.dashboard__posts-page-list\s*\{[^}]*justify-content:\s*safe center;[^}]*overflow-x:\s*auto;/s);
+    assert.match(css, /\.dashboard__posts-page--previous::before\s*\{\s*content:\s*'←';/s);
+    assert.match(css, /\.dashboard__posts-page--next::before\s*\{\s*content:\s*'→';/s);
     assert.match(security, /'aria-current', 'aria-label', 'aria-live'/);
 });

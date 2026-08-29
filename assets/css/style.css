@@ -4104,19 +4104,76 @@ body.modal-open {
     }
 
     .dashboard__posts-pagination {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: center;
+        gap: 0.35rem;
+        width: 100%;
+        padding: 0.45rem;
+        overflow: hidden;
+        border: 1px solid var(--color-border);
+        border-radius: 15px;
+        background: color-mix(in srgb, var(--color-surface) 96%, var(--color-primary));
+        box-shadow: var(--shadow-sm);
     }
 
     .dashboard__posts-page-list {
-        grid-column: 1 / -1;
-        grid-row: 1;
+        flex: 1 1 auto;
+        flex-wrap: nowrap;
+        justify-content: safe center;
+        min-width: 0;
+        padding: 0.1rem;
+        overflow-x: auto;
+        scrollbar-width: none;
+        overscroll-behavior-inline: contain;
+    }
+
+    .dashboard__posts-page-list::-webkit-scrollbar {
+        display: none;
+    }
+
+    .dashboard__posts-page-list .dashboard__posts-page {
+        flex: 0 0 2.35rem;
+        min-width: 2.35rem;
+        min-height: 2.35rem;
+        padding: 0;
+        border-color: transparent;
+        background: transparent;
+        box-shadow: none;
+    }
+
+    .dashboard__posts-page-list .dashboard__posts-page[aria-current="page"] {
+        border-color: var(--color-primary);
+        background: var(--color-primary);
+        color: var(--color-white);
+        box-shadow: 0 7px 16px color-mix(in srgb, var(--color-primary) 22%, transparent);
     }
 
     .dashboard__posts-page--previous,
     .dashboard__posts-page--next {
-        width: 100%;
-        min-width: 0;
+        flex: 0 0 2.6rem;
+        width: 2.6rem;
+        min-width: 2.6rem;
+        min-height: 2.6rem;
+        padding: 0;
+        border-color: color-mix(in srgb, var(--color-primary) 22%, var(--color-border));
+        background: color-mix(in srgb, var(--color-primary-light) 58%, var(--color-surface));
+        color: var(--color-primary);
+        font-size: 0;
+    }
+
+    .dashboard__posts-page--previous::before,
+    .dashboard__posts-page--next::before {
+        font-size: 1rem;
+        line-height: 1;
+    }
+
+    .dashboard__posts-page--previous::before {
+        content: '←';
+    }
+
+    .dashboard__posts-page--next::before {
+        content: '→';
     }
 
     body {
