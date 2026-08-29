@@ -18,6 +18,9 @@
     let editPostRequestId = 0;
     let editPostTrigger = null;
     let messageDismissTimer = null;
+    const POSTS_PAGE_SIZES = Object.freeze([20, 50, 100]);
+    const DEFAULT_POSTS_PAGE_SIZE = POSTS_PAGE_SIZES[0];
+    const POSTS_STATUS_FILTERS = Object.freeze(['all', 'published', 'unpublished']);
 
     const clearMessage = () => {
         if (messageDismissTimer !== null) {
@@ -688,7 +691,7 @@
             return;
         }
         title.textContent = safeView === 'all-posts' ? 'Tüm yazılar' : 'Yazılarım';
-        await renderPostsTable(container, profile, safeView, refresh);
+        await renderPostsTable(container, profile, safeView);
     };
 
     const renderProfile = (container, user, profile, refresh) => {
@@ -976,20 +979,102 @@
         });
     };
 
-    const renderPostsTable = async (container, profile, view, refresh) => {
-        const columns = profile.is_admin
-            ? 'id,title,body,thumbnail,date_time,is_verified,category_id,author_id,authors(firstname,lastname),categories(title)'
-            : 'id,title,body,thumbnail,date_time,is_verified,category_id,categories(title)';
-        let query = client.from('posts').select(columns).order('date_time', { ascending: false }).limit(1000);
-        if (!profile.is_admin || view !== 'all-posts') {
-            query = query.eq('author_id', profile.id);
+    const dashboardPaginationItems = (currentPage, totalPages) => {
+        if (totalPages <= 7) {
+            return Array.from({ length: totalPages }, (_, index) => index + 1);
         }
-        const { data, error } = await query;
-        if (error || !Array.isArray(data)) {
-            showMessage('Yazılar yüklenemedi.');
+        const pages = [...new Set([
+            1,
+            currentPage - 1,
+            currentPage,
+            currentPage + 1,
+            totalPages
+        ].filter(page => page >= 1 && page <= totalPages))].sort((a, b) => a - b);
+        const items = [];
+        pages.forEach((page, index) => {
+            if (index > 0 && page - pages[index - 1] > 1) {
+                items.push(null);
+            }
+            items.push(page);
+        });
+        return items;
+    };
+
+    const renderPostsTable = async (container, profile, view) => {
+        const columns = profile.is_admin
+            ? 'id,title,date_time,is_verified,authors(firstname,lastname),categories(title)'
+            : 'id,title,date_time,is_verified,categories(title)';
+        const isAdminTable = profile.is_admin === true;
+        const showsAuthor = isAdminTable && view === 'all-posts';
+        const state = {
+            page: 1,
+            pageSize: DEFAULT_POSTS_PAGE_SIZE,
+            status: POSTS_STATUS_FILTERS[0],
+            total: 0
+        };
+        let pageRequestId = 0;
+
+        security.renderUi(container, `
+            <section class="dashboard__posts-panel" aria-busy="true">
+                <div class="dashboard__posts-toolbar">
+                    <div class="dashboard__posts-controls">
+                        <label class="dashboard__posts-filter" for="dashboard-posts-page-size">
+                            <span>Sayfa başına</span>
+                            <select id="dashboard-posts-page-size" aria-label="Sayfa başına gösterilecek yazı sayısı">
+                                ${POSTS_PAGE_SIZES.map(size => `<option value="${size}" ${size === DEFAULT_POSTS_PAGE_SIZE ? 'selected' : ''}>${size} yazı</option>`).join('')}
+                            </select>
+                        </label>
+                        <label class="dashboard__posts-filter" for="dashboard-posts-status">
+                            <span>Yayın durumu</span>
+                            <select id="dashboard-posts-status" aria-label="Yayın durumuna göre filtrele">
+                                <option value="all" selected>Tüm yazılar</option>
+                                <option value="published">Yayında</option>
+                                <option value="unpublished">Yayında değil</option>
+                            </select>
+                        </label>
+                    </div>
+                    <p class="dashboard__posts-summary" aria-live="polite">Yazılar yükleniyor...</p>
+                </div>
+                <div class="dashboard__posts-table-host">
+                    <div class="dashboard__posts-loading">Yazılar yükleniyor...</div>
+                </div>
+                <div class="dashboard__posts-pagination" aria-label="Yazı sayfaları"></div>
+            </section>
+        `);
+
+        const panel = container.querySelector('.dashboard__posts-panel');
+        const toolbar = container.querySelector('.dashboard__posts-toolbar');
+        const tableHost = container.querySelector('.dashboard__posts-table-host');
+        const pagination = container.querySelector('.dashboard__posts-pagination');
+        const summary = container.querySelector('.dashboard__posts-summary');
+        const pageSizeSelect = container.querySelector('#dashboard-posts-page-size');
+        const statusSelect = container.querySelector('#dashboard-posts-status');
+        if (!panel || !toolbar || !tableHost || !pagination || !summary || !pageSizeSelect || !statusSelect) {
+            showMessage('Yazı tablosu hazırlanamadı.');
             return;
         }
-        const posts = data.map(post => {
+
+        const setLoading = loading => {
+            panel.setAttribute('aria-busy', String(loading));
+            panel.classList.toggle('is-loading', loading);
+            pageSizeSelect.disabled = loading;
+            statusSelect.disabled = loading;
+            pagination.querySelectorAll('button').forEach(button => {
+                button.disabled = loading || button.getAttribute('aria-current') === 'page';
+            });
+        };
+
+        const emptyStateText = () => {
+            if (state.status === 'published') {
+                return 'Yayında olan bir yazı bulunmuyor.';
+            }
+            if (state.status === 'unpublished') {
+                return 'Yayında olmayan bir yazı bulunmuyor.';
+            }
+            return view === 'all-posts' ? 'Henüz bir yazı bulunmuyor.' : 'Henüz bir yazı yazmadınız.';
+        };
+
+        const normalizePosts = data => data.map(post => {
             const id = safeId(post.id);
             const title = readTitle(post.title);
             if (!id || !title) {
@@ -1006,97 +1091,220 @@
                 ) || ''
             };
         }).filter(Boolean);
-        const isAdminTable = profile.is_admin === true;
-        const showsAuthor = isAdminTable && view === 'all-posts';
-        const emptyPostsState = posts.length === 0 ? `
-            <div class="dashboard__empty-posts">
-                <span>${view === 'all-posts' ? 'Henüz bir yazı bulunmuyor.' : 'Henüz bir yazı yazmadınız.'}</span>
-                <small>İlk yazıyı oluşturmak için “Yeni blog yazısı” butonunu kullanabilirsiniz.</small>
-            </div>
-        ` : '';
-        security.renderUi(container, `
-            <div class="dashboard__table-scroll">
-            <table class="dashboard__table dashboard__table--posts${isAdminTable ? ' dashboard__table--admin-posts' : ''}${showsAuthor ? ' dashboard__table--with-author' : ''}">
-                <thead><tr>
-                    <th scope="col">Başlık</th><th scope="col">Kategori</th>
-                    ${showsAuthor ? '<th scope="col">Yazar</th>' : ''}
-                    <th scope="col">Düzenle</th>${profile.is_admin ? '<th scope="col">Yayın durumu</th><th scope="col">Sil</th>' : ''}
-                </tr></thead>
-                <tbody>${posts.map(post => `
-                    <tr>
-                        <td class="dashboard__post-title" data-label="Başlık">${security.escapeHtml(post.title)}</td>
-                        <td class="dashboard__post-category" data-label="Kategori">${security.escapeHtml(post.categoryTitle)}</td>
-                        ${showsAuthor ? `<td class="dashboard__post-author" data-label="Yazar">${security.escapeHtml(post.authorName)}</td>` : ''}
-                        <td class="dashboard__post-action" data-label="Düzenle"><button type="button" class="btn sm edit-post" data-id="${post.id}">Düzenle</button></td>
-                        ${profile.is_admin ? `
-                            <td class="dashboard__post-action" data-label="Yayın durumu">
-                                <label class="dashboard__publish-control">
-                                    <input type="checkbox" class="toggle-post" data-id="${post.id}" data-verified="${post.is_verified === true}" ${post.is_verified === true ? 'checked' : ''} aria-label="${post.is_verified === true ? 'Yazı yayında' : 'Yazı yayında değil'}">
-                                    <span class="dashboard__publish-switch" aria-hidden="true"></span>
-                                </label>
-                            </td>
-                            <td class="dashboard__post-action" data-label="Sil"><button type="button" class="btn sm danger delete-post" data-id="${post.id}">Sil</button></td>
-                        ` : ''}
-                    </tr>
-                `).join('')}</tbody>
-            </table>
-            ${emptyPostsState}
-            </div>
-        `);
 
-        container.querySelectorAll('.toggle-post').forEach(checkbox => {
-            checkbox.addEventListener('change', async () => {
-                const id = safeId(checkbox.dataset.id);
-                if (!id) {
+        const renderTable = posts => {
+            const emptyPostsState = posts.length === 0 ? `
+                <div class="dashboard__empty-posts">
+                    <span>${emptyStateText()}</span>
+                    <small>Filtreyi değiştirebilir veya yeni bir blog yazısı oluşturabilirsiniz.</small>
+                </div>
+            ` : '';
+            security.renderUi(tableHost, `
+                <div class="dashboard__table-scroll">
+                ${posts.length ? `
+                    <table class="dashboard__table dashboard__table--posts${isAdminTable ? ' dashboard__table--admin-posts' : ''}${showsAuthor ? ' dashboard__table--with-author' : ''}">
+                        <thead><tr>
+                            <th scope="col">Başlık</th><th scope="col">Kategori</th>
+                            ${showsAuthor ? '<th scope="col">Yazar</th>' : ''}
+                            <th scope="col">Düzenle</th>${profile.is_admin ? '<th scope="col">Yayın durumu</th><th scope="col">Sil</th>' : ''}
+                        </tr></thead>
+                        <tbody>${posts.map(post => `
+                            <tr>
+                                <td class="dashboard__post-title" data-label="Başlık">${security.escapeHtml(post.title)}</td>
+                                <td class="dashboard__post-category" data-label="Kategori">${security.escapeHtml(post.categoryTitle)}</td>
+                                ${showsAuthor ? `<td class="dashboard__post-author" data-label="Yazar">${security.escapeHtml(post.authorName)}</td>` : ''}
+                                <td class="dashboard__post-action" data-label="Düzenle"><button type="button" class="btn sm edit-post" data-id="${post.id}">Düzenle</button></td>
+                                ${profile.is_admin ? `
+                                    <td class="dashboard__post-action" data-label="Yayın durumu">
+                                        <label class="dashboard__publish-control">
+                                            <input type="checkbox" class="toggle-post" data-id="${post.id}" data-verified="${post.is_verified === true}" ${post.is_verified === true ? 'checked' : ''} aria-label="${post.is_verified === true ? 'Yazı yayında' : 'Yazı yayında değil'}">
+                                            <span class="dashboard__publish-switch" aria-hidden="true"></span>
+                                        </label>
+                                    </td>
+                                    <td class="dashboard__post-action" data-label="Sil"><button type="button" class="btn sm danger delete-post" data-id="${post.id}">Sil</button></td>
+                                ` : ''}
+                            </tr>
+                        `).join('')}</tbody>
+                    </table>
+                ` : emptyPostsState}
+                </div>
+            `);
+        };
+
+        const renderPagination = () => {
+            const totalPages = Math.max(1, Math.ceil(state.total / state.pageSize));
+            if (state.total <= state.pageSize) {
+                security.renderUi(pagination, '');
+                pagination.hidden = true;
+                return;
+            }
+            const items = dashboardPaginationItems(state.page, totalPages);
+            security.renderUi(pagination, `
+                <button type="button" class="dashboard__posts-page dashboard__posts-page--previous" value="${state.page - 1}" ${state.page === 1 ? 'disabled' : ''} aria-label="Önceki sayfa">Önceki</button>
+                <span class="dashboard__posts-page-list">
+                    ${items.map(item => item === null
+                        ? '<span class="dashboard__posts-page-ellipsis" aria-hidden="true">…</span>'
+                        : `<button type="button" class="dashboard__posts-page" value="${item}" ${item === state.page ? 'aria-current="page" disabled' : ''} aria-label="${item}. sayfaya git">${item}</button>`
+                    ).join('')}
+                </span>
+                <button type="button" class="dashboard__posts-page dashboard__posts-page--next" value="${state.page + 1}" ${state.page === totalPages ? 'disabled' : ''} aria-label="Sonraki sayfa">Sonraki</button>
+            `);
+            pagination.hidden = false;
+        };
+
+        const updateSummary = posts => {
+            if (!state.total) {
+                summary.textContent = '0 yazı';
+                return;
+            }
+            const first = (state.page - 1) * state.pageSize + 1;
+            const last = first + posts.length - 1;
+            summary.textContent = `${first}–${last} / ${state.total} yazı`;
+        };
+
+        const loadPage = async () => {
+            const requestId = ++pageRequestId;
+            setLoading(true);
+            const from = (state.page - 1) * state.pageSize;
+            const to = from + state.pageSize - 1;
+            try {
+                let query = client.from('posts')
+                    .select(columns, { count: 'exact' })
+                    .order('date_time', { ascending: false })
+                    .order('id', { ascending: false });
+                if (!profile.is_admin || view !== 'all-posts') {
+                    query = query.eq('author_id', profile.id);
+                }
+                if (state.status !== 'all') {
+                    query = query.eq('is_verified', state.status === 'published');
+                }
+                const { data, error, count } = await query.range(from, to);
+                if (requestId !== pageRequestId) {
                     return;
                 }
-                clearMessage();
-                const previousValue = checkbox.dataset.verified === 'true';
-                const nextValue = checkbox.checked === true;
-                checkbox.disabled = true;
-                try {
-                    const { data: updated, error: updateError } = await client.from('posts')
-                        .update({ is_verified: nextValue }).eq('id', id).select('id');
-                    if (updateError || !updated?.length) {
-                        throw new Error('POST_STATUS_UPDATE_FAILED');
+                if (error || !Array.isArray(data)) {
+                    throw new Error('POSTS_LOAD_FAILED');
+                }
+                state.total = Number.isSafeInteger(count) && count >= 0 ? count : data.length;
+                const totalPages = Math.max(1, Math.ceil(state.total / state.pageSize));
+                if (state.page > totalPages) {
+                    state.page = totalPages;
+                    await loadPage();
+                    return;
+                }
+                const posts = normalizePosts(data);
+                renderTable(posts);
+                renderPagination();
+                updateSummary(posts);
+                bindTableActions();
+                bindPaginationActions();
+            } catch {
+                showMessage('Yazılar yüklenemedi.');
+            } finally {
+                if (requestId === pageRequestId) {
+                    setLoading(false);
+                }
+            }
+        };
+
+        const bindTableActions = () => {
+            tableHost.querySelectorAll('.toggle-post').forEach(checkbox => {
+                checkbox.addEventListener('change', async () => {
+                    const id = safeId(checkbox.dataset.id);
+                    if (!id) {
+                        return;
                     }
-                    checkbox.dataset.verified = String(nextValue);
-                    checkbox.setAttribute('aria-label', nextValue ? 'Yazı yayında' : 'Yazı yayında değil');
-                    showMessage(nextValue ? 'Yazı yayına alındı.' : 'Yazı yayından kaldırıldı.', 'success');
-                } catch {
-                    checkbox.checked = previousValue;
-                    showMessage('Yazının yayın durumu güncellenemedi.');
-                } finally {
-                    checkbox.disabled = false;
-                }
+                    clearMessage();
+                    const previousValue = checkbox.dataset.verified === 'true';
+                    const nextValue = checkbox.checked === true;
+                    checkbox.disabled = true;
+                    try {
+                        const { data: updated, error: updateError } = await client.from('posts')
+                            .update({ is_verified: nextValue }).eq('id', id).select('id');
+                        if (updateError || !updated?.length) {
+                            throw new Error('POST_STATUS_UPDATE_FAILED');
+                        }
+                        checkbox.dataset.verified = String(nextValue);
+                        checkbox.setAttribute('aria-label', nextValue ? 'Yazı yayında' : 'Yazı yayında değil');
+                        showMessage(nextValue ? 'Yazı yayına alındı.' : 'Yazı yayından kaldırıldı.', 'success');
+                        if (state.status !== 'all') {
+                            await loadPage();
+                        }
+                    } catch {
+                        checkbox.checked = previousValue;
+                        showMessage('Yazının yayın durumu güncellenemedi.');
+                    } finally {
+                        if (checkbox.isConnected) {
+                            checkbox.disabled = false;
+                        }
+                    }
+                });
             });
-        });
-        container.querySelectorAll('.delete-post').forEach(button => {
-            button.addEventListener('click', async () => {
-                const id = safeId(button.dataset.id);
-                if (!id || !confirm('Bu yazıyı silmek istediğinizden emin misiniz?')) {
-                    return;
-                }
-                clearMessage();
-                button.disabled = true;
-                const { data: deleted, error: deleteError } = await client.from('posts')
-                    .delete().eq('id', id).select('id');
-                if (deleteError || !deleted?.length) {
-                    showMessage('Yazı silinemedi.');
-                    button.disabled = false;
-                    return;
-                }
-                await refresh();
+            tableHost.querySelectorAll('.delete-post').forEach(button => {
+                button.addEventListener('click', async () => {
+                    const id = safeId(button.dataset.id);
+                    if (!id || !confirm('Bu yazıyı silmek istediğinizden emin misiniz?')) {
+                        return;
+                    }
+                    clearMessage();
+                    button.disabled = true;
+                    const { data: deleted, error: deleteError } = await client.from('posts')
+                        .delete().eq('id', id).select('id');
+                    if (deleteError || !deleted?.length) {
+                        showMessage('Yazı silinemedi.');
+                        button.disabled = false;
+                        return;
+                    }
+                    showMessage('Yazı silindi.', 'success');
+                    await loadPage();
+                });
             });
+            tableHost.querySelectorAll('.edit-post').forEach(button => {
+                button.addEventListener('click', () => renderEditPostPanel(
+                    safeId(button.dataset.id),
+                    profile.user_id,
+                    loadPage,
+                    button
+                ));
+            });
+        };
+
+        const bindPaginationActions = () => {
+            pagination.querySelectorAll('.dashboard__posts-page').forEach(button => {
+                button.addEventListener('click', async () => {
+                    const page = Number.parseInt(button.value, 10);
+                    const totalPages = Math.max(1, Math.ceil(state.total / state.pageSize));
+                    if (!Number.isSafeInteger(page) || page < 1 || page > totalPages || page === state.page) {
+                        return;
+                    }
+                    state.page = page;
+                    await loadPage();
+                    toolbar.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+            });
+        };
+
+        pageSizeSelect.addEventListener('change', async () => {
+            const pageSize = Number.parseInt(pageSizeSelect.value, 10);
+            if (!POSTS_PAGE_SIZES.includes(pageSize)) {
+                pageSizeSelect.value = String(state.pageSize);
+                return;
+            }
+            state.pageSize = pageSize;
+            state.page = 1;
+            await loadPage();
         });
-        container.querySelectorAll('.edit-post').forEach(button => {
-            button.addEventListener('click', () => renderEditPostPanel(
-                safeId(button.dataset.id),
-                profile.user_id,
-                refresh,
-                button
-            ));
+        statusSelect.addEventListener('change', async () => {
+            if (!POSTS_STATUS_FILTERS.includes(statusSelect.value)) {
+                statusSelect.value = state.status;
+                return;
+            }
+            state.status = statusSelect.value;
+            state.page = 1;
+            await loadPage();
         });
+
+        await loadPage();
     };
 
     const renderEditPostPanel = async (postId, userId, refresh, trigger) => {

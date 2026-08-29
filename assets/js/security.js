@@ -683,7 +683,7 @@
             'table', 'tbody', 'td', 'textarea', 'th', 'thead', 'tr'
         ],
         ALLOWED_ATTR: [
-            'accept', 'alt', 'aria-label', 'checked', 'class', 'data-admin', 'data-id',
+            'accept', 'alt', 'aria-current', 'aria-label', 'aria-live', 'checked', 'class', 'data-admin', 'data-id',
             'data-label', 'data-verified', 'decoding', 'disabled', 'fetchpriority', 'for', 'height',
             'hidden', 'id', 'loading', 'maxlength', 'minlength', 'href', 'name', 'placeholder',
             'rel', 'required', 'rows', 'selected', 'src', 'scope', 'target', 'type', 'value', 'width'

@@ -4,7 +4,7 @@ const { join } = require('node:path');
 const test = require('node:test');
 
 const ROOT = join(__dirname, '..');
-const RELEASE_VERSION = '74';
+const RELEASE_VERSION = '75';
 const HTML_FILES = [
     '404.html',
     'add-post.html',
@@ -64,7 +64,7 @@ test('keeps generated pages and local clean routes on the current assets', () =>
     const builder = readFileSync(join(ROOT, 'scripts', 'build-pages.mjs'), 'utf8');
     const server = readFileSync(join(ROOT, 'scripts', 'serve.mjs'), 'utf8');
 
-    assert.match(builder, /const assetVersion = '74';/);
+    assert.match(builder, /const assetVersion = '75';/);
     assert.match(builder, /img-src 'self' blob:/);
     assert.match(builder, /data-prerendered="true"/);
     assert.match(builder, /rel="preload" as="image"/);
@@ -83,7 +83,7 @@ test('preserves and normalizes the home pagination query', () => {
     assert.match(main, /security\.buildRoute\(canonicalRoute, canonicalValues\)/);
     assert.match(app, /const renderedHomePage = pageName === 'home'[\s\S]*document\.body\.dataset\.homePage/);
     assert.match(app, /const requestedHomePage = pageName === 'home'[\s\S]*security\?\.getQueryParam\('page'\) \|\| renderedHomePage/);
-    assert.match(app, /const PAGINATION_CACHE_VERSION = '74';/);
+    assert.match(app, /const PAGINATION_CACHE_VERSION = '75';/);
     assert.match(app, /route\.includes\('\?'\) \? '&' : '\?'/);
     assert.match(app, /security\.buildRoute\('home', safePage > 1 \? \{ page: safePage \} : \{\}\)/);
     assert.match(app, /window\.history\.replaceState\(null, '', `\$\{homeUrl\.pathname\}\$\{homeUrl\.search\}/);
@@ -140,4 +140,28 @@ test('keeps rich editor fields out of hidden native validation', () => {
         assert.match(form, /id="thumbnail-preview" hidden/, `${file} should include a cover image preview`);
         assert.match(form, /class="image-upload-preview__label"/, `${file} should label the selected cover preview`);
     }
+});
+
+test('paginates and filters dashboard posts without changing the URL', () => {
+    const authPages = readFileSync(join(ROOT, 'assets', 'js', 'auth-pages.js'), 'utf8');
+    const css = readFileSync(join(ROOT, 'assets', 'css', 'style.css'), 'utf8');
+    const security = readFileSync(join(ROOT, 'assets', 'js', 'security.js'), 'utf8');
+    const tableStart = authPages.indexOf('const renderPostsTable = async');
+    const tableEnd = authPages.indexOf('const renderEditPostPanel = async');
+    const tableSource = authPages.slice(tableStart, tableEnd);
+
+    assert.ok(tableStart >= 0 && tableEnd > tableStart, 'Dashboard post table source should be discoverable');
+    assert.match(authPages, /const POSTS_PAGE_SIZES = Object\.freeze\(\[20, 50, 100\]\);/);
+    assert.match(authPages, /const DEFAULT_POSTS_PAGE_SIZE = POSTS_PAGE_SIZES\[0\];/);
+    assert.match(tableSource, /\.select\(columns, \{ count: 'exact' \}\)/);
+    assert.match(tableSource, /\.order\('date_time', \{ ascending: false \}\)\s*\.order\('id', \{ ascending: false \}\)/);
+    assert.match(tableSource, /query = query\.eq\('is_verified', state\.status === 'published'\);/);
+    assert.match(tableSource, /await query\.range\(from, to\)/);
+    assert.match(tableSource, /dashboardPaginationItems\(state\.page, totalPages\)/);
+    assert.match(tableSource, /dashboard-posts-page-size/);
+    assert.match(tableSource, /dashboard-posts-status/);
+    assert.doesNotMatch(tableSource, /window\.history|window\.location|security\.navigate|security\.buildRoute/);
+    assert.match(css, /\.dashboard__posts-toolbar\s*\{[^}]*display:\s*flex;[^}]*scroll-margin-top:\s*6rem;/s);
+    assert.match(css, /\.dashboard__posts-pagination,\s*\.dashboard__posts-page-list\s*\{[^}]*display:\s*flex;/s);
+    assert.match(security, /'aria-current', 'aria-label', 'aria-live'/);
 });

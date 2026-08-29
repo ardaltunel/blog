@@ -3320,6 +3320,140 @@ body.modal-open {
     overscroll-behavior-inline: contain;
 }
 
+.dashboard__posts-panel {
+    display: grid;
+    gap: 0.9rem;
+    min-width: 0;
+}
+
+.dashboard__posts-toolbar {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    scroll-margin-top: 6rem;
+}
+
+.dashboard__posts-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.dashboard__posts-filter {
+    display: grid;
+    gap: 0.35rem;
+    min-width: 10rem;
+}
+
+.dashboard__posts-filter span {
+    color: var(--color-muted);
+    font-size: 0.68rem;
+    font-weight: 850;
+    letter-spacing: 0.055em;
+    text-transform: uppercase;
+}
+
+.dashboard__posts-filter select {
+    min-height: 2.65rem;
+    padding: 0.55rem 2.35rem 0.55rem 0.8rem;
+    border-radius: 10px;
+    background-color: var(--color-surface);
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.dashboard__posts-summary {
+    flex: 0 0 auto;
+    margin: 0 0 0.75rem;
+    color: var(--color-muted);
+    font-size: 0.76rem;
+    font-weight: 750;
+}
+
+.dashboard__posts-loading {
+    display: grid;
+    min-height: 10rem;
+    place-items: center;
+    border: 1px solid var(--color-border);
+    border-radius: 20px;
+    background: var(--color-surface);
+    color: var(--color-muted);
+    font-size: 0.82rem;
+    font-weight: 750;
+}
+
+.dashboard__posts-panel.is-loading .dashboard__posts-table-host {
+    opacity: 0.65;
+}
+
+.dashboard__posts-table-host {
+    min-width: 0;
+    transition: opacity 180ms ease;
+}
+
+.dashboard__posts-pagination,
+.dashboard__posts-page-list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+}
+
+.dashboard__posts-pagination[hidden] {
+    display: none;
+}
+
+.dashboard__posts-page {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.45rem;
+    min-height: 2.45rem;
+    padding: 0.45rem 0.7rem;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    background: var(--color-surface);
+    color: var(--color-heading);
+    font: inherit;
+    font-size: 0.74rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.dashboard__posts-page:hover:not(:disabled),
+.dashboard__posts-page:focus-visible {
+    border-color: var(--color-primary);
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+}
+
+.dashboard__posts-page[aria-current="page"] {
+    border-color: var(--color-primary);
+    background: var(--color-primary);
+    color: var(--color-white);
+    box-shadow: 0 8px 20px color-mix(in srgb, var(--color-primary) 22%, transparent);
+}
+
+.dashboard__posts-page:disabled:not([aria-current="page"]) {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.dashboard__posts-page--previous,
+.dashboard__posts-page--next {
+    min-width: 5.75rem;
+}
+
+.dashboard__posts-page-ellipsis {
+    min-width: 1.4rem;
+    color: var(--color-muted);
+    text-align: center;
+}
+
 .dashboard main table {
     width: 100%;
     text-align: left;
@@ -3732,6 +3866,25 @@ body.modal-open {
 }
 
 @media screen and (max-width: 900px) {
+    .dashboard__posts-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .dashboard__posts-controls {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .dashboard__posts-filter {
+        min-width: 0;
+    }
+
+    .dashboard__posts-summary {
+        margin: 0;
+        text-align: right;
+    }
+
     .dashboard__table-scroll {
         padding: 0;
         overflow: visible;
@@ -3946,6 +4099,26 @@ body.modal-open {
 }
 
 @media screen and (max-width: 640px) {
+    .dashboard__posts-controls {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .dashboard__posts-pagination {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .dashboard__posts-page-list {
+        grid-column: 1 / -1;
+        grid-row: 1;
+    }
+
+    .dashboard__posts-page--previous,
+    .dashboard__posts-page--next {
+        width: 100%;
+        min-width: 0;
+    }
+
     body {
         font-size: 0.92rem;
     }
