@@ -47,7 +47,7 @@ test('uses the GitHub Pages project root for clean routes and local assets in br
         '/blog/ornek-yazi-2/'
     );
     assert.equal(window.SecurityUtils.buildRoute('home'), '/blog/');
-    assert.equal(window.SecurityUtils.buildRoute('home', { page: 2 }), '/blog/sayfa/2/');
+    assert.equal(window.SecurityUtils.buildRoute('home', { page: 2 }), '/blog/2/');
     assert.equal(window.SecurityUtils.buildRoute('addPost'), '/blog/yeni-blog-ekle/');
     assert.equal(
         window.SecurityUtils.buildRoute('category', { id: 4, title: 'Yazılım' }),

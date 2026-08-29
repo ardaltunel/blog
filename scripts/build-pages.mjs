@@ -19,12 +19,17 @@ const siteBaseUrl = siteUrl.href;
 const basePath = siteUrl.pathname;
 const siteOrigin = siteUrl.origin;
 const siteName = 'ARDALTUNEL';
-const assetVersion = '73';
+const assetVersion = '74';
 const postsPerPage = 9;
+const maxPosts = 2000;
 const homeDescription = 'Arda Altunel’in yazılım, teknoloji, tasarım, bilim ve yaşam üzerine blog yazıları.';
 const logoUrl = new URL('assets/logo/logo.png', siteBaseUrl).href;
 const fallbackAvatar = new URL('assets/images/no-user-photo.svg?v=2', siteBaseUrl).href;
-const reservedPostSlugs = ['assets', 'kategori', 'yazi', 'yeni-blog-ekle'];
+const reservedPaginationSlugs = Array.from(
+    { length: Math.ceil(maxPosts / postsPerPage) - 1 },
+    (_, index) => String(index + 2)
+);
+const reservedPostSlugs = ['assets', 'kategori', 'yazi', 'yeni-blog-ekle', ...reservedPaginationSlugs];
 const csp = "default-src 'self'; base-uri 'none'; object-src 'none'; frame-src https://www.youtube-nocookie.com; form-action 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: https://bdadbqlkmdwzzkrwetrf.supabase.co https://lh3.googleusercontent.com; font-src 'self'; connect-src 'self' https://bdadbqlkmdwzzkrwetrf.supabase.co; media-src 'none'; worker-src 'none'; manifest-src 'self'; upgrade-insecure-requests";
 
 const escapeHtml = value => String(value ?? '')
@@ -157,7 +162,7 @@ const loadRemoteData = async () => {
     const [categories, authors, posts] = await Promise.all([
         fetchJson(config, '/rest/v1/categories?select=id,title,description&order=title.asc&limit=500'),
         fetchJson(config, '/rest/v1/authors?select=id,firstname,lastname,avatar&limit=2000'),
-        fetchJson(config, '/rest/v1/posts?select=id,title,body,thumbnail,date_time,category_id,author_id,is_featured,is_verified&is_verified=eq.true&order=date_time.desc&limit=2000')
+        fetchJson(config, `/rest/v1/posts?select=id,title,body,thumbnail,date_time,category_id,author_id,is_featured,is_verified&is_verified=eq.true&order=date_time.desc&limit=${maxPosts}`)
     ]);
     return { categories, authors, posts };
 };
@@ -393,7 +398,7 @@ const renderCategoryButtons = categories => `<section class="category__buttons">
             </div>
         </section>`;
 
-const homePagePath = pageNumber => pageNumber > 1 ? `${basePath}sayfa/${pageNumber}/` : basePath;
+const homePagePath = pageNumber => pageNumber > 1 ? `${basePath}${pageNumber}/` : basePath;
 const homePageUrl = pageNumber => new URL(homePagePath(pageNumber), siteOrigin).href;
 const homePageCount = data => Math.max(1, Math.ceil(data.posts.length / postsPerPage));
 const renderPagination = (currentPage, totalPages) => {
@@ -413,6 +418,25 @@ const renderPagination = (currentPage, totalPages) => {
                     <span class="pagination__icon" aria-hidden="true">&rarr;</span>
                 </a>` : ''}
             </div>`;
+};
+
+const renderLegacyPaginationRedirect = pageNumber => {
+    const destinationPath = homePagePath(pageNumber);
+    const destinationUrl = homePageUrl(pageNumber);
+    return `<!doctype html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex,follow">
+    <link rel="canonical" href="${destinationUrl}">
+    <meta http-equiv="refresh" content="0;url=${destinationPath}">
+    <title>Blog sayfasına yönlendiriliyor</title>
+</head>
+<body>
+    <p><a href="${destinationPath}">${pageNumber}. blog sayfasına devam et</a></p>
+</body>
+</html>`;
 };
 
 const renderHome = (data, requestedPage = 1) => {
@@ -749,7 +773,8 @@ await writePage(
 const totalHomePages = homePageCount(data);
 await writePage('index.html', renderHome(data, 1));
 for (let pageNumber = 2; pageNumber <= totalHomePages; pageNumber += 1) {
-    await writePage(join('sayfa', String(pageNumber), 'index.html'), renderHome(data, pageNumber));
+    await writePage(join(String(pageNumber), 'index.html'), renderHome(data, pageNumber));
+    await writePage(join('sayfa', String(pageNumber), 'index.html'), renderLegacyPaginationRedirect(pageNumber));
 }
 for (const [index, post] of data.posts.entries()) {
     await writePage(join(post.route_slug, 'index.html'), renderPost(post, index, data));

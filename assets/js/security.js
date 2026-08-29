@@ -438,7 +438,7 @@
                 if (usesLocalQueryRoutes()) {
                     params.set('page', String(page));
                 } else {
-                    return sitePath(`sayfa/${page}/`);
+                    return sitePath(`${page}/`);
                 }
             }
         } else if (routeName === 'admin' && values.view !== undefined) {

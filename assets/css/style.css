@@ -168,7 +168,7 @@ svg.ui-icon {
     filter: none;
 }
 
-nav {
+body > nav {
     width: 100%;
     height: 4.75rem;
     position: fixed;
@@ -180,7 +180,7 @@ nav {
     box-shadow: var(--shadow-sm);
 }
 
-nav button {
+body > nav button {
     display: none;
 }
 
@@ -2739,12 +2739,16 @@ select:focus {
 }
 
 .pagination__container {
+    position: static;
+    inset: auto;
+    z-index: auto;
     display: flex;
     flex-wrap: nowrap;
     align-items: center;
     justify-content: center;
     gap: 0.55rem;
     width: fit-content;
+    height: auto;
     max-width: calc(100% - 2rem);
     margin-top: -0.75rem;
     padding: 0;
@@ -3586,13 +3590,13 @@ body.modal-open {
         width: var(--container-width-md);
     }
 
-    nav {
+    body > nav {
         height: 4.25rem;
         background: color-mix(in srgb, var(--color-surface) 94%, transparent);
         box-shadow: 0 10px 26px rgba(0, 0, 0, 0.12);
     }
 
-    nav button {
+    body > nav button {
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -3607,7 +3611,7 @@ body.modal-open {
         box-shadow: none;
     }
 
-    nav button:hover {
+    body > nav button:hover {
         background: var(--color-primary-light);
         color: var(--color-primary);
         transform: none;

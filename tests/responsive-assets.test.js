@@ -4,7 +4,7 @@ const { join } = require('node:path');
 const test = require('node:test');
 
 const ROOT = join(__dirname, '..');
-const RELEASE_VERSION = '73';
+const RELEASE_VERSION = '74';
 const HTML_FILES = [
     '404.html',
     'add-post.html',
@@ -47,7 +47,9 @@ test('keeps the critical responsive breakpoints and overflow safeguards', () => 
     for (const [width, pattern] of breakpoints) {
         assert.match(css, pattern, `Missing ${width} breakpoint`);
     }
-    assert.match(css, /nav\s*\{[^}]*width:\s*100%;/s);
+    assert.match(css, /body > nav\s*\{[^}]*width:\s*100%;[^}]*position:\s*fixed;/s);
+    assert.doesNotMatch(css, /(?:^|\n)nav\s*\{[^}]*position:\s*fixed;/s);
+    assert.match(css, /\.pagination__container\s*\{[^}]*position:\s*static;[^}]*z-index:\s*auto;[^}]*height:\s*auto;/s);
     assert.match(css, /\.article-content table\s*\{[^}]*overflow-x:\s*auto;/s);
     assert.match(css, /input\[type="file"\]\s*\{[^}]*max-width:\s*100%;/s);
     assert.match(css, /\.dashboard main \.dashboard__table--posts td\s*\{[^}]*min-height:\s*0;/s);
@@ -62,7 +64,7 @@ test('keeps generated pages and local clean routes on the current assets', () =>
     const builder = readFileSync(join(ROOT, 'scripts', 'build-pages.mjs'), 'utf8');
     const server = readFileSync(join(ROOT, 'scripts', 'serve.mjs'), 'utf8');
 
-    assert.match(builder, /const assetVersion = '73';/);
+    assert.match(builder, /const assetVersion = '74';/);
     assert.match(builder, /img-src 'self' blob:/);
     assert.match(builder, /data-prerendered="true"/);
     assert.match(builder, /rel="preload" as="image"/);
@@ -81,20 +83,23 @@ test('preserves and normalizes the home pagination query', () => {
     assert.match(main, /security\.buildRoute\(canonicalRoute, canonicalValues\)/);
     assert.match(app, /const renderedHomePage = pageName === 'home'[\s\S]*document\.body\.dataset\.homePage/);
     assert.match(app, /const requestedHomePage = pageName === 'home'[\s\S]*security\?\.getQueryParam\('page'\) \|\| renderedHomePage/);
-    assert.match(app, /const PAGINATION_CACHE_VERSION = '73';/);
+    assert.match(app, /const PAGINATION_CACHE_VERSION = '74';/);
     assert.match(app, /route\.includes\('\?'\) \? '&' : '\?'/);
     assert.match(app, /security\.buildRoute\('home', safePage > 1 \? \{ page: safePage \} : \{\}\)/);
     assert.match(app, /window\.history\.replaceState\(null, '', `\$\{homeUrl\.pathname\}\$\{homeUrl\.search\}/);
     assert.match(app, /document\.querySelector\('#posts'\)\?\.scrollIntoView\(\{ block: 'start' \}\)/);
     assert.match(app, /paginationRevealTimer = null;\s*scrollToRequestedPosts\(\);/);
     assert.match(builder, /data-route="home" data-home-page="\$\{homePage\}"/);
-    assert.match(builder, /const homePagePath = pageNumber => pageNumber > 1 \? `\$\{basePath\}sayfa\/\$\{pageNumber\}\/` : basePath/);
+    assert.match(builder, /const homePagePath = pageNumber => pageNumber > 1 \? `\$\{basePath\}\$\{pageNumber\}\/` : basePath/);
     assert.match(builder, /renderPagination\(currentPage, totalPages\)/);
     assert.match(builder, /const versionedPage = pageNumber => `\$\{homePagePath\(pageNumber\)\}\?v=\$\{assetVersion\}`/);
     assert.doesNotMatch(builder, /versionedPage[^\n]+#posts/);
     assert.match(builder, /<div class="container pagination__container" role="navigation" aria-label="Blog sayfaları">/);
     assert.doesNotMatch(builder, /<nav class="container pagination__container"/);
-    assert.match(builder, /writePage\(join\('sayfa', String\(pageNumber\), 'index\.html'\), renderHome\(data, pageNumber\)\)/);
+    assert.match(builder, /writePage\(join\(String\(pageNumber\), 'index\.html'\), renderHome\(data, pageNumber\)\)/);
+    assert.match(builder, /writePage\(join\('sayfa', String\(pageNumber\), 'index\.html'\), renderLegacyPaginationRedirect\(pageNumber\)\)/);
+    assert.match(builder, /<meta name="robots" content="noindex,follow">/);
+    assert.match(builder, /<meta http-equiv="refresh" content="0;url=\$\{destinationPath\}">/);
     assert.match(app, /if \(isPrerendered && window\.BLOG_FALLBACK_DATA\)/);
     assert.doesNotMatch(app, /if \(pageName === 'home' && requestedHomePage && requestedHomePage > 1\) \{\s*renderHome\(\);/);
     assert.doesNotMatch(app, /href="\$\{(?:previous|next)\}#posts"/);

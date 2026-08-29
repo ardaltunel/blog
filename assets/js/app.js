@@ -2,10 +2,20 @@
     'use strict';
 
     const POSTS_PER_PAGE = 9;
-    const PAGINATION_CACHE_VERSION = '73';
+    const PAGINATION_CACHE_VERSION = '74';
     const MAX_CATEGORIES = 500;
     const MAX_AUTHORS = 2000;
     const MAX_POSTS = 2000;
+    const RESERVED_POST_SLUGS = [
+        'assets',
+        'kategori',
+        'yazi',
+        'yeni-blog-ekle',
+        ...Array.from(
+            { length: Math.ceil(MAX_POSTS / POSTS_PER_PAGE) - 1 },
+            (_, index) => String(index + 2)
+        )
+    ];
     const MIN_PAGINATION_LOADING_MS = 900;
     const app = document.querySelector('#app');
     const declaredPageName = document.body.dataset.page || 'home';
@@ -103,12 +113,7 @@
         state.authors = normalizeList(safeSource.authors, MAX_AUTHORS, normalizeAuthor);
         state.posts = assignRoutes(normalizeList(safeSource.posts, MAX_POSTS, normalizePost)
             .filter(post => post.is_verified)
-            .sort((a, b) => new Date(b.date_time) - new Date(a.date_time)), [
-                'assets',
-                'kategori',
-                'yazi',
-                'yeni-blog-ekle'
-            ]);
+            .sort((a, b) => new Date(b.date_time) - new Date(a.date_time)), RESERVED_POST_SLUGS);
     };
 
     const loadFromSupabase = async () => {
