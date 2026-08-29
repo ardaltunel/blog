@@ -155,7 +155,17 @@ img {
     width: 1.1rem !important;
     height: 1.1rem;
     object-fit: contain;
+}
+
+img.ui-icon,
+.safe-editor__button img {
     filter: var(--icon-filter);
+}
+
+svg.ui-icon {
+    flex: 0 0 auto;
+    color: currentColor;
+    filter: none;
 }
 
 nav {
@@ -1767,6 +1777,20 @@ p a {
 
 .pagination__loading-copy small {
     font-size: 0.78rem;
+}
+
+.route-loading {
+    min-height: calc(100vh - 4.75rem);
+    margin: 4.75rem 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.85rem;
+    color: var(--color-muted);
+}
+
+.route-loading .pagination__loading-spinner {
+    display: block;
 }
 
 html[data-pagination-pending="true"] body[data-page="home"] #app .posts__container,

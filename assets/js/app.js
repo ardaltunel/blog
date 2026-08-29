@@ -2,13 +2,14 @@
     'use strict';
 
     const POSTS_PER_PAGE = 9;
-    const PAGINATION_CACHE_VERSION = '71';
+    const PAGINATION_CACHE_VERSION = '72';
     const MAX_CATEGORIES = 500;
     const MAX_AUTHORS = 2000;
     const MAX_POSTS = 2000;
     const MIN_PAGINATION_LOADING_MS = 900;
     const app = document.querySelector('#app');
     const declaredPageName = document.body.dataset.page || 'home';
+    const isPrerendered = document.body.dataset.prerendered === 'true';
     const pageName = declaredPageName === 'route'
         ? window.location.pathname.split('/').filter(Boolean).at(-2) === 'kategori' ? 'category' : 'post'
         : declaredPageName;
@@ -111,11 +112,15 @@
         }
 
         const client = window.authClient;
+        const routeFallback = declaredPageName === 'route';
+        const postColumns = routeFallback
+            ? 'id,title,thumbnail,date_time,category_id,author_id,is_featured,is_verified'
+            : 'id,title,body,thumbnail,date_time,category_id,author_id,is_featured,is_verified';
         const [categoriesResult, authorsResult, postsResult] = await Promise.all([
             client.from('categories').select('id,title,description').order('title', { ascending: true }).limit(MAX_CATEGORIES),
             client.from('authors').select('id,firstname,lastname,avatar').limit(MAX_AUTHORS),
             client.from('posts')
-                .select('id,title,body,thumbnail,date_time,category_id,author_id,is_featured,is_verified')
+                .select(postColumns)
                 .eq('is_verified', true)
                 .order('date_time', { ascending: false })
                 .limit(MAX_POSTS)
@@ -125,11 +130,50 @@
             throw new Error('Uzak içerik yüklenemedi.');
         }
 
-        return {
+        const remoteData = {
             categories: categoriesResult.data,
             authors: authorsResult.data,
-            posts: postsResult.data
+            posts: postsResult.data.map(post => ({ body: '', ...post }))
         };
+
+        if (!routeFallback) {
+            return remoteData;
+        }
+
+        applyData(remoteData);
+        const requestedPost = findRequestedPost();
+        const requestedCategory = findRequestedCategory();
+        const requiredPosts = new Set();
+
+        if (requestedPost) {
+            const index = state.posts.findIndex(post => post.id === requestedPost.id);
+            [
+                requestedPost,
+                state.posts[index - 1],
+                state.posts[index + 1],
+                ...relatedPostsFor(requestedPost)
+            ].filter(Boolean).forEach(post => requiredPosts.add(post.id));
+        } else if (requestedCategory) {
+            state.posts
+                .filter(post => post.category_id === requestedCategory.id)
+                .forEach(post => requiredPosts.add(post.id));
+        }
+
+        if (!requiredPosts.size) {
+            return remoteData;
+        }
+
+        const hydratedPostsResult = await client.from('posts')
+            .select('id,title,body,thumbnail,date_time,category_id,author_id,is_featured,is_verified')
+            .in('id', [...requiredPosts])
+            .eq('is_verified', true);
+        if (hydratedPostsResult.error) {
+            throw new Error('Uzak içerik yüklenemedi.');
+        }
+
+        const hydratedById = new Map(hydratedPostsResult.data.map(post => [post.id, post]));
+        remoteData.posts = remoteData.posts.map(post => hydratedById.get(post.id) || post);
+        return remoteData;
     };
 
     const loadData = async () => {
@@ -175,6 +219,20 @@
         title: post.title,
         duplicateIndex: post.duplicate_index
     });
+    const findRequestedPost = () => {
+        const id = security.getPostId();
+        const requestedSlug = security.getPostSlug();
+        return id
+            ? state.posts.find(item => item.id === id)
+            : state.posts.find(item => item.route_slug === requestedSlug);
+    };
+    const findRequestedCategory = () => {
+        const id = security.getQueryParam('id');
+        const requestedSlug = security.getCategorySlug();
+        return id
+            ? categoryById(id)
+            : state.categories.find(item => item.route_slug === requestedSlug);
+    };
     const setMeta = (attribute, key, value) => {
         if (!value) {
             return;
@@ -462,11 +520,7 @@
     };
 
     const renderPost = () => {
-        const id = security.getPostId();
-        const requestedSlug = security.getPostSlug();
-        const post = id
-            ? state.posts.find(item => item.id === id)
-            : state.posts.find(item => item.route_slug === requestedSlug);
+        const post = findRequestedPost();
         if (!post) {
             renderSafeError('Yazı bulunamadı.');
             return;
@@ -532,11 +586,7 @@
     };
 
     const renderCategory = () => {
-        const id = security.getQueryParam('id');
-        const requestedSlug = security.getCategorySlug();
-        const category = id
-            ? categoryById(id)
-            : state.categories.find(item => item.route_slug === requestedSlug);
+        const category = findRequestedCategory();
         if (!category) {
             renderSafeError('Kategori bulunamadı.');
             return;
@@ -582,6 +632,16 @@
         }
 
         try {
+            if (isPrerendered && window.BLOG_FALLBACK_DATA) {
+                applyData(window.BLOG_FALLBACK_DATA);
+                if (pageName === 'home' && requestedHomePage && requestedHomePage > 1) {
+                    renderHome();
+                } else if (pageName === 'post') {
+                    window.ContentEnhancements?.enhance(document.querySelector('#post-content'));
+                }
+                return;
+            }
+
             let initialHomeState = null;
             if (requestedHomePage && requestedHomePage > 1 && window.BLOG_FALLBACK_DATA) {
                 applyData(window.BLOG_FALLBACK_DATA);

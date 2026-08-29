@@ -4,7 +4,7 @@ const { join } = require('node:path');
 const test = require('node:test');
 
 const ROOT = join(__dirname, '..');
-const RELEASE_VERSION = '71';
+const RELEASE_VERSION = '72';
 const HTML_FILES = [
     '404.html',
     'add-post.html',
@@ -24,6 +24,9 @@ test('keeps every page viewport-aware and first-party assets cache-safe', () => 
         assert.match(html, /<meta\s+name="viewport"\s+content="width=device-width,\s*initial-scale=1\.0">/i, `${file} needs a responsive viewport`);
         assert.match(html, /img-src\s+'self'\s+blob:/i, `${file} must allow local image previews`);
         assert.doesNotMatch(html, /default-src[^;]*blob:/i, `${file} must limit blob URLs to images`);
+        assert.match(html, /rel="preconnect" href="https:\/\/bdadbqlkmdwzzkrwetrf\.supabase\.co" crossorigin/i, `${file} must warm the content origin`);
+        assert.match(html, /<ul class="nav__items"><li><a href="\/blog\/signin\.html">Giriş yap<\/a><\/li><\/ul>/i, `${file} must render the anonymous header immediately`);
+        assert.match(html, /<svg class="ui-icon theme__icon theme__icon--sun"/i, `${file} must inline its critical theme icon`);
 
         const assetReferences = [...html.matchAll(/(?:src|href)="[^"]*assets\/(?:css|js|data)\/[^\"]+"/g)];
         assert.ok(assetReferences.length > 0, `${file} needs versioned first-party assets`);
@@ -59,8 +62,10 @@ test('keeps generated pages and local clean routes on the current assets', () =>
     const builder = readFileSync(join(ROOT, 'scripts', 'build-pages.mjs'), 'utf8');
     const server = readFileSync(join(ROOT, 'scripts', 'serve.mjs'), 'utf8');
 
-    assert.match(builder, /const assetVersion = '71';/);
+    assert.match(builder, /const assetVersion = '72';/);
     assert.match(builder, /img-src 'self' blob:/);
+    assert.match(builder, /data-prerendered="true"/);
+    assert.match(builder, /rel="preload" as="image"/);
     assert.match(builder, /style\.css\?v=\$\{assetVersion\}/);
     assert.match(builder, /app\.js\?v=\$\{assetVersion\}/);
     assert.match(server, /pathname\.startsWith\('\/blog\/'\)/);
@@ -75,13 +80,21 @@ test('preserves and normalizes the home pagination query', () => {
     assert.match(main, /canonicalRoute === 'home' \? security\.getQueryParam\('page'\) : null/);
     assert.match(main, /security\.buildRoute\(canonicalRoute, canonicalValues\)/);
     assert.match(app, /const requestedHomePage = pageName === 'home' \? security\?\.getQueryParam\('page'\) : null/);
-    assert.match(app, /const PAGINATION_CACHE_VERSION = '71';/);
+    assert.match(app, /const PAGINATION_CACHE_VERSION = '72';/);
     assert.match(app, /route\.includes\('\?'\) \? '&' : '\?'/);
     assert.match(app, /security\.buildRoute\('home', safePage > 1 \? \{ page: safePage \} : \{\}\)/);
     assert.match(app, /window\.history\.replaceState\(null, '', `\$\{homeUrl\.pathname\}\$\{homeUrl\.search\}/);
     assert.match(app, /document\.querySelector\('#posts'\)\?\.scrollIntoView\(\{ block: 'start' \}\)/);
     assert.match(app, /paginationRevealTimer = null;\s*scrollToRequestedPosts\(\);/);
     assert.match(builder, /pageName === 'home' \? ' data-route="home"' : ''/);
+    assert.match(app, /if \(isPrerendered && window\.BLOG_FALLBACK_DATA\)/);
+    assert.match(app, /postColumns = routeFallback[\s\S]*id,title,thumbnail,date_time,category_id,author_id,is_featured,is_verified/);
+    assert.match(app, /\.in\('id', \[\.\.\.requiredPosts\]\)/);
+
+    const notFound = readFileSync(join(ROOT, '404.html'), 'utf8');
+    const initialMain = notFound.match(/<main id="app">([\s\S]*?)<\/main>/)?.[1] || '';
+    assert.match(initialMain, /class="route-loading"/);
+    assert.doesNotMatch(initialMain, /not-found__code|ROTA BULUNAMADI/);
 });
 
 test('keeps rich editor fields out of hidden native validation', () => {

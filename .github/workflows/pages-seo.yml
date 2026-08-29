@@ -4,8 +4,8 @@ on:
   push:
     branches: [main]
   schedule:
-    # Refresh pre-rendered pages when approved Supabase content changes.
-    - cron: "17 */6 * * *"
+    # Keep newly approved Supabase content close to the static Pages snapshot.
+    - cron: "*/15 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -21,6 +21,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    outputs:
+      should_deploy: ${{ steps.deployment-decision.outputs.should_deploy }}
 
     steps:
       - name: Check out repository
@@ -42,9 +44,11 @@ jobs:
 
       # A scheduled run only refreshes content from Supabase. The same commit was
       # already fully checked when it was pushed, so repeating lint, unit tests and
-      # npm audit here turns one code/dependency failure into an email every 6 hours.
+      # npm audit here turns one code/dependency failure into repeated emails.
       - name: Build and verify scheduled SEO refresh
+        id: scheduled-build
         if: github.event_name == 'schedule'
+        continue-on-error: true
         env:
           SEO_REQUIRE_REMOTE: "1"
           SITE_URL: "https://ardaltunel.github.io/blog/"
@@ -57,12 +61,43 @@ jobs:
           SITE_URL: "https://ardaltunel.github.io/blog/"
         run: npm run check
 
+      - name: Check whether generated content changed
+        id: deployment-decision
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          RUN_ID: ${{ github.run_id }}
+          SCHEDULED_BUILD_OUTCOME: ${{ steps.scheduled-build.outcome }}
+          SITE_URL: "https://ardaltunel.github.io/blog/"
+        run: |
+          set -euo pipefail
+
+          if [[ "$EVENT_NAME" == "schedule" && "$SCHEDULED_BUILD_OUTCOME" != "success" ]]; then
+            echo "should_deploy=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Scheduled Supabase refresh failed; keeping the last verified deployment."
+          elif [[ "$EVENT_NAME" != "schedule" ]]; then
+            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+          elif curl --fail --silent --show-error \
+            --retry 2 \
+            --retry-all-errors \
+            --max-time 20 \
+            "${SITE_URL}assets/data/blog-data.js?content-check=${RUN_ID}" \
+            --output remote-blog-data.js \
+            && cmp --silent dist/assets/data/blog-data.js remote-blog-data.js; then
+            echo "should_deploy=false" >> "$GITHUB_OUTPUT"
+            echo "Supabase content is unchanged; skipping the Pages deployment."
+          else
+            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Upload GitHub Pages artifact
+        if: steps.deployment-decision.outputs.should_deploy == 'true'
         uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
         with:
           path: dist
 
   deploy:
+    if: needs.build.outputs.should_deploy == 'true'
     runs-on: ubuntu-latest
     needs: build
     timeout-minutes: 10

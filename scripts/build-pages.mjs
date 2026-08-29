@@ -19,7 +19,7 @@ const siteBaseUrl = siteUrl.href;
 const basePath = siteUrl.pathname;
 const siteOrigin = siteUrl.origin;
 const siteName = 'ARDALTUNEL';
-const assetVersion = '71';
+const assetVersion = '72';
 const homeDescription = 'Arda Altunel’in yazılım, teknoloji, tasarım, bilim ve yaşam üzerine blog yazıları.';
 const logoUrl = new URL('assets/logo/logo.png', siteBaseUrl).href;
 const fallbackAvatar = new URL('assets/images/no-user-photo.svg?v=2', siteBaseUrl).href;
@@ -269,17 +269,17 @@ ${article ? `<script src="${basePath}assets/js/content-enhancements.js?v=${asset
 const navigation = () => `<nav>
     <div class="container nav__container">
         <a href="${basePath}" class="nav__logo">ARDALTUNEL</a>
-        <ul class="nav__items"></ul>
+        <ul class="nav__items"><li><a href="${basePath}signin.html">Giriş yap</a></li></ul>
         <button class="theme__toggle" type="button" aria-label="Temayı değiştir">
-            <img class="ui-icon theme__icon theme__icon--sun" src="${basePath}assets/vendor/lucide/icons/sun.svg" alt="" aria-hidden="true">
-            <img class="ui-icon theme__icon theme__icon--moon" src="${basePath}assets/vendor/lucide/icons/moon.svg" alt="" aria-hidden="true">
+            <svg class="ui-icon theme__icon theme__icon--sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+            <svg class="ui-icon theme__icon theme__icon--moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg>
         </button>
-        <button id="open__nav-btn" type="button" aria-label="Menüyü aç"><img class="ui-icon" src="${basePath}assets/vendor/lucide/icons/menu.svg" alt="" aria-hidden="true"></button>
-        <button id="close__nav-btn" type="button" aria-label="Menüyü kapat" hidden><img class="ui-icon" src="${basePath}assets/vendor/lucide/icons/x.svg" alt="" aria-hidden="true"></button>
+        <button id="open__nav-btn" type="button" aria-label="Menüyü aç"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M4 5h16M4 12h16M4 19h16"/></svg></button>
+        <button id="close__nav-btn" type="button" aria-label="Menüyü kapat" hidden><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
     </div>
 </nav>`;
 
-const page = ({ title, description, canonical, type, image, published, section, pageName, main, structuredData, article = false, siteVerification = false }) => `<!DOCTYPE html>
+const page = ({ title, description, canonical, type, image, preloadImage = '', published, section, pageName, main, structuredData, article = false, siteVerification = false }) => `<!DOCTYPE html>
 <html lang="tr">
 <head>
     <title>${escapeHtml(title)}</title>
@@ -290,6 +290,8 @@ const page = ({ title, description, canonical, type, image, published, section, 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 ${siteVerification ? '    <meta name="google-site-verification" content="WhMumUYTcsUfTcXBMlek_AFSOMQFO66puERKoP0kpbE" />' : ''}
 ${metadataTags({ title, description, canonical, type, image, published, section })}
+    <link rel="preconnect" href="https://bdadbqlkmdwzzkrwetrf.supabase.co" crossorigin>
+    ${preloadImage ? `<link rel="preload" as="image" href="${escapeHtml(preloadImage)}" fetchpriority="high">` : ''}
     <script src="${basePath}assets/js/theme-bootstrap.js?v=${assetVersion}"></script>
     <link rel="apple-touch-icon" href="${basePath}assets/favicon/apple-touch-icon.png">
     <link rel="icon" href="${basePath}assets/favicon/favicon.ico">
@@ -297,7 +299,7 @@ ${metadataTags({ title, description, canonical, type, image, published, section 
 <link rel="stylesheet" href="${basePath}assets/css/style.css?v=${assetVersion}">
     <script type="application/ld+json">${jsonForHtml(structuredData)}</script>
 </head>
-<body data-page="${pageName}"${pageName === 'home' ? ' data-route="home"' : ''}>
+<body data-page="${pageName}" data-prerendered="true"${pageName === 'home' ? ' data-route="home"' : ''}>
 ${navigation()}
 <main id="app">
 ${main}
@@ -422,6 +424,7 @@ const renderHome = data => {
         canonical: siteBaseUrl,
         type: 'website',
         image: newest?.thumbnail || logoUrl,
+        preloadImage: featured?.thumbnail || newest?.thumbnail || '',
         pageName: 'home',
         siteVerification: true,
         main,
@@ -501,6 +504,7 @@ const renderPost = (post, index, data) => {
         canonical,
         type: 'article',
         image: post.thumbnail,
+        preloadImage: post.thumbnail,
         published: post.date_time,
         section: localizeCategory(category?.title),
         pageName: 'post',
