@@ -2,7 +2,7 @@
     'use strict';
 
     const POSTS_PER_PAGE = 9;
-    const PAGINATION_CACHE_VERSION = '72';
+    const PAGINATION_CACHE_VERSION = '73';
     const MAX_CATEGORIES = 500;
     const MAX_AUTHORS = 2000;
     const MAX_POSTS = 2000;
@@ -14,7 +14,12 @@
         ? window.location.pathname.split('/').filter(Boolean).at(-2) === 'kategori' ? 'category' : 'post'
         : declaredPageName;
     const security = window.SecurityUtils;
-    const requestedHomePage = pageName === 'home' ? security?.getQueryParam('page') : null;
+    const renderedHomePage = pageName === 'home'
+        ? security?.getQueryParam('page', `?page=${encodeURIComponent(document.body.dataset.homePage || '1')}`) || 1
+        : null;
+    const requestedHomePage = pageName === 'home'
+        ? security?.getQueryParam('page') || renderedHomePage
+        : null;
     const config = security?.getSafeSupabaseConfig();
     const state = {
         categories: [],
@@ -431,10 +436,10 @@
     };
 
     const renderHome = () => {
-        const featured = state.posts.find(post => post.is_featured);
         const currentPage = requestedHomePage || 1;
         const totalPages = Math.max(1, Math.ceil(state.posts.length / POSTS_PER_PAGE));
         const safePage = Math.min(currentPage, totalPages);
+        const featured = safePage === 1 ? state.posts.find(post => post.is_featured) : null;
         const pagePosts = state.posts.slice((safePage - 1) * POSTS_PER_PAGE, safePage * POSTS_PER_PAGE);
         const homeUrl = new URL(security.buildRoute('home', safePage > 1 ? { page: safePage } : {}), window.location.href);
         if (`${window.location.pathname}${window.location.search}` !== `${homeUrl.pathname}${homeUrl.search}`) {
@@ -634,9 +639,7 @@
         try {
             if (isPrerendered && window.BLOG_FALLBACK_DATA) {
                 applyData(window.BLOG_FALLBACK_DATA);
-                if (pageName === 'home' && requestedHomePage && requestedHomePage > 1) {
-                    renderHome();
-                } else if (pageName === 'post') {
+                if (pageName === 'post') {
                     window.ContentEnhancements?.enhance(document.querySelector('#post-content'));
                 }
                 return;

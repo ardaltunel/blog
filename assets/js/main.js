@@ -14,9 +14,17 @@
 
     const canonicalRoute = document.body.dataset.route;
     if (canonicalRoute && security) {
-        const requestedPage = canonicalRoute === 'home' ? security.getQueryParam('page') : null;
+        const queryPage = canonicalRoute === 'home' ? security.getQueryParam('page') : null;
+        const renderedPage = canonicalRoute === 'home'
+            ? security.getQueryParam('page', `?page=${encodeURIComponent(document.body.dataset.homePage || '1')}`) || 1
+            : null;
+        const requestedPage = queryPage || renderedPage;
         const canonicalValues = requestedPage ? { page: requestedPage } : {};
         const canonicalUrl = new URL(security.buildRoute(canonicalRoute, canonicalValues), window.location.href);
+        if (queryPage && canonicalUrl.pathname !== window.location.pathname) {
+            window.location.replace(`${canonicalUrl.pathname}${canonicalUrl.search}${window.location.hash}`);
+            return;
+        }
         if (`${window.location.pathname}${window.location.search}` !== `${canonicalUrl.pathname}${canonicalUrl.search}`) {
             window.history.replaceState(null, '', `${canonicalUrl.pathname}${canonicalUrl.search}${window.location.hash}`);
         }

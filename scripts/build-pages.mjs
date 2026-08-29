@@ -19,7 +19,8 @@ const siteBaseUrl = siteUrl.href;
 const basePath = siteUrl.pathname;
 const siteOrigin = siteUrl.origin;
 const siteName = 'ARDALTUNEL';
-const assetVersion = '72';
+const assetVersion = '73';
+const postsPerPage = 9;
 const homeDescription = 'Arda Altunel’in yazılım, teknoloji, tasarım, bilim ve yaşam üzerine blog yazıları.';
 const logoUrl = new URL('assets/logo/logo.png', siteBaseUrl).href;
 const fallbackAvatar = new URL('assets/images/no-user-photo.svg?v=2', siteBaseUrl).href;
@@ -279,7 +280,7 @@ const navigation = () => `<nav>
     </div>
 </nav>`;
 
-const page = ({ title, description, canonical, type, image, preloadImage = '', published, section, pageName, main, structuredData, article = false, siteVerification = false }) => `<!DOCTYPE html>
+const page = ({ title, description, canonical, type, image, preloadImage = '', published, section, pageName, homePage = 1, previousPage = '', nextPage = '', main, structuredData, article = false, siteVerification = false }) => `<!DOCTYPE html>
 <html lang="tr">
 <head>
     <title>${escapeHtml(title)}</title>
@@ -290,6 +291,8 @@ const page = ({ title, description, canonical, type, image, preloadImage = '', p
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 ${siteVerification ? '    <meta name="google-site-verification" content="WhMumUYTcsUfTcXBMlek_AFSOMQFO66puERKoP0kpbE" />' : ''}
 ${metadataTags({ title, description, canonical, type, image, published, section })}
+    ${previousPage ? `<link rel="prev" href="${escapeHtml(previousPage)}">` : ''}
+    ${nextPage ? `<link rel="next" href="${escapeHtml(nextPage)}">` : ''}
     <link rel="preconnect" href="https://bdadbqlkmdwzzkrwetrf.supabase.co" crossorigin>
     ${preloadImage ? `<link rel="preload" as="image" href="${escapeHtml(preloadImage)}" fetchpriority="high">` : ''}
     <script src="${basePath}assets/js/theme-bootstrap.js?v=${assetVersion}"></script>
@@ -299,7 +302,7 @@ ${metadataTags({ title, description, canonical, type, image, published, section 
 <link rel="stylesheet" href="${basePath}assets/css/style.css?v=${assetVersion}">
     <script type="application/ld+json">${jsonForHtml(structuredData)}</script>
 </head>
-<body data-page="${pageName}" data-prerendered="true"${pageName === 'home' ? ' data-route="home"' : ''}>
+<body data-page="${pageName}" data-prerendered="true"${pageName === 'home' ? ` data-route="home" data-home-page="${homePage}"` : ''}>
 ${navigation()}
 <main id="app">
 ${main}
@@ -390,9 +393,34 @@ const renderCategoryButtons = categories => `<section class="category__buttons">
             </div>
         </section>`;
 
-const renderHome = data => {
-    const featured = data.posts.find(post => post.is_featured);
-    const posts = data.posts.slice(0, 9);
+const homePagePath = pageNumber => pageNumber > 1 ? `${basePath}sayfa/${pageNumber}/` : basePath;
+const homePageUrl = pageNumber => new URL(homePagePath(pageNumber), siteOrigin).href;
+const homePageCount = data => Math.max(1, Math.ceil(data.posts.length / postsPerPage));
+const renderPagination = (currentPage, totalPages) => {
+    if (totalPages <= 1) {
+        return '';
+    }
+
+    const versionedPage = pageNumber => `${homePagePath(pageNumber)}?v=${assetVersion}#posts`;
+    return `<nav class="container pagination__container" aria-label="Blog sayfaları">
+                ${currentPage > 1 ? `<a href="${versionedPage(currentPage - 1)}" rel="prev" class="pagination__button pagination__button--previous" aria-label="Önceki sayfaya git">
+                    <span class="pagination__icon" aria-hidden="true">&larr;</span>
+                    <span>Önceki <span class="pagination__label-suffix">sayfa</span></span>
+                </a>` : ''}
+                <span class="pagination__status" aria-current="page" aria-label="${currentPage}. sayfa, toplam ${totalPages} sayfa">${currentPage} / ${totalPages}</span>
+                ${currentPage < totalPages ? `<a href="${versionedPage(currentPage + 1)}" rel="next" class="pagination__button pagination__button--next" aria-label="Sonraki sayfaya git">
+                    <span>Sonraki <span class="pagination__label-suffix">sayfa</span></span>
+                    <span class="pagination__icon" aria-hidden="true">&rarr;</span>
+                </a>` : ''}
+            </nav>`;
+};
+
+const renderHome = (data, requestedPage = 1) => {
+    const totalPages = homePageCount(data);
+    const currentPage = Math.min(Math.max(1, requestedPage), totalPages);
+    const offset = (currentPage - 1) * postsPerPage;
+    const posts = data.posts.slice(offset, offset + postsPerPage);
+    const featured = currentPage === 1 ? data.posts.find(post => post.is_featured) : null;
     const featuredCategory = featured ? categoryFor(featured, data.categories) : null;
     const main = `${featured ? `<section class="featured">
             <div class="container featured__container">
@@ -415,17 +443,23 @@ const renderHome = data => {
                 <span class="pagination__loading-copy"><span class="pagination__loading-title">Yazılar yükleniyor...</span><small>Gönderiler hazırlanıyor</small></span>
             </div>
             <div class="container posts__container">${posts.map(post => renderPostCard(post, data)).join('')}</div>
+            ${renderPagination(currentPage, totalPages)}
         </section>
         ${renderCategoryButtons(data.categories)}`;
     const newest = data.posts[0];
+    const canonical = homePageUrl(currentPage);
+    const title = currentPage > 1 ? `Blog Yazıları – Sayfa ${currentPage} | Arda Altunel` : 'Blog Yazıları | Arda Altunel';
     return page({
-        title: 'Blog Yazıları | Arda Altunel',
+        title,
         description: homeDescription,
-        canonical: siteBaseUrl,
+        canonical,
         type: 'website',
         image: newest?.thumbnail || logoUrl,
-        preloadImage: featured?.thumbnail || newest?.thumbnail || '',
+        preloadImage: featured?.thumbnail || posts[0]?.thumbnail || newest?.thumbnail || '',
         pageName: 'home',
+        homePage: currentPage,
+        previousPage: currentPage > 1 ? homePageUrl(currentPage - 1) : '',
+        nextPage: currentPage < totalPages ? homePageUrl(currentPage + 1) : '',
         siteVerification: true,
         main,
         structuredData: {
@@ -447,7 +481,7 @@ const renderHome = data => {
                     '@type': 'ItemList',
                     itemListElement: posts.map((post, index) => ({
                         '@type': 'ListItem',
-                        position: index + 1,
+                        position: offset + index + 1,
                         url: postUrl(post),
                         name: post.title
                     }))
@@ -609,6 +643,11 @@ const sitemapXml = data => {
     const newestDate = data.posts[0]?.date_time || new Date().toISOString();
     const entries = [
         { loc: siteBaseUrl, lastmod: newestDate, image: data.posts[0]?.thumbnail },
+        ...Array.from({ length: Math.max(0, homePageCount(data) - 1) }, (_, index) => ({
+            loc: homePageUrl(index + 2),
+            lastmod: newestDate,
+            image: data.posts[(index + 1) * postsPerPage]?.thumbnail
+        })),
         ...data.categories.map(category => {
             const latest = data.posts.find(post => post.category_id === category.id);
             return {
@@ -707,7 +746,11 @@ await writePage(
     join('assets', 'data', 'blog-data.js'),
     `window.BLOG_FALLBACK_DATA = ${jsonForHtml(data)};\n`
 );
-await writePage('index.html', renderHome(data));
+const totalHomePages = homePageCount(data);
+await writePage('index.html', renderHome(data, 1));
+for (let pageNumber = 2; pageNumber <= totalHomePages; pageNumber += 1) {
+    await writePage(join('sayfa', String(pageNumber), 'index.html'), renderHome(data, pageNumber));
+}
 for (const [index, post] of data.posts.entries()) {
     await writePage(join(post.route_slug, 'index.html'), renderPost(post, index, data));
 }
@@ -718,4 +761,4 @@ await writePage('sitemap.xml', sitemapXml(data));
 await writePage('feed.xml', atomFeed(data));
 await writePage('robots.txt', robotsTxt);
 
-process.stdout.write(`SEO build created ${data.posts.length} post pages and ${data.categories.length} category pages from ${source}.\n`);
+process.stdout.write(`SEO build created ${data.posts.length} post pages, ${data.categories.length} category pages and ${totalHomePages} blog index pages from ${source}.\n`);

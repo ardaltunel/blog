@@ -435,7 +435,11 @@
         } else if (routeName === 'home' && values.page !== undefined) {
             const page = parsePositiveInteger(String(values.page), QUERY_RULES.page);
             if (page !== null && page > 1) {
-                params.set('page', String(page));
+                if (usesLocalQueryRoutes()) {
+                    params.set('page', String(page));
+                } else {
+                    return sitePath(`sayfa/${page}/`);
+                }
             }
         } else if (routeName === 'admin' && values.view !== undefined) {
             const view = normalizeString(values.view);
