@@ -469,7 +469,7 @@ const renderHome = (data, requestedPage = 1) => {
                 </div>
             </div>
         </section>` : ''}
-        <section class="posts ${featured ? '' : 'section__extra-margin'}" id="posts">
+        <section class="posts posts--home ${featured ? '' : 'section__extra-margin'}" id="posts">
             <div class="pagination__loading" role="status" aria-live="polite" aria-label="Yazılar yükleniyor">
                 <span class="pagination__loading-spinner" aria-hidden="true"></span>
                 <span class="pagination__loading-copy"><span class="pagination__loading-title">Yazılar yükleniyor...</span><small>Gönderiler hazırlanıyor</small></span>
