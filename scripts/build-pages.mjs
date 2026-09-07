@@ -30,7 +30,7 @@ const reservedPaginationSlugs = Array.from(
     (_, index) => String(index + 2)
 );
 const reservedPostSlugs = ['assets', 'kategori', 'yazi', 'yeni-blog-ekle', ...reservedPaginationSlugs];
-const csp = "default-src 'self'; base-uri 'none'; object-src 'none'; frame-src https://www.youtube-nocookie.com; form-action 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: https://bdadbqlkmdwzzkrwetrf.supabase.co https://lh3.googleusercontent.com; font-src 'self'; connect-src 'self' https://bdadbqlkmdwzzkrwetrf.supabase.co; media-src 'none'; worker-src 'none'; manifest-src 'self'; upgrade-insecure-requests";
+const csp = "default-src 'self'; base-uri 'none'; object-src 'none'; frame-src https://www.youtube-nocookie.com; form-action 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: https://bdadbqlkmdwzzkrwetrf.supabase.co https://lh3.googleusercontent.com https://lh4.googleusercontent.com https://lh5.googleusercontent.com; font-src 'self'; connect-src 'self' https://bdadbqlkmdwzzkrwetrf.supabase.co; media-src 'none'; worker-src 'none'; manifest-src 'self'; upgrade-insecure-requests";
 
 const escapeHtml = value => String(value ?? '')
     .replace(/&/g, '&amp;')
@@ -291,7 +291,7 @@ const navigation = () => `<nav>
     </div>
 </nav>`;
 
-const page = ({ title, description, canonical, type, image, preloadImage = '', published, section, pageName, homePage = 1, previousPage = '', nextPage = '', main, structuredData, article = false, siteVerification = false }) => `<!DOCTYPE html>
+const page = ({ title, description, canonical, type, image, preloadImage = '', published, section, pageName, homePage = 1, previousPage = '', nextPage = '', main, categories = [], structuredData, article = false, siteVerification = false }) => `<!DOCTYPE html>
 <html lang="tr">
 <head>
     <title>${escapeHtml(title)}</title>
@@ -319,7 +319,7 @@ ${navigation()}
     <main id="app" tabindex="-1">
 ${main}
 </main>
-<footer class="site-footer"><span>Arda Altunel · Blog</span><a href="${basePath}privacy.html">Gizlilik politikası</a></footer>
+<footer class="site-footer">${categories.length ? renderCategoryButtons(categories) : ''}<span>Arda Altunel · Blog</span><a href="${basePath}privacy.html">Gizlilik politikası</a></footer>
 ${scripts({ article })}
 </body>
 </html>
@@ -474,11 +474,11 @@ const renderHome = (data, requestedPage = 1) => {
                 <span class="pagination__loading-spinner" aria-hidden="true"></span>
                 <span class="pagination__loading-copy"><span class="pagination__loading-title">Yazılar yükleniyor...</span><small>Gönderiler hazırlanıyor</small></span>
             </div>
-            <header class="container editorial-heading"><h1>${currentPage === 1 ? 'Son yazılar' : `Yazı arşivi · ${currentPage}`}</h1><p>Yazılım, teknoloji ve hayata dair notlar.</p></header>
+            <header class="container editorial-heading"><h1>${currentPage === 1 ? 'Son yazılar' : `Sayfa · ${currentPage}`}</h1><p>Yazılım, teknoloji ve hayata dair notlar.</p></header>
             ${posts.length ? `<div class="container posts__container">${posts.map(post => renderPostCard(post, data)).join('')}</div>` : '<div class="container content-empty"><h2>Henüz yayınlanmış yazı yok</h2><p>Yeni yazılar burada yer alacak.</p></div>'}
             ${renderPagination(currentPage, totalPages)}
         </section>
-        ${renderCategoryButtons(data.categories)}`;
+        `;
     const newest = data.posts[0];
     const canonical = homePageUrl(currentPage);
     const title = currentPage > 1 ? `Blog Yazıları – Sayfa ${currentPage} | Arda Altunel` : 'Blog Yazıları | Arda Altunel';
@@ -495,6 +495,7 @@ const renderHome = (data, requestedPage = 1) => {
         nextPage: currentPage < totalPages ? homePageUrl(currentPage + 1) : '',
         siteVerification: true,
         main,
+        categories: data.categories,
         structuredData: {
             '@context': 'https://schema.org',
             '@graph': [
@@ -576,6 +577,7 @@ const renderPost = (post, index, data) => {
         section: localizeCategory(category?.title),
         pageName: 'post',
         main,
+        categories: data.categories,
         article: true,
         structuredData: {
             '@context': 'https://schema.org',
@@ -647,7 +649,7 @@ const renderCategory = (category, data) => {
         ${posts.length ? `<section class="posts">
             <div class="container posts__container">${posts.map(post => renderPostCard(post, data)).join('')}</div>
         </section>` : '<div class="container content-empty"><p>Bu kategoride henüz yazı bulunmuyor.</p></div>'}
-        ${renderCategoryButtons(data.categories)}`;
+        `;
     return page({
         title,
         description,
@@ -656,6 +658,7 @@ const renderCategory = (category, data) => {
         image: posts[0]?.thumbnail || logoUrl,
         pageName: 'category',
         main,
+        categories: data.categories,
         structuredData: {
             '@context': 'https://schema.org',
             '@type': 'CollectionPage',

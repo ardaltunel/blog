@@ -4633,6 +4633,7 @@ input, textarea, select { scroll-margin-top: 6rem; }
 
 .site-footer {
     display: flex;
+    flex-wrap: wrap;
     background: transparent;
     justify-content: space-between;
     gap: 1rem;
@@ -4642,6 +4643,18 @@ input, textarea, select { scroll-margin-top: 6rem; }
     border-top: 1px solid var(--color-border);
     font-size: 0.75rem;
     color: var(--color-muted);
+}
+.site-footer .category__buttons {
+    flex-basis: 100%;
+    margin: 0 0 0.5rem;
+    padding: 0 0 1.5rem;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+}
+.site-footer .category__buttons-container {
+    width: 100%;
+    justify-content: flex-start;
 }
 @media screen and (max-width: 640px) {
     .featured .post__body { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }

@@ -388,6 +388,15 @@
         </section>
     `;
 
+    const renderFooterCategories = () => {
+        const footer = document.querySelector('.site-footer');
+        if (!footer) return;
+        footer.querySelector('.category__buttons')?.remove();
+        const container = document.createElement('div');
+        security.renderUi(container, renderCategoryButtons());
+        footer.prepend(...container.childNodes);
+    };
+
     const renderPagination = (currentPage, totalPages) => {
         if (totalPages <= 1) {
             return '';
@@ -446,6 +455,7 @@
     };
 
     const renderHome = () => {
+        renderFooterCategories();
         const currentPage = requestedHomePage || 1;
         const totalPages = Math.max(1, Math.ceil(state.posts.length / POSTS_PER_PAGE));
         const safePage = Math.min(currentPage, totalPages);
@@ -486,7 +496,7 @@
                     <span class="pagination__loading-spinner" aria-hidden="true"></span>
                     <span class="pagination__loading-copy"><span class="pagination__loading-title">Yazılar yükleniyor...</span><small>Gönderiler hazırlanıyor</small></span>
                 </div>
-                <header class="container editorial-heading"><h1>${safePage === 1 ? 'Son yazılar' : `Yazı arşivi · ${safePage}`}</h1><p>Yazılım, teknoloji ve hayata dair notlar.</p></header>
+                <header class="container editorial-heading"><h1>${safePage === 1 ? 'Son yazılar' : `Sayfa · ${safePage}`}</h1><p>Yazılım, teknoloji ve hayata dair notlar.</p></header>
                 ${pagePosts.length ? `<div class="container posts__container">${pagePosts.map(renderPostCard).join('')}</div>` : '<div class="container content-empty"><h2>Henüz yayınlanmış yazı yok</h2><p>Yeni yazılar burada yer alacak.</p></div>'}
                 ${renderPagination(safePage, totalPages)}
             </section>
@@ -536,6 +546,7 @@
     };
 
     const renderPost = () => {
+        renderFooterCategories();
         const post = findRequestedPost();
         if (!post) {
             renderSafeError('Yazı bulunamadı.');
@@ -602,6 +613,7 @@
     };
 
     const renderCategory = () => {
+        renderFooterCategories();
         const category = findRequestedCategory();
         if (!category) {
             renderSafeError('Kategori bulunamadı.');
