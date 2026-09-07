@@ -4699,3 +4699,24 @@ input, textarea, select { scroll-margin-top: 6rem; }
 .password__toggle, .auth__switch a { color: var(--color-primary-strong); }
 .category__title p { white-space: pre-line; }
 @media screen and (max-width: 1024px) { body > nav { box-shadow: none; } }
+.privacy-dialog {
+    width: min(42rem, calc(100vw - 2rem));
+    max-height: calc(100dvh - 3rem);
+    margin: auto;
+    padding: 2rem;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    background: var(--color-surface);
+    color: var(--color-text);
+    overflow-y: auto;
+}
+.privacy-dialog::backdrop { background: rgba(0, 0, 0, 0.65); }
+.privacy-dialog > h2 { margin: 0 0 1.5rem; font-size: 1.5rem; }
+.privacy-dialog__close { display: block; margin-left: auto; margin-bottom: 1rem; padding: 0.5rem; background: transparent; color: var(--color-muted); cursor: pointer; }
+.privacy-dialog__body section { margin: 1.5rem 0; }
+.privacy-dialog__body h3 { font-size: 1rem; margin-bottom: 0.5rem; }
+.privacy-dialog__body p { font-size: 0.875rem; line-height: 1.8; }
+.privacy-dialog__body a { text-decoration: underline; }
+.privacy-dialog button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; }
+body:has(.privacy-dialog[open]) { overflow: hidden; }
+@media (max-width: 640px) { .privacy-dialog { padding: 1.25rem; } }

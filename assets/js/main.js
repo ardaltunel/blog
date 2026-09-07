@@ -130,4 +130,71 @@
             }
         });
     }
+
+    const privacyLink = document.querySelector('.site-footer__privacy');
+    if (privacyLink) {
+        const dialog = document.createElement('dialog');
+        dialog.className = 'privacy-dialog';
+        dialog.setAttribute('aria-labelledby', 'privacy-dialog-title');
+        const heading = document.createElement('h2');
+        heading.id = 'privacy-dialog-title';
+        heading.textContent = 'Gizlilik politikası';
+        const close = document.createElement('button');
+        close.type = 'button';
+        close.className = 'privacy-dialog__close';
+        close.textContent = 'Kapat ×';
+        const body = document.createElement('div');
+        body.className = 'privacy-dialog__body';
+        body.setAttribute('aria-live', 'polite');
+        dialog.append(close, heading, body);
+        document.body.append(dialog);
+        close.addEventListener('click', () => dialog.close());
+        dialog.addEventListener('click', event => {
+            if (event.target !== dialog) return;
+            const box = dialog.getBoundingClientRect();
+            if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) dialog.close();
+        });
+        dialog.addEventListener('close', () => privacyLink.focus());
+        let loaded = false;
+        let loading = false;
+        privacyLink.setAttribute('aria-haspopup', 'dialog');
+        privacyLink.addEventListener('click', async event => {
+            event.preventDefault();
+            if (!dialog.open) dialog.showModal();
+            if (loaded || loading) return;
+            loading = true;
+            body.textContent = 'Yükleniyor…';
+            try {
+                const response = await fetch(privacyLink.href, { signal: AbortSignal.timeout(10000) });
+                if (!response.ok) throw new Error('Privacy unavailable');
+                const documentCopy = new DOMParser().parseFromString(await response.text(), 'text/html');
+                const sections = documentCopy.querySelectorAll('.legal__container section');
+                if (!sections.length) throw new Error('Privacy content missing');
+                const content = document.createDocumentFragment();
+                sections.forEach(section => {
+                    const group = document.createElement('section');
+                    section.querySelectorAll('h2, p').forEach(source => {
+                        const node = document.createElement(source.tagName === 'H2' ? 'h3' : 'p');
+                        node.textContent = source.textContent;
+                        source.querySelectorAll('a').forEach(link => {
+                            const url = new URL(link.href);
+                            if (url.protocol !== 'https:') return;
+                            const anchor = document.createElement('a');
+                            anchor.href = url.href;
+                            anchor.textContent = link.textContent;
+                            node.append(' ', anchor);
+                        });
+                        group.append(node);
+                    });
+                    content.append(group);
+                });
+                body.replaceChildren(content);
+                loaded = true;
+            } catch {
+                body.textContent = 'Gizlilik politikası yüklenemedi. Lütfen pencereyi kapatıp tekrar deneyin.';
+            } finally {
+                loading = false;
+            }
+        });
+    }
 }());
