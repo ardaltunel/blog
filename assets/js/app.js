@@ -2,7 +2,7 @@
     'use strict';
 
     const POSTS_PER_PAGE = 9;
-    const PAGINATION_CACHE_VERSION = '76';
+    const PAGINATION_CACHE_VERSION = '77';
     const MAX_CATEGORIES = 500;
     const MAX_AUTHORS = 2000;
     const MAX_POSTS = 2000;
@@ -16,7 +16,7 @@
             (_, index) => String(index + 2)
         )
     ];
-    const MIN_PAGINATION_LOADING_MS = 900;
+    const MIN_PAGINATION_LOADING_MS = 0;
     const app = document.querySelector('#app');
     const declaredPageName = document.body.dataset.page || 'home';
     const isPrerendered = document.body.dataset.prerendered === 'true';
@@ -46,7 +46,10 @@
     const normalizeCategory = category => {
         const id = security.toSafeId(category?.id);
         const title = security.validateText(category?.title, { min: 1, max: 100 });
-        const description = security.validateText(category?.description || '', { max: 1000 });
+        const rawDescription = category?.description || '';
+        const description = security.validateText(/^This is the description for .+ category\.?$/i.test(rawDescription)
+            ? `${security.localizeCategoryTitle(title)} üzerine yazılar ve notlar.` : rawDescription,
+        { max: 1000, multiline: true });
         return id && title !== null && description !== null ? { id, title, description } : null;
     };
     const normalizeAuthor = author => {
@@ -122,18 +125,19 @@
         }
 
         const client = window.authClient;
+        const signal = AbortSignal.timeout(12000);
         const routeFallback = declaredPageName === 'route';
         const postColumns = routeFallback
             ? 'id,title,thumbnail,date_time,category_id,author_id,is_featured,is_verified'
             : 'id,title,body,thumbnail,date_time,category_id,author_id,is_featured,is_verified';
         const [categoriesResult, authorsResult, postsResult] = await Promise.all([
-            client.from('categories').select('id,title,description').order('title', { ascending: true }).limit(MAX_CATEGORIES),
-            client.from('authors').select('id,firstname,lastname,avatar').limit(MAX_AUTHORS),
+            client.from('categories').select('id,title,description').order('title', { ascending: true }).limit(MAX_CATEGORIES).abortSignal(signal),
+            client.from('authors').select('id,firstname,lastname,avatar').limit(MAX_AUTHORS).abortSignal(signal),
             client.from('posts')
                 .select(postColumns)
                 .eq('is_verified', true)
                 .order('date_time', { ascending: false })
-                .limit(MAX_POSTS)
+                .limit(MAX_POSTS).abortSignal(signal)
         ]);
 
         if (categoriesResult.error || authorsResult.error || postsResult.error) {
@@ -176,7 +180,7 @@
         const hydratedPostsResult = await client.from('posts')
             .select('id,title,body,thumbnail,date_time,category_id,author_id,is_featured,is_verified')
             .in('id', [...requiredPosts])
-            .eq('is_verified', true);
+            .eq('is_verified', true).abortSignal(signal);
         if (hydratedPostsResult.error) {
             throw new Error('Uzak içerik yüklenemedi.');
         }
@@ -211,6 +215,7 @@
                 day: 'numeric',
                 month: 'long',
                 year: 'numeric',
+                timeZone: 'Europe/Istanbul',
             }).format(new Date(dateValue));
         } catch {
             return '';
@@ -481,7 +486,8 @@
                     <span class="pagination__loading-spinner" aria-hidden="true"></span>
                     <span class="pagination__loading-copy"><span class="pagination__loading-title">Yazılar yükleniyor...</span><small>Gönderiler hazırlanıyor</small></span>
                 </div>
-                <div class="container posts__container">${pagePosts.map(renderPostCard).join('')}</div>
+                <header class="container editorial-heading"><h1>${safePage === 1 ? 'Son yazılar' : `Yazı arşivi · ${safePage}`}</h1><p>Yazılım, teknoloji ve hayata dair notlar.</p></header>
+                ${pagePosts.length ? `<div class="container posts__container">${pagePosts.map(renderPostCard).join('')}</div>` : '<div class="container content-empty"><h2>Henüz yayınlanmış yazı yok</h2><p>Yeni yazılar burada yer alacak.</p></div>'}
                 ${renderPagination(safePage, totalPages)}
             </section>
             ${renderCategoryButtons()}
@@ -614,13 +620,13 @@
             image: posts[0]?.thumbnail || ''
         });
         security.renderUi(app, `
-            <header class="category__title"><h2>${security.escapeHtml(categoryTitle(category))}</h2></header>
+            <header class="category__title"><div class="container"><a href="${security.buildRoute('home')}">Blog</a><h1>${security.escapeHtml(categoryTitle(category))}</h1><p>${security.escapeHtml(category.description || 'Bu konudaki tüm yazıları keşfedin.')}</p><small>${posts.length} yazı</small></div></header>
             ${posts.length ? `
                 <section class="posts">
                     <div class="container posts__container">${posts.map(renderPostCard).join('')}</div>
                 </section>
             ` : `
-                <div class="alert__message error lg"><p>Bu kategoride henüz yazı bulunmuyor.</p></div>
+                <div class="container content-empty"><p>Bu kategoride henüz yazı bulunmuyor.</p><a href="${security.buildRoute('home')}">Diğer yazılara göz at →</a></div>
             `}
             ${renderCategoryButtons()}
         `);
@@ -642,11 +648,11 @@
         }
 
         try {
-            if (isPrerendered && window.BLOG_FALLBACK_DATA) {
-                applyData(window.BLOG_FALLBACK_DATA);
+            if (isPrerendered) {
                 if (pageName === 'post') {
                     window.ContentEnhancements?.enhance(document.querySelector('#post-content'));
                 }
+                finishPaginationLoading();
                 return;
             }
 

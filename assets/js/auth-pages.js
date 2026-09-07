@@ -18,6 +18,7 @@
     let editPostRequestId = 0;
     let editPostTrigger = null;
     let messageDismissTimer = null;
+    let editPostSaving = false;
     const POSTS_PAGE_SIZES = Object.freeze([20, 50, 100]);
     const DEFAULT_POSTS_PAGE_SIZE = POSTS_PAGE_SIZES[0];
     const POSTS_STATUS_FILTERS = Object.freeze(['all', 'published', 'unpublished']);
@@ -42,7 +43,7 @@
         messageBox.className = `alert__message ${isSuccess ? 'success' : 'error'}`;
         messageBox.textContent = String(message).slice(0, 300);
         if (isSuccess) {
-            messageDismissTimer = window.setTimeout(clearMessage, 2000);
+            messageDismissTimer = window.setTimeout(clearMessage, 8000);
         }
     };
     const showEditPostMessage = message => {
@@ -68,7 +69,7 @@
         await editor.destroy();
     };
     const closeEditPostModal = async () => {
-        if (!editPostModal || editPostModal.hidden) {
+        if (!editPostModal || editPostModal.hidden || editPostSaving) {
             return;
         }
         editPostRequestId += 1;
@@ -147,7 +148,33 @@
     const setSubmitting = (button, disabled, label) => {
         if (button) {
             button.disabled = disabled;
+            button.form?.setAttribute('aria-busy', String(disabled));
             button.textContent = label;
+        }
+    };
+    document.addEventListener('submit', event => {
+        if (event.target.getAttribute('aria-busy') === 'true') {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+        }
+    }, true);
+    const runRowMutation = async (button, request, successMessage, refresh) => {
+        if (button.disabled) return;
+        button.disabled = true;
+        clearMessage();
+        let saved = false;
+        try {
+            const { data, error } = await request();
+            if (error || !data?.length) throw new Error('MUTATION_FAILED');
+            saved = true;
+            showMessage(successMessage, 'success');
+            await refresh();
+        } catch {
+            showMessage(saved
+                ? 'İşlem tamamlandı ancak liste yenilenemedi. Sayfayı yenileyebilirsiniz.'
+                : 'İşlem tamamlanamadı. Bağlantınızı ve yetkinizi kontrol edip tekrar deneyin.');
+        } finally {
+            button.disabled = false;
         }
     };
     const setupPasswordToggles = form => {
@@ -241,7 +268,11 @@
         if (!path || !client || !config) {
             return;
         }
-        await client.storage.from(config.storageBucket).remove([path]);
+        try {
+            await client.storage.from(config.storageBucket).remove([path]);
+        } catch {
+            // Cleanup is best effort; it must never turn a saved record into a failure.
+        }
     };
     const uploadImage = async (file, userId, kind, maxBytes) => {
         const validated = security.validateImageFile(file, maxBytes);
@@ -429,6 +460,7 @@
             const button = form.querySelector('button[type="submit"]');
             setSubmitting(button, true, 'Hesap oluşturuluyor...');
             let uploadedPath = null;
+            let accountCreated = false;
             try {
                 const emailRedirectTo = new URL(
                     security.buildRoute('admin', { view: 'profile' }),
@@ -445,6 +477,7 @@
                     return;
                 }
 
+                accountCreated = true;
                 let avatarUploaded = false;
                 if (hasAvatar && data.session?.user?.id === data.user.id) {
                     const upload = await uploadImage(avatarFile, data.user.id, 'avatars', 2 * 1024 * 1024);
@@ -459,6 +492,7 @@
                         uploadedPath = null;
                         throw new Error('PROFILE_UPDATE_FAILED');
                     }
+                    uploadedPath = null;
                     avatarUploaded = true;
                 }
 
@@ -469,7 +503,9 @@
                 form.reset();
             } catch {
                 await cleanupUpload(uploadedPath);
-                showMessage('Hesap kurulumu tamamlanamadı. Lütfen tekrar deneyin.');
+                showMessage(accountCreated
+                    ? 'Hesabınız oluşturuldu ancak profil fotoğrafı yüklenemedi. Giriş yaptıktan sonra Profil sayfasından tekrar yükleyebilirsiniz.'
+                    : 'Hesap kurulumu tamamlanamadı. Lütfen tekrar deneyin.');
             } finally {
                 setSubmitting(button, false, 'Kayıt ol');
             }
@@ -575,6 +611,7 @@
                     uploadedPath = null;
                     throw new Error('POST_INSERT_FAILED');
                 }
+                uploadedPath = null;
                 showMessage('Yazı yönetici incelemesine gönderildi.', 'success');
                 form.reset();
                 form.querySelector('#thumbnail')?.dispatchEvent(new Event('change'));
@@ -775,7 +812,7 @@
                         <p>PNG, JPEG veya WebP biçiminde, en fazla 2 MB.</p>
                     </div>
                     <form id="profile-avatar-form">
-                        <input type="file" name="avatar" id="profile-avatar" accept="image/png,image/jpeg,image/webp" required>
+                        <input aria-label="Profil fotoğrafı" type="file" name="avatar" id="profile-avatar" accept="image/png,image/jpeg,image/webp" required>
                         <div class="dashboard__avatar-actions">
                             <button type="submit" class="btn">Fotoğrafı güncelle</button>
                             ${googleAvatarAction}
@@ -1073,7 +1110,9 @@
             pageSizeSelect.disabled = loading;
             statusSelect.disabled = loading;
             pagination.querySelectorAll('button').forEach(button => {
-                button.disabled = loading || button.getAttribute('aria-current') === 'page';
+                const page = Number(button.value);
+                button.disabled = loading || button.getAttribute('aria-current') === 'page'
+                    || page < 1 || page > Math.max(1, Math.ceil(state.total / state.pageSize));
             });
         };
 
@@ -1126,7 +1165,7 @@
                                 <td class="dashboard__post-title" data-label="Başlık">${security.escapeHtml(post.title)}</td>
                                 <td class="dashboard__post-category" data-label="Kategori">${security.escapeHtml(post.categoryTitle)}</td>
                                 ${showsAuthor ? `<td class="dashboard__post-author" data-label="Yazar">${security.escapeHtml(post.authorName)}</td>` : ''}
-                                <td class="dashboard__post-action" data-label="Düzenle"><button type="button" class="btn sm edit-post" data-id="${post.id}">Düzenle</button></td>
+                                <td class="dashboard__post-action" data-label="Düzenle"><button type="button" class="btn sm edit-post" data-id="${post.id}" ${!profile.is_admin && post.is_verified ? 'disabled title="Yayındaki yazıları yalnızca yönetici düzenleyebilir"' : ''}>${!profile.is_admin && post.is_verified ? 'Yayında' : 'Düzenle'}</button></td>
                                 ${profile.is_admin ? `
                                     <td class="dashboard__post-action" data-label="Yayın durumu">
                                         <label class="dashboard__publish-control">
@@ -1212,6 +1251,10 @@
                 bindTableActions();
                 bindPaginationActions();
             } catch {
+                if (requestId !== pageRequestId) return;
+                summary.textContent = 'Yazılar yüklenemedi';
+                security.renderUi(tableHost, '<div class="dashboard__empty-posts"><p>Bağlantınızı kontrol edip tekrar deneyin.</p><button type="button" class="btn" id="retry-posts">Tekrar dene</button></div>');
+                tableHost.querySelector('#retry-posts')?.addEventListener('click', loadPage);
                 showMessage('Yazılar yüklenemedi.');
             } finally {
                 if (requestId === pageRequestId) {
@@ -1421,6 +1464,8 @@
             }
             const button = event.currentTarget.querySelector('button[type="submit"]');
             setSubmitting(button, true, 'Kaydediliyor...');
+            editPostSaving = true;
+            editPostCloseButton.disabled = true;
             let uploadedPath = null;
             try {
                 const updates = {
@@ -1438,18 +1483,24 @@
                 if (error || !updated?.id) {
                     throw new Error('POST_UPDATE_FAILED');
                 }
-                if (uploadedPath) {
+                const savedPath = uploadedPath;
+                uploadedPath = null;
+                if (savedPath) {
                     const oldThumbnailPath = storagePathFromPublicUrl(thumbnail);
-                    if (oldThumbnailPath && oldThumbnailPath !== uploadedPath) {
+                    if (oldThumbnailPath && oldThumbnailPath !== savedPath) {
                         await cleanupUpload(oldThumbnailPath);
                     }
                 }
                 showMessage('Yazı güncellendi.', 'success');
                 await refresh();
+                editPostSaving = false;
                 await closeEditPostModal();
             } catch {
                 await cleanupUpload(uploadedPath);
                 showEditPostMessage('Yazı güncellenemedi.');
+            } finally {
+                editPostSaving = false;
+                editPostCloseButton.disabled = false;
                 setSubmitting(button, false, 'Değişiklikleri kaydet');
             }
         });
@@ -1458,10 +1509,14 @@
     const renderAddUser = container => {
         security.renderUi(container, `
             <form id="admin-add-user-form">
-                <input type="text" name="firstname" maxlength="80" placeholder="Ad" required>
-                <input type="text" name="lastname" maxlength="80" placeholder="Soyad" required>
-                <input type="email" name="email" maxlength="254" placeholder="E-posta" required>
-                <input type="password" name="password" minlength="8" maxlength="128" placeholder="Şifre" required>
+                <label for="new-user-firstname">Ad</label>
+                <input id="new-user-firstname" type="text" name="firstname" maxlength="80" placeholder="Ad" required>
+                <label for="new-user-lastname">Soyad</label>
+                <input id="new-user-lastname" type="text" name="lastname" maxlength="80" placeholder="Soyad" required>
+                <label for="new-user-email">E-posta</label>
+                <input id="new-user-email" type="email" name="email" maxlength="254" placeholder="E-posta" required>
+                <label for="new-user-password">Şifre</label>
+                <input id="new-user-password" type="password" name="password" minlength="8" maxlength="128" placeholder="Şifre" required>
                 <div class="form__control inline">
                     <input type="checkbox" name="is_admin" value="1" id="new_user_admin">
                     <label for="new_user_admin">Yönetici yetkisi ver</label>
@@ -1472,7 +1527,8 @@
         container.querySelector('#admin-add-user-form')?.addEventListener('submit', async event => {
             event.preventDefault();
             clearMessage();
-            const formData = new FormData(event.currentTarget);
+            const form = event.currentTarget;
+            const formData = new FormData(form);
             const firstname = readName(formData.get('firstname'));
             const lastname = readName(formData.get('lastname'));
             const email = security.validateEmail(formData.get('email'));
@@ -1510,7 +1566,7 @@
                     }
                 }
                 showMessage('Kullanıcı oluşturuldu. E-posta doğrulaması gerekebilir.', 'success');
-                event.currentTarget.reset();
+                form.reset();
             } catch {
                 showMessage('Kullanıcı oluşturulamadı.');
             } finally {
@@ -1582,7 +1638,7 @@
         container.querySelectorAll('.delete-author:not([disabled])').forEach(button => {
             button.addEventListener('click', async () => {
                 const id = safeId(button.dataset.id);
-                if (!id || !confirm('Bu profil silinsin mi? Kimlik doğrulama hesabı korunacaktır.')) {
+                if (!id || !confirm('Bu profil ve yazara ait tüm yazılar kalıcı olarak silinsin mi? Kimlik doğrulama hesabı korunacaktır.')) {
                     return;
                 }
                 clearMessage();
@@ -1603,29 +1659,42 @@
     const renderAddCategory = (container, refresh) => {
         security.renderUi(container, `
             <form id="add-category-form">
-                <input type="text" name="title" maxlength="100" placeholder="Kategori adı" required>
-                <textarea rows="4" name="description" maxlength="1000" placeholder="Kategori açıklaması"></textarea>
+                <label for="new-category-title">Kategori adı</label>
+                <input id="new-category-title" type="text" name="category_title" maxlength="100" placeholder="Örn. Tasarım" required>
+                <label for="new-category-description">Açıklama (isteğe bağlı)</label>
+                <textarea id="new-category-description" rows="4" name="description" maxlength="1000" placeholder="Kategori açıklaması"></textarea>
                 <button type="submit" class="btn">Kategori ekle</button>
             </form>
         `);
         container.querySelector('#add-category-form')?.addEventListener('submit', async event => {
             event.preventDefault();
             clearMessage();
-            const formData = new FormData(event.currentTarget);
-            const title = security.validateText(formData.get('title'), { min: 1, max: 100 });
-            const description = security.validateText(formData.get('description') || '', { max: 1000 });
+            const form = event.currentTarget;
+            const formData = new FormData(form);
+            const title = security.validateText(formData.get('category_title'), { min: 1, max: 100 });
+            const description = security.validateText(formData.get('description') || '', { max: 1000, multiline: true });
             if (!title || description === null) {
                 showMessage('Kategori adı zorunludur ve en fazla 100 karakter olabilir.');
                 return;
             }
-            const { error } = await client.from('categories').insert({ title, description });
-            if (error) {
-                showMessage('Kategori eklenemedi.');
-                return;
+            const button = form.querySelector('button[type="submit"]');
+            setSubmitting(button, true, 'Ekleniyor...');
+            let saved = false;
+            try {
+                const { error } = await client.from('categories').insert({ title, description });
+                if (error) {
+                    throw new Error('CATEGORY_INSERT_FAILED');
+                }
+                saved = true;
+                form.reset();
+                showMessage('Kategori eklendi.', 'success');
+                await refresh();
+            } catch {
+                showMessage(saved ? 'Kategori eklendi ancak liste yenilenemedi. Sayfayı yenileyebilirsiniz.'
+                    : 'Kategori eklenemedi. Lütfen tekrar deneyin.');
+            } finally {
+                setSubmitting(button, false, 'Kategori ekle');
             }
-            showMessage('Kategori eklendi.', 'success');
-            event.currentTarget.reset();
-            await refresh();
         });
     };
 
@@ -1662,14 +1731,9 @@
                     showMessage('Kategori adı geçersiz.');
                     return;
                 }
-                const { data: updated, error: updateError } = await client.from('categories')
-                    .update({ title }).eq('id', id).select('id');
-                if (updateError || !updated?.length) {
-                    showMessage('Kategori güncellenemedi.');
-                    return;
-                }
-                showMessage('Kategori güncellendi.', 'success');
-                await refresh();
+                await runRowMutation(button,
+                    () => client.from('categories').update({ title }).eq('id', id).select('id'),
+                    'Kategori güncellendi.', refresh);
             });
         });
         container.querySelectorAll('.delete-category').forEach(button => {
@@ -1678,13 +1742,9 @@
                 if (!id || !confirm('Bu kategori silinsin mi? Kategorideki yazılar kategorisiz kalacaktır.')) {
                     return;
                 }
-                const { data: deleted, error: deleteError } = await client.from('categories')
-                    .delete().eq('id', id).select('id');
-                if (deleteError || !deleted?.length) {
-                    showMessage('Kategori silinemedi.');
-                    return;
-                }
-                await refresh();
+                await runRowMutation(button,
+                    () => client.from('categories').delete().eq('id', id).select('id'),
+                    'Kategori silindi.', refresh);
             });
         });
     };

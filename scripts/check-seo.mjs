@@ -76,6 +76,8 @@ for (const file of htmlFiles) {
     const indexable = robots.split(',').map(value => value.trim()).includes('index');
     if (indexable) {
         indexableFiles.push(file);
+        report([...html.matchAll(/<h1(?:\s|>)/gi)].length === 1, `${name}: expected exactly one H1`);
+        report(!/<script[^>]+src=["'][^"']*assets\/data\/blog-data\.js/i.test(html), `${name}: prerendered page downloads the full archive`);
         report(/<title>[^<]{3,}<\/title>/i.test(html), `${name}: missing title`);
         report(/<meta\s+name=["']description["']\s+content=["'][^"']{30,}["']/i.test(html), `${name}: missing useful meta description`);
         report(/<link\s+rel=["']canonical["']\s+href=["']https:\/\/[^"']+["']/i.test(html), `${name}: missing absolute canonical`);
@@ -138,7 +140,7 @@ for (const file of htmlFiles) {
         if (/^(?:https?:|mailto:|tel:|#)/i.test(reference)) {
             continue;
         }
-        const clean = reference.split(/[?#]/, 1)[0];
+        const clean = decodeURIComponent(reference.split(/[?#]/, 1)[0]);
         if (!clean) {
             continue;
         }

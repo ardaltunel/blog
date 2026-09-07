@@ -19,7 +19,7 @@ const siteBaseUrl = siteUrl.href;
 const basePath = siteUrl.pathname;
 const siteOrigin = siteUrl.origin;
 const siteName = 'ARDALTUNEL';
-const assetVersion = '76';
+const assetVersion = '77';
 const postsPerPage = 9;
 const maxPosts = 2000;
 const homeDescription = 'Arda Altunel’in yazılım, teknoloji, tasarım, bilim ve yaşam üzerine blog yazıları.';
@@ -77,6 +77,10 @@ const assignRoutes = (items, reserved = [], titleForRoute = item => item.title) 
 };
 const absoluteUrl = relativePath => new URL(relativePath, siteBaseUrl).href;
 const sitePath = relativePath => new URL(relativePath, siteBaseUrl).pathname;
+const imageSource = value => {
+    const url = new URL(value, siteBaseUrl);
+    return url.origin === siteOrigin ? `${url.pathname}${url.search}` : url.href;
+};
 const postUrl = post => absoluteUrl(`${post.route_slug}/`);
 const postPath = post => sitePath(`${post.route_slug}/`);
 const categoryUrl = category => absoluteUrl(`kategori/${category.route_slug}/`);
@@ -214,7 +218,9 @@ const normalizeData = source => {
         .map(item => ({
             id: Number(item.id),
             title: String(item.title).trim(),
-            description: String(item.description || '').trim()
+            description: /^This is the description for .+ category\.?$/i.test(String(item.description || '').trim())
+                ? `${localizeCategory(item.title)} üzerine yazılar ve notlar.`
+                : String(item.description || '').trim()
         })), [], category => localizeCategory(category.title));
     const authors = (Array.isArray(source.authors) ? source.authors : [])
         .filter(item => Number.isInteger(Number(item.id)) && String(item.firstname || '').trim())
@@ -225,7 +231,7 @@ const normalizeData = source => {
             avatar: normalizeImage(item.avatar)
         }));
     const posts = assignRoutes((Array.isArray(source.posts) ? source.posts : [])
-        .filter(item => Number.isInteger(Number(item.id)) && item.is_verified !== false && item.is_verified !== 0)
+        .filter(item => Number.isInteger(Number(item.id)) && (item.is_verified === true || item.is_verified === 1))
         .map(item => ({
             id: Number(item.id),
             title: String(item.title || '').trim(),
@@ -234,6 +240,7 @@ const normalizeData = source => {
             date_time: isoDate(item.date_time),
             category_id: Number(item.category_id) || null,
             author_id: Number(item.author_id) || null,
+            is_verified: true,
             is_featured: item.is_featured === true || item.is_featured === 1
         }))
         .filter(item => item.title && item.body)
@@ -265,7 +272,6 @@ const scripts = ({ article = false } = {}) => `
 <script src="${basePath}assets/js/security.js?v=${assetVersion}"></script>
 <script src="${basePath}assets/vendor/supabase/supabase.js"></script>
 <script src="${basePath}assets/js/supabase-config.js?v=${assetVersion}"></script>
-<script src="${basePath}assets/data/blog-data.js?v=${assetVersion}"></script>
 <script src="${basePath}assets/js/auth-storage.js?v=${assetVersion}"></script>
 <script src="${basePath}assets/js/auth.js?v=${assetVersion}"></script>
 ${article ? `<script src="${basePath}assets/js/content-enhancements.js?v=${assetVersion}"></script>` : ''}
@@ -299,7 +305,7 @@ ${metadataTags({ title, description, canonical, type, image, published, section 
     ${previousPage ? `<link rel="prev" href="${escapeHtml(previousPage)}">` : ''}
     ${nextPage ? `<link rel="next" href="${escapeHtml(nextPage)}">` : ''}
     <link rel="preconnect" href="https://bdadbqlkmdwzzkrwetrf.supabase.co" crossorigin>
-    ${preloadImage ? `<link rel="preload" as="image" href="${escapeHtml(preloadImage)}" fetchpriority="high">` : ''}
+    ${preloadImage ? `<link rel="preload" as="image" href="${escapeHtml(imageSource(preloadImage))}" fetchpriority="high">` : ''}
     <script src="${basePath}assets/js/theme-bootstrap.js?v=${assetVersion}"></script>
     <link rel="apple-touch-icon" href="${basePath}assets/favicon/apple-touch-icon.png">
     <link rel="icon" href="${basePath}assets/favicon/favicon.ico">
@@ -309,9 +315,11 @@ ${metadataTags({ title, description, canonical, type, image, published, section 
 </head>
 <body data-page="${pageName}" data-prerendered="true"${pageName === 'home' ? ` data-route="home" data-home-page="${homePage}"` : ''}>
 ${navigation()}
-<main id="app">
+<a class="skip-link" href="#app">İçeriğe geç</a>
+    <main id="app" tabindex="-1">
 ${main}
 </main>
+<footer class="site-footer"><span>Arda Altunel · Blog</span><a href="${basePath}privacy.html">Gizlilik politikası</a></footer>
 ${scripts({ article })}
 </body>
 </html>
@@ -328,7 +336,7 @@ const renderAuthor = (post, authors) => {
     const name = `${author.firstname} ${author.lastname}`.trim();
     return `<div class="post__author">
                     <div class="post__author-avatar">
-                        <img src="${escapeHtml(author.avatar)}" alt="${escapeHtml(name)}" width="46" height="46" decoding="async">
+                        <img src="${escapeHtml(imageSource(author.avatar))}" alt="${escapeHtml(name)}" width="46" height="46" decoding="async">
                     </div>
                     <div class="post__author-info">
                         <h5>${escapeHtml(name)}</h5>
@@ -341,7 +349,7 @@ const renderPostCard = (post, data) => {
     return `<article class="post">
                 <a href="${postPath(post)}">
                     <div class="post__thumbnail">
-                        <img src="${escapeHtml(post.thumbnail)}" alt="${escapeHtml(post.title)}" loading="lazy" decoding="async">
+                        <img src="${escapeHtml(imageSource(post.thumbnail))}" alt="${escapeHtml(post.title)}" loading="lazy" decoding="async">
                     </div>
                 </a>
                 <div class="post__info">
@@ -376,7 +384,7 @@ const renderRelatedPosts = (relatedPosts, data) => {
                     const relatedHref = postPath(relatedPost);
                     return `<article class="related-post">
                         <a href="${relatedHref}" class="related-post__thumbnail">
-                            <img src="${escapeHtml(relatedPost.thumbnail)}" alt="${escapeHtml(relatedPost.title)}" loading="lazy" decoding="async">
+                            <img src="${escapeHtml(imageSource(relatedPost.thumbnail))}" alt="${escapeHtml(relatedPost.title)}" loading="lazy" decoding="async">
                             <span class="related-post__category">${escapeHtml(localizeCategory(relatedCategory?.title) || 'Kategorisiz')}</span>
                         </a>
                         <div class="related-post__content">
@@ -450,7 +458,7 @@ const renderHome = (data, requestedPage = 1) => {
             <div class="container featured__container">
                 <a href="${postPath(featured)}">
                     <div class="post__thumbnail">
-                        <img src="${escapeHtml(featured.thumbnail)}" alt="${escapeHtml(featured.title)}" decoding="async" fetchpriority="high">
+                        <img src="${escapeHtml(imageSource(featured.thumbnail))}" alt="${escapeHtml(featured.title)}" decoding="async" fetchpriority="high">
                     </div>
                 </a>
                 <div class="post__info">
@@ -466,7 +474,8 @@ const renderHome = (data, requestedPage = 1) => {
                 <span class="pagination__loading-spinner" aria-hidden="true"></span>
                 <span class="pagination__loading-copy"><span class="pagination__loading-title">Yazılar yükleniyor...</span><small>Gönderiler hazırlanıyor</small></span>
             </div>
-            <div class="container posts__container">${posts.map(post => renderPostCard(post, data)).join('')}</div>
+            <header class="container editorial-heading"><h1>${currentPage === 1 ? 'Son yazılar' : `Yazı arşivi · ${currentPage}`}</h1><p>Yazılım, teknoloji ve hayata dair notlar.</p></header>
+            ${posts.length ? `<div class="container posts__container">${posts.map(post => renderPostCard(post, data)).join('')}</div>` : '<div class="container content-empty"><h2>Henüz yayınlanmış yazı yok</h2><p>Yeni yazılar burada yer alacak.</p></div>'}
             ${renderPagination(currentPage, totalPages)}
         </section>
         ${renderCategoryButtons(data.categories)}`;
@@ -528,7 +537,7 @@ const renderPost = (post, index, data) => {
         <article class="container singlepost__container">
             <div class="singlepost__hero">
                 <figure class="singlepost__thumbnail">
-                    <img src="${escapeHtml(post.thumbnail)}" alt="${escapeHtml(post.title)}" decoding="async" fetchpriority="high">
+                    <img src="${escapeHtml(imageSource(post.thumbnail))}" alt="${escapeHtml(post.title)}" decoding="async" fetchpriority="high">
                 </figure>
                 <div class="singlepost__hero-shade"></div>
                 <header class="singlepost__header">
@@ -634,10 +643,10 @@ const renderCategory = (category, data) => {
     const title = `${localizeCategory(category.title)} Yazıları | Arda Altunel`;
     const description = category.description || `${localizeCategory(category.title)} kategorisindeki blog yazıları.`;
     const canonical = categoryUrl(category);
-    const main = `<header class="category__title"><h2>${escapeHtml(localizeCategory(category.title))}</h2></header>
+    const main = `<header class="category__title"><div class="container"><a href="${basePath}">Blog</a><h1>${escapeHtml(localizeCategory(category.title))}</h1><p>${escapeHtml(description)}</p><small>${posts.length} yazı</small></div></header>
         ${posts.length ? `<section class="posts">
             <div class="container posts__container">${posts.map(post => renderPostCard(post, data)).join('')}</div>
-        </section>` : '<div class="alert__message error lg"><p>Bu kategoride henüz yazı bulunmuyor.</p></div>'}
+        </section>` : '<div class="container content-empty"><p>Bu kategoride henüz yazı bulunmuyor.</p></div>'}
         ${renderCategoryButtons(data.categories)}`;
     return page({
         title,

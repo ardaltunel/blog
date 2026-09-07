@@ -332,3 +332,10 @@ test('normalizes literal legacy line break escape sequences', () => {
     );
     assert.equal(security.normalizeLegacyLineBreaks('First\\nSecond'), 'First\nSecond');
 });
+
+
+test('allows line breaks only in explicitly multiline fields', () => {
+    assert.equal(security.validateText('Birinci satır\nİkinci satır'), null);
+    assert.equal(security.validateText('Birinci satır\nİkinci satır', { multiline: true }), 'Birinci satır\nİkinci satır');
+    assert.equal(security.validateText('Satır\u0000sonu', { multiline: true }), null);
+});

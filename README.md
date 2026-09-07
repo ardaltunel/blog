@@ -211,12 +211,10 @@ Settings > Pages
 4. Select the following options:
 
 ```text
-Source: Deploy from a branch
-Branch: main
-Folder: /root
+Source: GitHub Actions
 ```
 
-5. Save the configuration.
+5. The Deploy SEO Pages workflow builds and publishes the verified `dist/` artifact. Do not publish the repository root: it does not contain the generated SEO pages.
 6. Open the generated GitHub Pages URL after deployment is complete.
 
 The website URL will usually follow this format:
@@ -279,3 +277,27 @@ This project is licensed under the [MIT License](LICENSE).
 ---
 
 Made with ❤️ by **Arda Altunel**
+
+
+## Verification and schema upgrades
+
+`npm run check` builds the public pages, runs ESLint and Node tests, checks local
+links and SEO metadata, scans source patterns, and audits pinned dependencies.
+Use `npm run build` followed by `npm run preview` to inspect the actual static
+output locally. Stop the development server first if it uses the same port.
+This is a JavaScript project; there is no separate TypeScript compilation step.
+
+New installations use `database/supabase/schema.sql`. Existing installations
+should apply the reviewed files in `database/supabase/migrations/` in version
+order. The `20260907221824_harden_blog_permissions` migration was applied to the
+Blog Supabase project and verified with anonymous, member, and administrator
+roles. It preserves existing content and restores the least-privilege policies,
+category write grants, guarded user-list RPC, and owned Storage metadata access.
+
+Run `database/supabase/tests/permissions.sql` through a trusted SQL connection
+after schema changes. Its assertions run in a transaction and roll back. Never
+put a service-role key or database password in browser files.
+
+The remaining Supabase security advisory is leaked-password protection being
+disabled; enable it in Authentication settings when supported by the project
+plan. OAuth/email delivery still needs an end-to-end check with a test account.

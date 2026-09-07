@@ -28,7 +28,7 @@ for (const file of htmlFiles) {
         if (/^(?:https?:|mailto:|tel:|#)/i.test(reference)) {
             continue;
         }
-        const cleanReference = reference.split(/[?#]/, 1)[0];
+        const cleanReference = decodeURIComponent(reference.split(/[?#]/, 1)[0]);
         if (!cleanReference) {
             continue;
         }

@@ -8,13 +8,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex,nofollow">
     <link rel="preconnect" href="https://bdadbqlkmdwzzkrwetrf.supabase.co" crossorigin>
-    <script src="./assets/js/theme-bootstrap.js?v=76"></script>
+    <script src="./assets/js/theme-bootstrap.js?v=77"></script>
     <link rel="apple-touch-icon" href="./assets/favicon/apple-touch-icon.png">
     <link rel="icon" href="./assets/favicon/favicon.ico">
     <link rel="stylesheet" href="./assets/vendor/montserrat/montserrat.css">
-<link rel="stylesheet" href="./assets/css/style.css?v=76">
+<link rel="stylesheet" href="./assets/css/style.css?v=77">
 </head>
 <body>
+    <a class="skip-link" href="#main-content">İçeriğe geç</a>
 <nav>
     <div class="container nav__container">
         <a href="./" class="nav__logo">ARDALTUNEL</a>
@@ -49,7 +50,7 @@
             <a href="./admin.html?view=add-category" data-admin-only data-view-link="add-category" aria-label="Kategori ekle" title="Kategori ekle" hidden><img class="ui-icon" src="./assets/vendor/lucide/icons/folder-plus.svg" alt="" aria-hidden="true"><h5>Kategori ekle</h5></a>
             <a href="./admin.html?view=manage-categories" data-admin-only data-view-link="manage-categories" aria-label="Kategorileri yönet" title="Kategorileri yönet" hidden><img class="ui-icon" src="./assets/vendor/lucide/icons/files.svg" alt="" aria-hidden="true"><h5>Kategorileri yönet</h5></a>
         </aside>
-        <main>
+        <main id="main-content" tabindex="-1">
             <header class="dashboard__page-header">
                 <div class="dashboard__heading">
                     <span class="dashboard__heading-icon" aria-hidden="true">
@@ -60,13 +61,13 @@
                         <p class="dashboard__description" id="dashboard-description">İçeriklerinizi tek bir çalışma alanından yönetin.</p>
                     </div>
                 </div>
-                <a href="./yeni-blog-ekle/" class="btn dashboard__new-post">
+                <a href="./yeni-blog-ekle/" class="btn dashboard__new-post" aria-label="Yeni blog yazısı">
                     <img class="ui-icon" src="./assets/vendor/lucide/icons/pen-line.svg" alt="" aria-hidden="true">
                     <span class="dashboard__new-post-label">Yeni blog yazısı</span>
                     <span class="dashboard__new-post-label-compact" aria-hidden="true">Yeni yazı</span>
                 </a>
             </header>
-            <div class="alert__message error" id="auth-message" hidden></div>
+            <div class="alert__message error" id="auth-message" role="status" aria-live="polite" hidden></div>
             <div id="dashboard-content"></div>
         </main>
     </div>
@@ -86,13 +87,13 @@
     </div>
 </div>
 <script src="./assets/vendor/dompurify/purify.min.js"></script>
-<script src="./assets/js/security.js?v=76"></script>
+<script src="./assets/js/security.js?v=77"></script>
 <script src="./assets/vendor/supabase/supabase.js"></script>
-<script src="./assets/js/supabase-config.js?v=76"></script>
-<script src="./assets/js/auth-storage.js?v=76"></script>
-<script src="./assets/js/auth.js?v=76"></script>
-<script src="./assets/js/rich-editor.js?v=76"></script>
-<script src="./assets/js/auth-pages.js?v=76"></script>
-<script src="./assets/js/main.js?v=76"></script>
+<script src="./assets/js/supabase-config.js?v=77"></script>
+<script src="./assets/js/auth-storage.js?v=77"></script>
+<script src="./assets/js/auth.js?v=77"></script>
+<script src="./assets/js/rich-editor.js?v=77"></script>
+<script src="./assets/js/auth-pages.js?v=77"></script>
+<script src="./assets/js/main.js?v=77"></script>
 </body>
 </html>

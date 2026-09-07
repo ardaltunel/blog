@@ -64,7 +64,12 @@
             button.setAttribute('aria-controls', navItems.id);
         });
 
+        const background = Array.from(document.body.children).filter(element =>
+            element !== nav && !['SCRIPT', 'LINK'].includes(element.tagName)
+        );
+        const initialInert = new Map(background.map(element => [element, element.inert]));
         const setNavOpen = (isOpen, restoreFocus = false) => {
+            background.forEach(element => { element.inert = isOpen || initialInert.get(element); });
             navItems.classList.toggle('is-open', isOpen);
             openNavBtn.hidden = isOpen;
             closeNavBtn.hidden = !isOpen;
@@ -101,6 +106,19 @@
         });
 
         document.addEventListener('keydown', event => {
+            if (event.key === 'Tab' && navItems.classList.contains('is-open')) {
+                const controls = Array.from(nav.querySelectorAll('a, button:not([disabled])'))
+                    .filter(element => element.getClientRects().length && !element.hidden);
+                const first = controls[0];
+                const last = controls.at(-1);
+                if (event.shiftKey && document.activeElement === first) {
+                    event.preventDefault();
+                    last?.focus();
+                } else if (!event.shiftKey && document.activeElement === last) {
+                    event.preventDefault();
+                    first?.focus();
+                }
+            }
             if (event.key === 'Escape' && navItems.classList.contains('is-open')) {
                 setNavOpen(false, true);
             }

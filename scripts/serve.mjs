@@ -4,7 +4,7 @@ import { createServer } from 'node:http';
 import { extname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)));
+const ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)), process.argv.includes('--dist') ? 'dist' : '.');
 const HOST = '127.0.0.1';
 const requestedPort = Number.parseInt(process.env.PORT || '5500', 10);
 const PORT = Number.isSafeInteger(requestedPort) && requestedPort > 0 && requestedPort < 65536
@@ -37,6 +37,11 @@ const safePath = pathname => {
     }
 
     const relativePath = decoded.replace(/^\/+/, '') || 'index.html';
+    const segments = relativePath.split(/[\\/]/);
+    if (segments.some(segment => segment.startsWith('.'))
+        || ['node_modules', 'database', 'scripts', 'tests'].includes(segments[0])) {
+        return null;
+    }
     const candidate = resolve(ROOT, relativePath);
     return candidate === ROOT || candidate.startsWith(`${ROOT}${sep}`) ? candidate : null;
 };
@@ -102,7 +107,14 @@ const server = createServer(async (request, response) => {
         return;
     }
 
-    const url = new URL(request.url || '/', `http://${HOST}:${PORT}`);
+    let url;
+    try {
+        url = new URL(request.url || '/', `http://${HOST}:${PORT}`);
+    } catch {
+        response.writeHead(400);
+        response.end('Bad Request');
+        return;
+    }
     const filePath = await existingFile(url.pathname);
     if (filePath) {
         sendFile(request, response, filePath);

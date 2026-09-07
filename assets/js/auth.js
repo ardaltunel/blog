@@ -23,7 +23,7 @@
         })
         : null;
 
-    const getProfile = async () => {
+    const fetchProfile = async () => {
         if (!authClient) {
             return { user: null, profile: null };
         }
@@ -83,6 +83,14 @@
                 is_admin: data.is_admin === true
             }
         };
+    };
+
+    let profileRequest = null;
+    const getProfile = () => {
+        if (!profileRequest) {
+            profileRequest = fetchProfile().finally(() => { profileRequest = null; });
+        }
+        return profileRequest;
     };
 
     const getSessionUser = async () => {
@@ -166,8 +174,18 @@
         navItems.append(createNavItem('Çıkış', '#', 'nav__logout'));
         navItems.querySelector('.nav__logout')?.addEventListener('click', async event => {
             event.preventDefault();
-            await authClient.auth.signOut({ scope: 'local' });
-            security.navigate('home');
+            const link = event.currentTarget;
+            if (link.getAttribute('aria-disabled') === 'true') return;
+            link.setAttribute('aria-disabled', 'true');
+            link.textContent = 'Çıkış yapılıyor...';
+            try {
+                const { error } = await authClient.auth.signOut({ scope: 'local' });
+                if (error) throw error;
+                security.navigate('home');
+            } catch {
+                link.removeAttribute('aria-disabled');
+                link.textContent = 'Çıkış başarısız · Tekrar dene';
+            }
         });
     };
 

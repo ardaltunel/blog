@@ -61,6 +61,7 @@
     const currentBaseUrl = () => global.location?.href || 'https://example.invalid/';
     const currentOrigin = () => new URL(currentBaseUrl()).origin;
     const usesLocalQueryRoutes = () => {
+        if (global.document?.body?.dataset?.prerendered === 'true') return false;
         try {
             const url = new URL(currentBaseUrl());
             return url.protocol === 'file:'
@@ -513,30 +514,30 @@
         return true;
     };
 
-    const getStoredTheme = (storage = global.localStorage) => {
+    const getStoredTheme = (storage) => {
         try {
-            const value = storage?.getItem('theme');
+            const value = (storage ?? global.localStorage)?.getItem('theme');
             return value === 'light' || value === 'dark' ? value : 'dark';
         } catch {
             return 'dark';
         }
     };
 
-    const setStoredTheme = (theme, storage = global.localStorage) => {
+    const setStoredTheme = (theme, storage) => {
         if (theme !== 'light' && theme !== 'dark') {
             return false;
         }
 
         try {
-            storage?.setItem('theme', theme);
+            (storage ?? global.localStorage)?.setItem('theme', theme);
             return true;
         } catch {
             return false;
         }
     };
 
-    const validateText = (value, { min = 0, max = 160, trim = true } = {}) => {
-        if (typeof value !== 'string' || containsControlCharacters(value)) {
+    const validateText = (value, { min = 0, max = 160, trim = true, multiline = false } = {}) => {
+        if (typeof value !== 'string' || containsControlCharacters(multiline ? value.replace(/[\r\n]/g, '') : value)) {
             return null;
         }
 
@@ -686,7 +687,7 @@
             'accept', 'alt', 'aria-current', 'aria-label', 'aria-live', 'checked', 'class', 'data-admin', 'data-id',
             'data-label', 'data-verified', 'decoding', 'disabled', 'fetchpriority', 'for', 'height',
             'hidden', 'id', 'loading', 'maxlength', 'minlength', 'href', 'name', 'placeholder',
-            'rel', 'required', 'rows', 'selected', 'src', 'scope', 'target', 'type', 'value', 'width'
+            'rel', 'role', 'title', 'required', 'rows', 'selected', 'src', 'scope', 'target', 'type', 'value', 'width'
         ],
         ALLOW_DATA_ATTR: false,
         FORBID_ATTR: ['style'],
@@ -712,7 +713,10 @@
         target.replaceChildren(sanitizeUiFragment(html));
         return true;
     };
-    const stripHtml = (html = '') => sanitizeBlogFragment(html).textContent || '';
+    const stripHtml = (html = '') => sanitizeBlogFragment(String(html)
+        .replace(/<br\s*\/?>/gi, ' ')
+        .replace(/<\/(?:blockquote|div|figcaption|h[1-6]|li|p|td|th|tr)>/gi, ' $&')
+    ).textContent || '';
 
     const getSafeSupabaseConfig = () => {
         const source = global.SUPABASE_CONFIG;

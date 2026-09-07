@@ -5,6 +5,7 @@
   "description": "Static GitHub Pages blog with Supabase-backed content and authentication.",
   "scripts": {
     "dev": "node scripts/serve.mjs",
+    "preview": "node scripts/serve.mjs --dist",
     "build": "node scripts/vendor.mjs && node scripts/build-pages.mjs",
     "lint": "eslint assets/js scripts tests",
     "test": "node --test",
@@ -24,7 +25,7 @@
   "devDependencies": {
     "eslint": "10.7.0",
     "eslint-plugin-security": "4.0.1",
-    "sanitize-html": "2.17.6"
+    "sanitize-html": "2.17.7"
   },
   "engines": {
     "node": ">=24.0.0"

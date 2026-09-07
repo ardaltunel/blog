@@ -8,11 +8,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex,nofollow">
     <link rel="preconnect" href="https://bdadbqlkmdwzzkrwetrf.supabase.co" crossorigin>
-    <script src="./assets/js/theme-bootstrap.js?v=76"></script>
+    <script src="./assets/js/theme-bootstrap.js?v=77"></script>
     <link rel="apple-touch-icon" href="./assets/favicon/apple-touch-icon.png">
     <link rel="icon" href="./assets/favicon/favicon.ico">
     <link rel="stylesheet" href="./assets/vendor/montserrat/montserrat.css">
-<link rel="stylesheet" href="./assets/css/style.css?v=76">
+<link rel="stylesheet" href="./assets/css/style.css?v=77">
 </head>
 <body>
 <nav>
@@ -24,17 +24,19 @@
         <button id="close__nav-btn" type="button" aria-label="Menüyü kapat" hidden><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
     </div>
 </nav>
-<section class="form__section">
+<main class="form__section" id="main-content" tabindex="-1">
     <div class="container form__section-container">
-        <h2>Giriş yap</h2>
-        <div class="alert__message error" id="auth-message" hidden></div>
+        <h1 class="auth__title">Giriş yap</h1>
+        <div class="alert__message error" id="auth-message" role="status" aria-live="polite" hidden></div>
         <form class="auth__form" id="signin-form">
             <button class="oauth__button" type="button" data-google-oauth>
                 <img src="./assets/vendor/google/google-g.svg" alt="" aria-hidden="true">
                 <span class="oauth__button-label">Google ile giriş yap</span>
             </button>
             <div class="auth__divider" aria-hidden="true"><span>veya</span></div>
-            <input type="email" name="email" maxlength="254" autocomplete="email" placeholder="E-posta" required>
+            <label for="signin-email">E-posta</label>
+            <input id="signin-email" type="email" name="email" maxlength="254" autocomplete="email" placeholder="E-posta" required>
+            <label for="signin-password">Şifre</label>
             <div class="password__field">
                 <input id="signin-password" type="password" name="password" minlength="8" maxlength="128" autocomplete="current-password" placeholder="Şifre" required>
                 <button class="password__toggle" type="button" aria-controls="signin-password" aria-pressed="false">Göster</button>
@@ -50,14 +52,14 @@
             <p class="auth__switch">Hesabınız yok mu? <a href="./signup.html">Hesap oluşturun</a></p>
         </form>
     </div>
-</section>
+</main>
 <script src="./assets/vendor/dompurify/purify.min.js"></script>
-<script src="./assets/js/security.js?v=76"></script>
+<script src="./assets/js/security.js?v=77"></script>
 <script src="./assets/vendor/supabase/supabase.js"></script>
-<script src="./assets/js/supabase-config.js?v=76"></script>
-<script src="./assets/js/auth-storage.js?v=76"></script>
-<script src="./assets/js/auth.js?v=76"></script>
-<script src="./assets/js/auth-pages.js?v=76"></script>
-<script src="./assets/js/main.js?v=76"></script>
+<script src="./assets/js/supabase-config.js?v=77"></script>
+<script src="./assets/js/auth-storage.js?v=77"></script>
+<script src="./assets/js/auth.js?v=77"></script>
+<script src="./assets/js/auth-pages.js?v=77"></script>
+<script src="./assets/js/main.js?v=77"></script>
 </body>
 </html>
