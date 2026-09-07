@@ -4646,7 +4646,7 @@ input, textarea, select { scroll-margin-top: 6rem; }
     width: var(--container-width-lg);
     margin: 3rem auto 0;
     padding: 2rem 0 1.5rem;
-    border-top: 1px solid var(--color-border);
+    border-top: 0;
     color: var(--color-muted);
     font-size: 0.75rem;
 }
