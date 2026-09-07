@@ -4641,10 +4641,10 @@ input, textarea, select { scroll-margin-top: 6rem; }
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 28rem);
     grid-template-areas: "identity categories" "note privacy";
-    gap: 1rem 3rem;
+    gap: 2rem 3rem;
     background: transparent;
     width: var(--container-width-lg);
-    margin: 3rem auto 0;
+    margin: 2rem auto 0;
     padding: 2rem 0 1.5rem;
     border-top: 0;
     color: var(--color-muted);
