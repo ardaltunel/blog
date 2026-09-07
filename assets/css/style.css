@@ -4632,29 +4632,41 @@ input, textarea, select { scroll-margin-top: 6rem; }
 }
 
 .site-footer {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas: "identity categories" "note privacy";
+    gap: 2.5rem 4rem;
     background: transparent;
-    justify-content: space-between;
-    gap: 1rem;
     width: var(--container-width-lg);
-    margin: 2rem auto 0;
-    padding: 1.5rem 0;
+    margin: 3rem auto 0;
+    padding: 2.5rem 0 1.5rem;
     border-top: 1px solid var(--color-border);
-    font-size: 0.75rem;
     color: var(--color-muted);
+    font-size: 0.75rem;
 }
+.site-footer__identity { grid-area: identity; }
+.site-footer__brand { font-size: 1.15rem; font-weight: 800; letter-spacing: -0.04em; color: var(--color-heading); }
+.site-footer__brand span { color: var(--color-primary); }
+.site-footer__identity p { margin-top: 0.75rem; font-size: 0.8rem; line-height: 1.7; }
+.site-footer__note { grid-area: note; }
+.site-footer__privacy { grid-area: privacy; justify-self: end; color: var(--color-muted); }
 .site-footer .category__buttons {
-    flex-basis: 100%;
-    margin: 0 0 0.5rem;
-    padding: 0 0 1.5rem;
+    grid-area: categories;
+    margin: 0;
+    padding: 0;
     border: 0;
     background: transparent;
     box-shadow: none;
 }
-.site-footer .category__buttons-container {
-    width: 100%;
-    justify-content: flex-start;
+.site-footer .category__buttons::before { content: "KATEGORİLER"; display: block; margin-bottom: 0.85rem; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.12em; }
+.site-footer .category__buttons-container { width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.25rem 1.25rem; }
+.site-footer .category__button { padding: 0.35rem 0; min-height: 32px; border: 0; border-radius: 0; background: transparent; box-shadow: none; color: var(--color-text); font-size: 0.8rem; font-weight: 500; text-align: left; white-space: normal; }
+.site-footer .category__button:hover { color: var(--color-primary); background: transparent; box-shadow: none; transform: none; }
+.site-footer a:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 4px; }
+@media screen and (max-width: 640px) {
+    .site-footer { grid-template-columns: 1fr 1fr; grid-template-areas: "identity identity" "categories categories" "note privacy"; gap: 1.75rem 1rem; margin-top: 2rem; padding-top: 2rem; }
+    .site-footer .category__buttons-container { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .site-footer .category__button { min-height: 44px; display: flex; align-items: center; }
 }
 @media screen and (max-width: 640px) {
     .featured .post__body { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }

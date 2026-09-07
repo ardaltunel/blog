@@ -319,7 +319,7 @@ ${navigation()}
     <main id="app" tabindex="-1">
 ${main}
 </main>
-<footer class="site-footer">${categories.length ? renderCategoryButtons(categories) : ''}<span>Arda Altunel · Blog</span><a href="${basePath}privacy.html">Gizlilik politikası</a></footer>
+<footer class="site-footer">${categories.length ? renderCategoryButtons(categories) : ''}<div class="site-footer__identity"><a class="site-footer__brand" href="${basePath}">ARDALTUNEL<span>.</span></a><p>Yazılım, teknoloji ve hayata dair notlar.</p></div><span class="site-footer__note">Arda Altunel · Blog</span><a href="${basePath}privacy.html" class="site-footer__privacy">Gizlilik politikası</a></footer>
 ${scripts({ article })}
 </body>
 </html>
