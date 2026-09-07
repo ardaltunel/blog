@@ -496,9 +496,8 @@
                     <span class="pagination__loading-spinner" aria-hidden="true"></span>
                     <span class="pagination__loading-copy"><span class="pagination__loading-title">Yazılar yükleniyor...</span><small>Gönderiler hazırlanıyor</small></span>
                 </div>
-                <header class="container editorial-heading"><h1>${safePage === 1 ? 'Son yazılar' : `Sayfa · ${safePage}`}</h1><p>Yazılım, teknoloji ve hayata dair notlar.</p></header>
+                <header class="container editorial-heading"><div class="editorial-heading__copy"><h1>${safePage === 1 ? 'Son yazılar' : `Sayfa · ${safePage}`}</h1><p>Yazılım, teknoloji ve hayata dair notlar.</p></div>${renderPagination(safePage, totalPages)}</header>
                 ${pagePosts.length ? `<div class="container posts__container">${pagePosts.map(renderPostCard).join('')}</div>` : '<div class="container content-empty"><h2>Henüz yayınlanmış yazı yok</h2><p>Yeni yazılar burada yer alacak.</p></div>'}
-                ${renderPagination(safePage, totalPages)}
             </section>
             ${renderCategoryButtons()}
         `);

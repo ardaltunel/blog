@@ -474,9 +474,8 @@ const renderHome = (data, requestedPage = 1) => {
                 <span class="pagination__loading-spinner" aria-hidden="true"></span>
                 <span class="pagination__loading-copy"><span class="pagination__loading-title">Yazılar yükleniyor...</span><small>Gönderiler hazırlanıyor</small></span>
             </div>
-            <header class="container editorial-heading"><h1>${currentPage === 1 ? 'Son yazılar' : `Sayfa · ${currentPage}`}</h1><p>Yazılım, teknoloji ve hayata dair notlar.</p></header>
+            <header class="container editorial-heading"><div class="editorial-heading__copy"><h1>${currentPage === 1 ? 'Son yazılar' : `Sayfa · ${currentPage}`}</h1><p>Yazılım, teknoloji ve hayata dair notlar.</p></div>${renderPagination(currentPage, totalPages)}</header>
             ${posts.length ? `<div class="container posts__container">${posts.map(post => renderPostCard(post, data)).join('')}</div>` : '<div class="container content-empty"><h2>Henüz yayınlanmış yazı yok</h2><p>Yeni yazılar burada yer alacak.</p></div>'}
-            ${renderPagination(currentPage, totalPages)}
         </section>
         `;
     const newest = data.posts[0];

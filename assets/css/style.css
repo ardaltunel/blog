@@ -531,12 +531,18 @@ html[data-theme="dark"] .theme__toggle .theme__icon--sun {
 }
 
 .posts--home .editorial-heading {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    align-items: center;
     gap: 0.5rem;
     padding-bottom: 0;
     border-bottom: 0;
     margin-bottom: 2rem;
+}
+.editorial-heading__copy p { margin-top: 0.5rem; }
+.editorial-heading .pagination__container { margin: 0; max-width: 100%; flex-shrink: 0; }
+@media screen and (max-width: 640px) {
+    .posts--home .editorial-heading { flex-direction: column; align-items: flex-start; gap: 1.25rem; }
+    .editorial-heading .pagination__container { flex-wrap: wrap; }
 }
 
 .posts__container .post {
@@ -4635,7 +4641,7 @@ input, textarea, select { scroll-margin-top: 6rem; }
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 28rem);
     grid-template-areas: "identity categories" "note privacy";
-    gap: 1.75rem 3rem;
+    gap: 1rem 3rem;
     background: transparent;
     width: var(--container-width-lg);
     margin: 3rem auto 0;
@@ -4652,16 +4658,17 @@ input, textarea, select { scroll-margin-top: 6rem; }
 .site-footer__privacy { grid-area: privacy; justify-self: end; color: var(--color-muted); }
 .site-footer .category__buttons {
     grid-area: categories;
+    align-self: end;
     margin: 0;
     padding: 0;
     border: 0;
     background: transparent;
     box-shadow: none;
 }
-.site-footer .category__buttons::before { content: "KATEGORİLER"; display: block; margin-bottom: 0.85rem; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.12em; }
 .site-footer .category__buttons-container { width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.15rem 1.5rem; }
 .site-footer .category__button { display: flex; justify-content: flex-start; align-items: center; padding: 0.35rem 0; min-height: 32px; border: 0; border-radius: 0; background: transparent; box-shadow: none; color: var(--color-text); font-size: 0.8rem; font-weight: 500; text-align: left; white-space: normal; }
 .site-footer .category__button:hover { color: var(--color-primary); background: transparent; box-shadow: none; transform: none; }
+.site-footer .category__button:nth-child(even) { justify-content: flex-end; text-align: right; }
 .site-footer a:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 4px; }
 @media screen and (max-width: 640px) {
     .site-footer { grid-template-columns: 1fr 1fr; grid-template-areas: "identity identity" "categories categories" "note privacy"; gap: 1.75rem 1rem; margin-top: 2rem; padding-top: 2rem; }
