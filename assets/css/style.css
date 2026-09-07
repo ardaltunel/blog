@@ -4700,23 +4700,34 @@ input, textarea, select { scroll-margin-top: 6rem; }
 .category__title p { white-space: pre-line; }
 @media screen and (max-width: 1024px) { body > nav { box-shadow: none; } }
 .privacy-dialog {
-    width: min(42rem, calc(100vw - 2rem));
-    max-height: calc(100dvh - 3rem);
+    width: min(44rem, calc(100vw - 2rem));
+    max-height: min(46rem, calc(100dvh - 4rem));
     margin: auto;
-    padding: 2rem;
+    padding: 0;
     border: 1px solid var(--color-border);
     border-radius: 12px;
     background: var(--color-surface);
     color: var(--color-text);
-    overflow-y: auto;
+    overflow: hidden;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.25);
 }
-.privacy-dialog::backdrop { background: rgba(0, 0, 0, 0.65); }
-.privacy-dialog > h2 { margin: 0 0 1.5rem; font-size: 1.5rem; }
-.privacy-dialog__close { display: block; margin-left: auto; margin-bottom: 1rem; padding: 0.5rem; background: transparent; color: var(--color-muted); cursor: pointer; }
-.privacy-dialog__body section { margin: 1.5rem 0; }
-.privacy-dialog__body h3 { font-size: 1rem; margin-bottom: 0.5rem; }
-.privacy-dialog__body p { font-size: 0.875rem; line-height: 1.8; }
-.privacy-dialog__body a { text-decoration: underline; }
+.privacy-dialog[open] { display: flex; flex-direction: column; }
+.privacy-dialog::backdrop { background: rgba(0, 0, 0, 0.55); }
+.privacy-dialog__header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 1.5rem 2rem; border-bottom: 1px solid var(--color-border); flex-shrink: 0; }
+.privacy-dialog__label { margin: 0 0 0.45rem; font-size: 0.6rem; letter-spacing: 0.12em; color: var(--color-muted); }
+.privacy-dialog__header h2 { margin: 0; font-size: 1.4rem; letter-spacing: -0.03em; }
+.privacy-dialog__close { display: grid; place-items: center; flex-shrink: 0; width: 44px; height: 44px; padding: 0; border-radius: 8px; background: var(--color-surface-2); color: var(--color-text); font-size: 1.5rem; cursor: pointer; }
+.privacy-dialog__close:hover { color: var(--color-primary); }
+.privacy-dialog__body { overflow-y: auto; overscroll-behavior: contain; padding: 0.25rem 2rem 1.5rem; scrollbar-width: thin; scrollbar-color: var(--color-muted) transparent; }
+.privacy-dialog__body section { margin: 1.5rem 0 0; }
+.privacy-dialog__body h3 { font-size: 0.9rem; margin: 0 0 0.5rem; }
+.privacy-dialog__body p { margin: 0; font-size: 0.825rem; line-height: 1.85; color: var(--color-muted); }
+.privacy-dialog__body a { text-decoration: underline; text-underline-offset: 3px; }
 .privacy-dialog button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; }
 body:has(.privacy-dialog[open]) { overflow: hidden; }
-@media (max-width: 640px) { .privacy-dialog { padding: 1.25rem; } }
+@media (max-width: 640px) {
+    .privacy-dialog { max-height: calc(100dvh - 2rem); }
+    .privacy-dialog__header { padding: 1.25rem; }
+    .privacy-dialog__body { padding: 0 1.25rem 1.25rem; }
+    .privacy-dialog__header h2 { font-size: 1.2rem; }
+}

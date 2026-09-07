@@ -142,11 +142,20 @@
         const close = document.createElement('button');
         close.type = 'button';
         close.className = 'privacy-dialog__close';
-        close.textContent = 'Kapat ×';
+        close.textContent = '×';
+        close.setAttribute('aria-label', 'Gizlilik politikasını kapat');
         const body = document.createElement('div');
         body.className = 'privacy-dialog__body';
         body.setAttribute('aria-live', 'polite');
-        dialog.append(close, heading, body);
+        const header = document.createElement('header');
+        header.className = 'privacy-dialog__header';
+        const label = document.createElement('p');
+        label.className = 'privacy-dialog__label';
+        label.textContent = 'ARDALTUNEL · BİLGİLENDİRME';
+        const titleGroup = document.createElement('div');
+        titleGroup.append(label, heading);
+        header.append(titleGroup, close);
+        dialog.append(header, body);
         document.body.append(dialog);
         close.addEventListener('click', () => dialog.close());
         dialog.addEventListener('click', event => {
@@ -175,14 +184,18 @@
                     const group = document.createElement('section');
                     section.querySelectorAll('h2, p').forEach(source => {
                         const node = document.createElement(source.tagName === 'H2' ? 'h3' : 'p');
-                        node.textContent = source.textContent;
-                        source.querySelectorAll('a').forEach(link => {
-                            const url = new URL(link.href);
-                            if (url.protocol !== 'https:') return;
-                            const anchor = document.createElement('a');
-                            anchor.href = url.href;
-                            anchor.textContent = link.textContent;
-                            node.append(' ', anchor);
+                        source.childNodes.forEach(child => {
+                            if (child.nodeName === 'A') {
+                                const url = new URL(child.getAttribute('href'), privacyLink.href);
+                                if (url.protocol === 'https:') {
+                                    const anchor = document.createElement('a');
+                                    anchor.href = url.href;
+                                    anchor.textContent = child.textContent;
+                                    node.append(anchor);
+                                    return;
+                                }
+                            }
+                            node.append(document.createTextNode(child.textContent));
                         });
                         group.append(node);
                     });
