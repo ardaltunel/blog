@@ -10,7 +10,7 @@ This project provides a complete blog infrastructure with user authentication, p
 # 📸 Preview
 
 <p align="center">
-  <img width="1891" height="900" alt="Blog application preview" src="https://github.com/user-attachments/assets/b1d228f0-c8fc-4357-8f8f-3776570adb8a" />
+  <img width="1891" height="900" alt="Blog application preview" src="https://github.com/user-attachments/assets/66f73b7a-7aea-4722-b84a-312c1083b972" />
 </p>
 
 ---
