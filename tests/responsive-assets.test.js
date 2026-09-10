@@ -4,7 +4,7 @@ const { join } = require('node:path');
 const test = require('node:test');
 
 const ROOT = join(__dirname, '..');
-const RELEASE_VERSION = '78';
+const RELEASE_VERSION = '79';
 const HTML_FILES = [
     '404.html',
     'add-post.html',
@@ -64,7 +64,7 @@ test('keeps generated pages and local clean routes on the current assets', () =>
     const builder = readFileSync(join(ROOT, 'scripts', 'build-pages.mjs'), 'utf8');
     const server = readFileSync(join(ROOT, 'scripts', 'serve.mjs'), 'utf8');
 
-    assert.match(builder, /const assetVersion = '78';/);
+    assert.match(builder, /const assetVersion = '79';/);
     assert.match(builder, /img-src 'self' blob:/);
     assert.match(builder, /data-prerendered="true"/);
     assert.match(builder, /rel="preload" as="image"/);
@@ -83,7 +83,7 @@ test('preserves and normalizes the home pagination query', () => {
     assert.match(main, /security\.buildRoute\(canonicalRoute, canonicalValues\)/);
     assert.match(app, /const renderedHomePage = pageName === 'home'[\s\S]*document\.body\.dataset\.homePage/);
     assert.match(app, /const requestedHomePage = pageName === 'home'[\s\S]*security\?\.getQueryParam\('page'\) \|\| renderedHomePage/);
-    assert.match(app, /const PAGINATION_CACHE_VERSION = '78';/);
+    assert.match(app, /const PAGINATION_CACHE_VERSION = '79';/);
     assert.match(app, /route\.includes\('\?'\) \? '&' : '\?'/);
     assert.match(app, /security\.buildRoute\('home', safePage > 1 \? \{ page: safePage \} : \{\}\)/);
     assert.match(app, /window\.history\.replaceState\(null, '', `\$\{homeUrl\.pathname\}\$\{homeUrl\.search\}/);

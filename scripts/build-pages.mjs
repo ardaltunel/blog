@@ -19,7 +19,7 @@ const siteBaseUrl = siteUrl.href;
 const basePath = siteUrl.pathname;
 const siteOrigin = siteUrl.origin;
 const siteName = 'ARDALTUNEL';
-const assetVersion = '78';
+const assetVersion = '79';
 const postsPerPage = 9;
 const maxPosts = 2000;
 const homeDescription = 'Arda Altunel’in yazılım, teknoloji, tasarım, bilim ve yaşam üzerine blog yazıları.';
@@ -647,7 +647,7 @@ const renderCategory = (category, data, currentPage = 1) => {
     const pagePosts = posts.slice((currentPage - 1) * postsPerPage, currentPage * postsPerPage);
     const pagePath = page => `${categoryPath(category)}${page > 1 ? `${page}/` : ''}`;
     const canonical = new URL(pagePath(currentPage), siteOrigin).href;
-    const main = `<header class="category__title"><div class="container category__heading"><div><div class="category__breadcrumb"><a href="${basePath}">Blog</a><span aria-hidden="true"> / </span><span>Kategori</span><span aria-hidden="true"> / </span><span>Sayfa</span><span aria-hidden="true"> / </span><span aria-current="page">${currentPage}</span></div><h1>${escapeHtml(localizeCategory(category.title))}</h1><p>${escapeHtml(description)}</p></div>${renderPagination(currentPage, totalPages, pagePath)}</div></header>
+    const main = `<header class="category__title"><div class="container category__heading"><div><div class="category__breadcrumb"><a href="${basePath}">Blog</a><span aria-hidden="true"> / </span><span>Kategori</span><span aria-hidden="true"> / </span><span>Sayfa</span><span aria-hidden="true"> / </span><span aria-current="page">${currentPage}</span></div><h1>${escapeHtml(localizeCategory(category.title))}</h1></div>${renderPagination(currentPage, totalPages, pagePath)}</div></header>
         ${posts.length ? `<section class="posts">
             <div class="container posts__container">${pagePosts.map(post => renderPostCard(post, data)).join('')}</div>
         </section>` : '<div class="container content-empty"><p>Bu kategoride henüz yazı bulunmuyor.</p></div>'}

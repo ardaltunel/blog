@@ -4606,7 +4606,7 @@ body.modal-open {
     font-weight: 700;
 }
 .editorial-heading p { color: var(--color-muted); font-size: 0.8rem; }
-.category__title { height: auto; padding: 2rem 0; text-align: left; background: transparent; }
+.category__title { border-bottom: 0; height: auto; padding: 2rem 0; text-align: left; background: transparent; }
 .category__title h1 { margin: 0.5rem 0; font-size: clamp(2rem, 5vw, 3rem); }
 .category__title p { max-width: 42rem; color: var(--color-muted); }
 .content-empty { padding: 3rem 1rem; text-align: center; color: var(--color-muted); }
