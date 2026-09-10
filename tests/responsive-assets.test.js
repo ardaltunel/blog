@@ -92,7 +92,7 @@ test('preserves and normalizes the home pagination query', () => {
     assert.match(builder, /data-route="home" data-home-page="\$\{homePage\}"/);
     assert.match(builder, /const homePagePath = pageNumber => pageNumber > 1 \? `\$\{basePath\}\$\{pageNumber\}\/` : basePath/);
     assert.match(builder, /renderPagination\(currentPage, totalPages\)/);
-    assert.match(builder, /const versionedPage = pageNumber => `\$\{homePagePath\(pageNumber\)\}\?v=\$\{assetVersion\}`/);
+    assert.match(builder, /const versionedPage = pageNumber => `\$\{pagePath\(pageNumber\)\}\?v=\$\{assetVersion\}`/);
     assert.doesNotMatch(builder, /versionedPage[^\n]+#posts/);
     assert.match(builder, /<div class="container pagination__container" role="navigation" aria-label="Blog sayfaları">/);
     assert.doesNotMatch(builder, /<nav class="container pagination__container"/);

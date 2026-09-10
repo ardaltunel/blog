@@ -21,7 +21,7 @@
     const declaredPageName = document.body.dataset.page || 'home';
     const isPrerendered = document.body.dataset.prerendered === 'true';
     const pageName = declaredPageName === 'route'
-        ? window.location.pathname.split('/').filter(Boolean).at(-2) === 'kategori' ? 'category' : 'post'
+        ? Boolean(window.SecurityUtils?.getCategorySlug()) ? 'category' : 'post'
         : declaredPageName;
     const security = window.SecurityUtils;
     const renderedHomePage = pageName === 'home'
@@ -397,14 +397,14 @@
         footer.prepend(...container.childNodes);
     };
 
-    const renderPagination = (currentPage, totalPages) => {
+    const renderPagination = (currentPage, totalPages, pageRoute = page => security.buildRoute('home', { page })) => {
         if (totalPages <= 1) {
             return '';
         }
 
         const withCacheVersion = route => `${route}${route.includes('?') ? '&' : '?'}v=${PAGINATION_CACHE_VERSION}`;
-        const previous = withCacheVersion(security.buildRoute('home', { page: currentPage - 1 }));
-        const next = withCacheVersion(security.buildRoute('home', { page: currentPage + 1 }));
+        const previous = withCacheVersion(pageRoute(currentPage - 1));
+        const next = withCacheVersion(pageRoute(currentPage + 1));
         return `
             <div class="container pagination__container">
                 ${currentPage > 1 ? `
@@ -620,9 +620,19 @@
         }
 
         const posts = state.posts.filter(post => post.category_id === category.id);
-        const canonicalUrl = new URL(categoryRoute(category), window.location.href);
+        const totalPages = Math.max(1, Math.ceil(posts.length / POSTS_PER_PAGE));
+        const requestedPage = Number(window.location.pathname.match(/\/kategori\/[^/]+\/(\d+)\/?$/)?.[1]) || security.getQueryParam('page') || 1;
+        const currentPage = Math.min(Math.max(1, requestedPage), totalPages);
+        const pagePosts = posts.slice((currentPage - 1) * POSTS_PER_PAGE, currentPage * POSTS_PER_PAGE);
+        const pageRoute = page => {
+            const route = categoryRoute(category);
+            return route.includes('?')
+                ? `${route}${page > 1 ? `&page=${page}` : ''}`
+                : `${route}${page > 1 ? `${page}/` : ''}`;
+        };
+        const canonicalUrl = new URL(pageRoute(currentPage), window.location.href);
         if (`${window.location.pathname}${window.location.search}` !== `${canonicalUrl.pathname}${canonicalUrl.search}`) {
-            window.history.replaceState(null, '', canonicalUrl.pathname);
+            window.history.replaceState(null, '', `${canonicalUrl.pathname}${canonicalUrl.search}`);
         }
         updatePageMetadata({
             title: `${categoryTitle(category)} Yazıları | Arda Altunel`,
@@ -631,10 +641,10 @@
             image: posts[0]?.thumbnail || ''
         });
         security.renderUi(app, `
-            <header class="category__title"><div class="container"><a href="${security.buildRoute('home')}">Blog</a><h1>${security.escapeHtml(categoryTitle(category))}</h1><p>${security.escapeHtml(category.description || 'Bu konudaki tüm yazıları keşfedin.')}</p><small>${posts.length} yazı</small></div></header>
+            <header class="category__title"><div class="container category__heading"><div><a href="${security.buildRoute('home')}">Blog</a><h1>${security.escapeHtml(categoryTitle(category))}</h1><p>${security.escapeHtml(category.description || 'Bu konudaki tüm yazıları keşfedin.')}</p><small>${posts.length} yazı</small></div>${renderPagination(currentPage, totalPages, pageRoute)}</div></header>
             ${posts.length ? `
                 <section class="posts">
-                    <div class="container posts__container">${posts.map(renderPostCard).join('')}</div>
+                    <div class="container posts__container">${pagePosts.map(renderPostCard).join('')}</div>
                 </section>
             ` : `
                 <div class="container content-empty"><p>Bu kategoride henüz yazı bulunmuyor.</p><a href="${security.buildRoute('home')}">Diğer yazılara göz at →</a></div>

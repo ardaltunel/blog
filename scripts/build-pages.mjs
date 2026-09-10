@@ -409,12 +409,12 @@ const renderCategoryButtons = categories => `<section class="category__buttons">
 const homePagePath = pageNumber => pageNumber > 1 ? `${basePath}${pageNumber}/` : basePath;
 const homePageUrl = pageNumber => new URL(homePagePath(pageNumber), siteOrigin).href;
 const homePageCount = data => Math.max(1, Math.ceil(data.posts.length / postsPerPage));
-const renderPagination = (currentPage, totalPages) => {
+const renderPagination = (currentPage, totalPages, pagePath = homePagePath) => {
     if (totalPages <= 1) {
         return '';
     }
 
-    const versionedPage = pageNumber => `${homePagePath(pageNumber)}?v=${assetVersion}`;
+    const versionedPage = pageNumber => `${pagePath(pageNumber)}?v=${assetVersion}`;
     return `<div class="container pagination__container" role="navigation" aria-label="Blog sayfaları">
                 ${currentPage > 1 ? `<a href="${versionedPage(currentPage - 1)}" rel="prev" class="pagination__button pagination__button--previous" aria-label="Önceki sayfaya git">
                     <span class="pagination__icon" aria-hidden="true">&larr;</span>
@@ -639,14 +639,17 @@ const renderPost = (post, index, data) => {
     });
 };
 
-const renderCategory = (category, data) => {
+const renderCategory = (category, data, currentPage = 1) => {
     const posts = data.posts.filter(post => post.category_id === category.id);
     const title = `${localizeCategory(category.title)} Yazıları | Arda Altunel`;
     const description = category.description || `${localizeCategory(category.title)} kategorisindeki blog yazıları.`;
-    const canonical = categoryUrl(category);
-    const main = `<header class="category__title"><div class="container"><a href="${basePath}">Blog</a><h1>${escapeHtml(localizeCategory(category.title))}</h1><p>${escapeHtml(description)}</p><small>${posts.length} yazı</small></div></header>
+    const totalPages = Math.max(1, Math.ceil(posts.length / postsPerPage));
+    const pagePosts = posts.slice((currentPage - 1) * postsPerPage, currentPage * postsPerPage);
+    const pagePath = page => `${categoryPath(category)}${page > 1 ? `${page}/` : ''}`;
+    const canonical = new URL(pagePath(currentPage), siteOrigin).href;
+    const main = `<header class="category__title"><div class="container category__heading"><div><a href="${basePath}">Blog</a><h1>${escapeHtml(localizeCategory(category.title))}</h1><p>${escapeHtml(description)}</p><small>${posts.length} yazı</small></div>${renderPagination(currentPage, totalPages, pagePath)}</div></header>
         ${posts.length ? `<section class="posts">
-            <div class="container posts__container">${posts.map(post => renderPostCard(post, data)).join('')}</div>
+            <div class="container posts__container">${pagePosts.map(post => renderPostCard(post, data)).join('')}</div>
         </section>` : '<div class="container content-empty"><p>Bu kategoride henüz yazı bulunmuyor.</p></div>'}
         `;
     return page({
@@ -656,6 +659,8 @@ const renderCategory = (category, data) => {
         type: 'website',
         image: posts[0]?.thumbnail || logoUrl,
         pageName: 'category',
+        previousPage: currentPage > 1 ? new URL(pagePath(currentPage - 1), siteOrigin).href : '',
+        nextPage: currentPage < totalPages ? new URL(pagePath(currentPage + 1), siteOrigin).href : '',
         main,
         categories: data.categories,
         structuredData: {
@@ -683,13 +688,14 @@ const sitemapXml = data => {
             lastmod: newestDate,
             image: data.posts[(index + 1) * postsPerPage]?.thumbnail
         })),
-        ...data.categories.map(category => {
+        ...data.categories.flatMap(category => {
             const latest = data.posts.find(post => post.category_id === category.id);
-            return {
-                loc: categoryUrl(category),
+            const count = Math.max(1, Math.ceil(data.posts.filter(post => post.category_id === category.id).length / postsPerPage));
+            return Array.from({ length: count }, (_, index) => ({
+                loc: `${categoryUrl(category)}${index > 0 ? `${index + 1}/` : ''}`,
                 lastmod: latest?.date_time || newestDate,
                 image: latest?.thumbnail
-            };
+            }));
         }),
         ...data.posts.map(post => ({ loc: postUrl(post), lastmod: post.date_time, image: post.thumbnail }))
     ];
@@ -791,7 +797,10 @@ for (const [index, post] of data.posts.entries()) {
     await writePage(join(post.route_slug, 'index.html'), renderPost(post, index, data));
 }
 for (const category of data.categories) {
-    await writePage(join('kategori', category.route_slug, 'index.html'), renderCategory(category, data));
+    const totalPages = Math.max(1, Math.ceil(data.posts.filter(post => post.category_id === category.id).length / postsPerPage));
+    for (let pageNumber = 1; pageNumber <= totalPages; pageNumber += 1) {
+        await writePage(join('kategori', category.route_slug, ...(pageNumber > 1 ? [String(pageNumber)] : []), 'index.html'), renderCategory(category, data, pageNumber));
+    }
 }
 await writePage('sitemap.xml', sitemapXml(data));
 await writePage('feed.xml', atomFeed(data));

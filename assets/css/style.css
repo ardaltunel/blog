@@ -4731,3 +4731,11 @@ body:has(.privacy-dialog[open]) { overflow: hidden; }
     .privacy-dialog__body { padding: 0 1.25rem 1.25rem; }
     .privacy-dialog__header h2 { font-size: 1.2rem; }
 }
+
+.category__heading { display: flex; align-items: center; justify-content: space-between; gap: 2rem; }
+.category__heading > div:first-child { min-width: 0; }
+.category__heading .pagination__container { margin: 0; width: auto; max-width: 100%; flex-shrink: 0; }
+@media screen and (max-width: 800px) {
+    .category__heading { flex-direction: column; align-items: flex-start; gap: 1.25rem; }
+    .category__heading .pagination__container { flex-wrap: wrap; }
+}

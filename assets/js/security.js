@@ -208,6 +208,9 @@
 
     const getCategorySlug = (pathname = global.location?.pathname || '') => {
         const segments = normalizeString(pathname).split('/').filter(Boolean);
+        if (segments.at(-3) === 'kategori' && /^[1-9]\d*$/.test(segments.at(-1))) {
+            segments.pop();
+        }
         if (segments.length < 2 || segments.at(-2) !== 'kategori') {
             return null;
         }
