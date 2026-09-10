@@ -4742,8 +4742,3 @@ body:has(.privacy-dialog[open]) { overflow: hidden; }
 .category__title { padding-bottom: 0; }
 .category__title h1 { margin-bottom: 0; }
 .category__title + .posts { margin-top: 2rem; }
-
-.pagination__button[aria-disabled="true"] {
-    opacity: 0.45;
-    pointer-events: none;
-}

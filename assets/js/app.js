@@ -2,7 +2,7 @@
     'use strict';
 
     const POSTS_PER_PAGE = 9;
-    const PAGINATION_CACHE_VERSION = '81';
+    const PAGINATION_CACHE_VERSION = '82';
     const MAX_CATEGORIES = 500;
     const MAX_AUTHORS = 2000;
     const MAX_POSTS = 2000;
@@ -397,8 +397,8 @@
         footer.prepend(...container.childNodes);
     };
 
-    const renderPagination = (currentPage, totalPages, pageRoute = page => security.buildRoute('home', { page }), alwaysVisible = false) => {
-        if (totalPages <= 1 && !alwaysVisible) {
+    const renderPagination = (currentPage, totalPages, pageRoute = page => security.buildRoute('home', { page })) => {
+        if (totalPages <= 1) {
             return '';
         }
 
@@ -412,14 +412,14 @@
                         <span class="pagination__icon" aria-hidden="true">&larr;</span>
                         <span>Önceki <span class="pagination__label-suffix">sayfa</span></span>
                     </a>
-                ` : alwaysVisible ? `<span class="pagination__button pagination__button--previous" role="link" aria-disabled="true"><span class="pagination__icon" aria-hidden="true">&larr;</span><span>Önceki <span class="pagination__label-suffix">sayfa</span></span></span>` : ''}
+                ` : ''}
                 <span class="pagination__status" aria-label="${currentPage}. sayfa, toplam ${totalPages} sayfa">${currentPage} / ${totalPages}</span>
                 ${currentPage < totalPages ? `
                     <a href="${next}" class="pagination__button pagination__button--next" aria-label="Sonraki sayfaya git">
                         <span>Sonraki <span class="pagination__label-suffix">sayfa</span></span>
                         <span class="pagination__icon" aria-hidden="true">&rarr;</span>
                     </a>
-                ` : alwaysVisible ? `<span class="pagination__button pagination__button--next" role="link" aria-disabled="true"><span>Sonraki <span class="pagination__label-suffix">sayfa</span></span><span class="pagination__icon" aria-hidden="true">&rarr;</span></span>` : ''}
+                ` : ''}
             </div>
         `;
     };
@@ -641,7 +641,7 @@
             image: posts[0]?.thumbnail || ''
         });
         security.renderUi(app, `
-            <header class="category__title"><div class="container category__heading"><div><div class="category__breadcrumb"><a href="${security.buildRoute('home')}">Blog</a><span aria-hidden="true"> / </span><span>Kategori</span><span aria-hidden="true"> / </span><span>Sayfa</span><span aria-hidden="true"> / </span><span aria-current="page">${currentPage}</span></div><h1>${security.escapeHtml(categoryTitle(category))}</h1></div>${renderPagination(currentPage, totalPages, pageRoute, true)}</div></header>
+            <header class="category__title"><div class="container category__heading"><div><div class="category__breadcrumb"><a href="${security.buildRoute('home')}">Blog</a><span aria-hidden="true"> / </span><span>Kategori</span><span aria-hidden="true"> / </span><span>Sayfa</span><span aria-hidden="true"> / </span><span aria-current="page">${currentPage}</span></div><h1>${security.escapeHtml(categoryTitle(category))}</h1></div>${renderPagination(currentPage, totalPages, pageRoute)}</div></header>
             ${posts.length ? `
                 <section class="posts">
                     <div class="container posts__container">${pagePosts.map(renderPostCard).join('')}</div>
