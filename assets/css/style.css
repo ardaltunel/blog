@@ -1659,7 +1659,7 @@ p a {
 }
 
 .category__title {
-    min-height: 13rem;
+    min-height: 0;
     margin-top: 4.75rem;
     display: grid;
     place-items: center;
@@ -4737,3 +4737,8 @@ body:has(.privacy-dialog[open]) { overflow: hidden; }
     .category__heading { flex-direction: column; align-items: flex-start; gap: 1.25rem; }
     .category__heading .pagination__container { flex-wrap: wrap; }
 }
+
+/* Match the blog heading-to-card spacing on category pages. */
+.category__title { padding-bottom: 0; }
+.category__title h1 { margin-bottom: 0; }
+.category__title + .posts { margin-top: 2rem; }
