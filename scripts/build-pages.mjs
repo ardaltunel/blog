@@ -19,7 +19,7 @@ const siteBaseUrl = siteUrl.href;
 const basePath = siteUrl.pathname;
 const siteOrigin = siteUrl.origin;
 const siteName = 'ARDALTUNEL';
-const assetVersion = '80';
+const assetVersion = '81';
 const postsPerPage = 9;
 const maxPosts = 2000;
 const homeDescription = 'Arda Altunel’in yazılım, teknoloji, tasarım, bilim ve yaşam üzerine blog yazıları.';
@@ -409,8 +409,8 @@ const renderCategoryButtons = categories => `<section class="category__buttons">
 const homePagePath = pageNumber => pageNumber > 1 ? `${basePath}${pageNumber}/` : basePath;
 const homePageUrl = pageNumber => new URL(homePagePath(pageNumber), siteOrigin).href;
 const homePageCount = data => Math.max(1, Math.ceil(data.posts.length / postsPerPage));
-const renderPagination = (currentPage, totalPages, pagePath = homePagePath) => {
-    if (totalPages <= 1) {
+const renderPagination = (currentPage, totalPages, pagePath = homePagePath, alwaysVisible = false) => {
+    if (totalPages <= 1 && !alwaysVisible) {
         return '';
     }
 
@@ -419,12 +419,12 @@ const renderPagination = (currentPage, totalPages, pagePath = homePagePath) => {
                 ${currentPage > 1 ? `<a href="${versionedPage(currentPage - 1)}" rel="prev" class="pagination__button pagination__button--previous" aria-label="Önceki sayfaya git">
                     <span class="pagination__icon" aria-hidden="true">&larr;</span>
                     <span>Önceki <span class="pagination__label-suffix">sayfa</span></span>
-                </a>` : ''}
+                </a>` : alwaysVisible ? `<span class="pagination__button pagination__button--previous" role="link" aria-disabled="true"><span class="pagination__icon" aria-hidden="true">&larr;</span><span>Önceki <span class="pagination__label-suffix">sayfa</span></span></span>` : ''}
                 <span class="pagination__status" aria-current="page" aria-label="${currentPage}. sayfa, toplam ${totalPages} sayfa">${currentPage} / ${totalPages}</span>
                 ${currentPage < totalPages ? `<a href="${versionedPage(currentPage + 1)}" rel="next" class="pagination__button pagination__button--next" aria-label="Sonraki sayfaya git">
                     <span>Sonraki <span class="pagination__label-suffix">sayfa</span></span>
                     <span class="pagination__icon" aria-hidden="true">&rarr;</span>
-                </a>` : ''}
+                </a>` : alwaysVisible ? `<span class="pagination__button pagination__button--next" role="link" aria-disabled="true"><span>Sonraki <span class="pagination__label-suffix">sayfa</span></span><span class="pagination__icon" aria-hidden="true">&rarr;</span></span>` : ''}
             </div>`;
 };
 
@@ -647,7 +647,7 @@ const renderCategory = (category, data, currentPage = 1) => {
     const pagePosts = posts.slice((currentPage - 1) * postsPerPage, currentPage * postsPerPage);
     const pagePath = page => `${categoryPath(category)}${page > 1 ? `${page}/` : ''}`;
     const canonical = new URL(pagePath(currentPage), siteOrigin).href;
-    const main = `<header class="category__title"><div class="container category__heading"><div><div class="category__breadcrumb"><a href="${basePath}">Blog</a><span aria-hidden="true"> / </span><span>Kategori</span><span aria-hidden="true"> / </span><span>Sayfa</span><span aria-hidden="true"> / </span><span aria-current="page">${currentPage}</span></div><h1>${escapeHtml(localizeCategory(category.title))}</h1></div>${renderPagination(currentPage, totalPages, pagePath)}</div></header>
+    const main = `<header class="category__title"><div class="container category__heading"><div><div class="category__breadcrumb"><a href="${basePath}">Blog</a><span aria-hidden="true"> / </span><span>Kategori</span><span aria-hidden="true"> / </span><span>Sayfa</span><span aria-hidden="true"> / </span><span aria-current="page">${currentPage}</span></div><h1>${escapeHtml(localizeCategory(category.title))}</h1></div>${renderPagination(currentPage, totalPages, pagePath, true)}</div></header>
         ${posts.length ? `<section class="posts">
             <div class="container posts__container">${pagePosts.map(post => renderPostCard(post, data)).join('')}</div>
         </section>` : '<div class="container content-empty"><p>Bu kategoride henüz yazı bulunmuyor.</p></div>'}
