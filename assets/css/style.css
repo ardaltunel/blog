@@ -1664,7 +1664,6 @@ p a {
     display: grid;
     place-items: center;
     background: var(--color-surface);
-    border-bottom: 1px solid var(--color-border);
 }
 
 .empty__page {
@@ -4610,7 +4609,6 @@ body.modal-open {
 .category__title { height: auto; padding: 2rem 0; text-align: left; background: transparent; }
 .category__title h1 { margin: 0.5rem 0; font-size: clamp(2rem, 5vw, 3rem); }
 .category__title p { max-width: 42rem; color: var(--color-muted); }
-.category__title small { color: var(--color-primary-strong); }
 .content-empty { padding: 3rem 1rem; text-align: center; color: var(--color-muted); }
 .content-empty h2 { color: var(--color-heading); }
 .featured .post__title { font-weight: 700; letter-spacing: -0.04em; }

@@ -641,7 +641,7 @@
             image: posts[0]?.thumbnail || ''
         });
         security.renderUi(app, `
-            <header class="category__title"><div class="container category__heading"><div><a href="${security.buildRoute('home')}">Blog</a><h1>${security.escapeHtml(categoryTitle(category))}</h1><p>${security.escapeHtml(category.description || 'Bu konudaki tüm yazıları keşfedin.')}</p><small>${posts.length} yazı</small></div>${renderPagination(currentPage, totalPages, pageRoute)}</div></header>
+            <header class="category__title"><div class="container category__heading"><div><div class="category__breadcrumb"><a href="${security.buildRoute('home')}">Blog</a><span aria-hidden="true"> / </span><span>Kategori</span><span aria-hidden="true"> / </span><span>Sayfa</span><span aria-hidden="true"> / </span><span aria-current="page">${currentPage}</span></div><h1>${security.escapeHtml(categoryTitle(category))}</h1><p>${security.escapeHtml(category.description || 'Bu konudaki tüm yazıları keşfedin.')}</p></div>${renderPagination(currentPage, totalPages, pageRoute)}</div></header>
             ${posts.length ? `
                 <section class="posts">
                     <div class="container posts__container">${pagePosts.map(renderPostCard).join('')}</div>
