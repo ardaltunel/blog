@@ -4881,3 +4881,16 @@ html[data-content-pending="true"] body:is([data-page="home"], [data-page="catego
     .pagination__status { grid-column: 2; grid-row: 1; }
     .pagination__button--next { grid-column: 3; grid-row: 1; }
 }
+
+@media screen and (max-width: 640px) {
+    .editorial-heading .pagination__container:not(:has(.pagination__button--previous)),
+    .category__heading .pagination__container:not(:has(.pagination__button--previous)) {
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+    .pagination__container:not(:has(.pagination__button--previous)) .pagination__status { grid-column: 1; }
+    .pagination__container:not(:has(.pagination__button--previous)) .pagination__button--next { grid-column: 2; }
+    .editorial-heading .pagination__container:not(:has(.pagination__button--next)),
+    .category__heading .pagination__container:not(:has(.pagination__button--next)) {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+}
