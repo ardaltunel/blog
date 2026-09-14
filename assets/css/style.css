@@ -4858,3 +4858,26 @@ html[data-content-pending="true"] body:is([data-page="home"], [data-page="catego
     pointer-events: none;
 }
 #auth-message[hidden] { display: none; }
+
+/* Keep mobile pagination aligned with the search field, including edge pages. */
+@media screen and (max-width: 640px) {
+    .editorial-heading .pagination__container,
+    .category__heading .pagination__container {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+        align-items: stretch;
+        gap: 0.45rem;
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+    }
+    .editorial-heading .pagination__button,
+    .category__heading .pagination__button {
+        width: 100%;
+        min-width: 0;
+        margin: 0;
+    }
+    .pagination__button--previous { grid-column: 1; grid-row: 1; }
+    .pagination__status { grid-column: 2; grid-row: 1; }
+    .pagination__button--next { grid-column: 3; grid-row: 1; }
+}
