@@ -131,7 +131,7 @@
         const summaryTitle = document.createElement('strong');
         summaryTitle.textContent = 'İçindekiler';
         const summaryMeta = document.createElement('span');
-        summaryMeta.textContent = `${headings.length} bölüm · Okumak istediğin yere geç`;
+        summaryMeta.textContent = `${headings.length} bölüm`;
         summaryCopy.append(summaryTitle, summaryMeta);
 
         const summaryControl = document.createElement('span');
