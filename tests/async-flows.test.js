@@ -107,3 +107,30 @@ test('prerendered articles enhance their HTML without downloading the archive', 
     vm.runInNewContext(readFileSync('assets/js/app.js', 'utf8'), { window, document });
     assert.equal(enhanced, true);
 });
+
+for (const pageName of ['home', 'category']) {
+    for (const result of ['fresh', 'offline', 'unconfigured']) {
+        test(`prerendered ${pageName} refresh: ${result}`, async () => {
+            const source = readFileSync('assets/js/app.js', 'utf8');
+            const init = source.slice(source.indexOf('    const init = async () => {'), source.lastIndexOf('    init();'));
+            const fresh = { posts: [{ id: 5, title: 'Newly published post' }] };
+            const calls = [];
+            const context = vm.createContext({
+                app: {}, security: {}, isPrerendered: true, pageName,
+                finishPaginationLoading: () => calls.push('visible'),
+                loadFromSupabase: async () => {
+                    calls.push('fetch');
+                    if (result === 'offline') throw new Error('offline');
+                    return result === 'fresh' ? fresh : null;
+                },
+                applyData: data => { assert.equal(data, fresh); calls.push('apply'); },
+                renderCurrentPage: () => calls.push('render'),
+                renderSafeError: () => calls.push('error')
+            });
+            await vm.runInContext(`${init}\ninit();`, context);
+            assert.deepEqual(calls, result === 'fresh'
+                ? ['visible', 'fetch', 'apply', 'render']
+                : ['visible', 'fetch']);
+        });
+    }
+}

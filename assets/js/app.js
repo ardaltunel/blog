@@ -2,7 +2,7 @@
     'use strict';
 
     const POSTS_PER_PAGE = 9;
-    const PAGINATION_CACHE_VERSION = '82';
+    const PAGINATION_CACHE_VERSION = '83';
     const MAX_CATEGORIES = 500;
     const MAX_AUTHORS = 2000;
     const MAX_POSTS = 2000;
@@ -674,6 +674,17 @@
                     window.ContentEnhancements?.enhance(document.querySelector('#post-content'));
                 }
                 finishPaginationLoading();
+                if (pageName === 'home' || pageName === 'category') {
+                    try {
+                        const remoteData = await loadFromSupabase();
+                        if (remoteData) {
+                            applyData(remoteData);
+                            renderCurrentPage();
+                        }
+                    } catch {
+                        // Keep the prerendered content usable when the refresh fails.
+                    }
+                }
                 return;
             }
 
