@@ -1,6 +1,8 @@
 (function applyInitialTheme() {
     'use strict';
 
+    document.documentElement.dataset.contentPending = 'true';
+
     let theme = 'dark';
     try {
         const storedTheme = localStorage.getItem('theme');

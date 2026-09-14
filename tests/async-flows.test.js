@@ -90,47 +90,46 @@ test('theme helpers survive browsers that throw when accessing localStorage', ()
     assert.equal(window.SecurityUtils.setStoredTheme('light'), false);
 });
 
-test('prerendered articles enhance their HTML without downloading the archive', () => {
-    let enhanced = false;
-    const content = {};
-    const document = {
-        body: { dataset: { page: 'post', prerendered: 'true' } },
-        documentElement: { dataset: {} },
-        querySelector: selector => selector === '#post-content' ? content : {}
-    };
-    const window = {
-        location: { pathname: '/blog/example/', hash: '' },
-        SecurityUtils: { getSafeSupabaseConfig: () => ({}) },
-        authClient: { from() { throw new Error('Unexpected remote request'); } },
-        ContentEnhancements: { enhance(node) { assert.equal(node, content); enhanced = true; } }
-    };
-    vm.runInNewContext(readFileSync('assets/js/app.js', 'utf8'), { window, document });
-    assert.equal(enhanced, true);
+test('content remains hidden until current publication state is loaded', async () => {
+    const source = readFileSync('assets/js/app.js', 'utf8');
+    const init = source.slice(source.indexOf('    const init = async () => {'), source.lastIndexOf('    init();'));
+    for (const fails of [false, true]) {
+        const calls = [];
+        const dataset = { contentPending: 'true', paginationPending: 'true' };
+        let release;
+        const pending = new Promise(resolve => { release = resolve; });
+        const context = vm.createContext({
+            app: {}, security: {}, document: { documentElement: { dataset } },
+            loadData: async () => { await pending; if (fails) throw new Error('offline'); },
+            renderCurrentPage: () => calls.push('fresh'),
+            renderSafeError: () => calls.push('error')
+        });
+        const run = vm.runInContext(`${init}\ninit();`, context);
+        assert.equal(dataset.contentPending, 'true');
+        assert.deepEqual(calls, []);
+        release();
+        await run;
+        assert.deepEqual(calls, [fails ? 'error' : 'fresh']);
+        assert.equal(dataset.contentPending, undefined);
+    }
 });
 
-for (const pageName of ['home', 'category']) {
-    for (const result of ['fresh', 'offline', 'unconfigured']) {
-        test(`prerendered ${pageName} refresh: ${result}`, async () => {
-            const source = readFileSync('assets/js/app.js', 'utf8');
-            const init = source.slice(source.indexOf('    const init = async () => {'), source.lastIndexOf('    init();'));
-            const fresh = { posts: [{ id: 5, title: 'Newly published post' }] };
-            const calls = [];
-            const context = vm.createContext({
-                app: {}, security: {}, isPrerendered: true, pageName,
-                finishPaginationLoading: () => calls.push('visible'),
-                loadFromSupabase: async () => {
-                    calls.push('fetch');
-                    if (result === 'offline') throw new Error('offline');
-                    return result === 'fresh' ? fresh : null;
-                },
-                applyData: data => { assert.equal(data, fresh); calls.push('apply'); },
-                renderCurrentPage: () => calls.push('render'),
-                renderSafeError: () => calls.push('error')
-            });
-            await vm.runInContext(`${init}\ninit();`, context);
-            assert.deepEqual(calls, result === 'fresh'
-                ? ['visible', 'fetch', 'apply', 'render']
-                : ['visible', 'fetch']);
+test('missing live data never falls back to the saved archive', async () => {
+    const source = readFileSync('assets/js/app.js', 'utf8');
+    const loader = source.slice(source.indexOf('    const loadData = async'), source.indexOf('    const categoryById'));
+    for (const result of [null, { posts: [] }]) {
+        let applied;
+        const context = vm.createContext({
+            loadFromSupabase: async () => result,
+            applyData: data => { applied = data; }
         });
+        const run = vm.runInContext(`${loader}\nloadData();`, context);
+        if (result === null) {
+            await assert.rejects(run);
+            assert.equal(applied, undefined);
+        } else {
+            await run;
+            assert.equal(applied, result);
+        }
     }
-}
+});

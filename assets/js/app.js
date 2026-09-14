@@ -2,7 +2,7 @@
     'use strict';
 
     const POSTS_PER_PAGE = 9;
-    const PAGINATION_CACHE_VERSION = '83';
+    const PAGINATION_CACHE_VERSION = '84';
     const MAX_CATEGORIES = 500;
     const MAX_AUTHORS = 2000;
     const MAX_POSTS = 2000;
@@ -19,7 +19,6 @@
     const MIN_PAGINATION_LOADING_MS = 0;
     const app = document.querySelector('#app');
     const declaredPageName = document.body.dataset.page || 'home';
-    const isPrerendered = document.body.dataset.prerendered === 'true';
     const pageName = declaredPageName === 'route'
         ? Boolean(window.SecurityUtils?.getCategorySlug()) ? 'category' : 'post'
         : declaredPageName;
@@ -191,12 +190,11 @@
     };
 
     const loadData = async () => {
-        try {
-            const remoteData = await loadFromSupabase();
-            applyData(remoteData || window.BLOG_FALLBACK_DATA);
-        } catch {
-            applyData(window.BLOG_FALLBACK_DATA);
+        const remoteData = await loadFromSupabase();
+        if (!remoteData) {
+            throw new Error('Güncel içerik doğrulanamadı.');
         }
+        applyData(remoteData);
     };
 
     const categoryById = id => state.categories.find(category => category.id === id);
@@ -669,38 +667,12 @@
         }
 
         try {
-            if (isPrerendered) {
-                if (pageName === 'post') {
-                    window.ContentEnhancements?.enhance(document.querySelector('#post-content'));
-                }
-                finishPaginationLoading();
-                if (pageName === 'home' || pageName === 'category') {
-                    try {
-                        const remoteData = await loadFromSupabase();
-                        if (remoteData) {
-                            applyData(remoteData);
-                            renderCurrentPage();
-                        }
-                    } catch {
-                        // Keep the prerendered content usable when the refresh fails.
-                    }
-                }
-                return;
-            }
-
-            let initialHomeState = null;
-            if (requestedHomePage && requestedHomePage > 1 && window.BLOG_FALLBACK_DATA) {
-                applyData(window.BLOG_FALLBACK_DATA);
-                initialHomeState = JSON.stringify(state);
-                renderHome();
-            }
-
             await loadData();
-            if (initialHomeState === null || JSON.stringify(state) !== initialHomeState) {
-                renderCurrentPage();
-            }
+            renderCurrentPage();
         } catch {
-            renderSafeError('İçerik yüklenemedi.');
+            renderSafeError('Güncel içerik yüklenemedi. Lütfen sayfayı yenileyin.');
+        } finally {
+            delete document.documentElement.dataset.contentPending;
             delete document.documentElement.dataset.paginationPending;
             delete document.documentElement.dataset.paginationStartedAt;
         }
