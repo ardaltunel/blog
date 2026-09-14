@@ -4827,8 +4827,11 @@ html[data-content-pending="true"] body:is([data-page="home"], [data-page="catego
     background: color-mix(in srgb, var(--color-primary) 8%, transparent);
 }
 .blog-search button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -4px; border-radius: 12px; }
-.search-summary { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; margin-bottom: 1.5rem; color: var(--color-muted); }
-.search-clear { background: transparent; color: var(--color-primary-strong); cursor: pointer; text-decoration: underline; }
+.search-term { color: var(--color-text); overflow-wrap: anywhere; }
+.blog-search .search-clear { flex-basis: 2rem; font-size: 1.2rem; font-weight: 400; line-height: 1; }
+.blog-search .search-clear::before, .blog-search .search-clear::after { content: none; }
+.blog-search input::-webkit-search-cancel-button { -webkit-appearance: none; }
+.posts--home .editorial-heading__copy { min-width: 0; }
 @media screen and (max-width: 1050px) {
     .posts--home .editorial-heading { flex-wrap: wrap; gap: 1.25rem; }
     .blog-search { order: 3; flex: 1 1 100%; max-width: none; margin: 0; }

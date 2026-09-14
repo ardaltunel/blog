@@ -2,7 +2,7 @@
     'use strict';
 
     const POSTS_PER_PAGE = 9;
-    const PAGINATION_CACHE_VERSION = '87';
+    const PAGINATION_CACHE_VERSION = '88';
     const MAX_CATEGORIES = 500;
     const MAX_AUTHORS = 2000;
     const MAX_POSTS = 2000;
@@ -507,12 +507,11 @@
                     <span class="pagination__loading-spinner" aria-hidden="true"></span>
                     <span class="pagination__loading-copy"><span class="pagination__loading-title">Yazılar yükleniyor...</span><small>Gönderiler hazırlanıyor</small></span>
                 </div>
-                <header class="container editorial-heading"><div class="editorial-heading__copy"><h1>${safePage === 1 ? 'Son yazılar' : `Sayfa · ${safePage}`}</h1><p>Yazılım, teknoloji ve hayata dair notlar.</p></div><form class="blog-search" role="search"><input type="search" name="q" aria-label="Blog yazılarında ara" placeholder="Yazılarda ara…" maxlength="120" value="${security.escapeHtml(query)}"><button type="submit" aria-label="Ara">Ara</button></form>${renderPagination(safePage, totalPages, page => {
+                <header class="container editorial-heading"><div class="editorial-heading__copy"><h1>${query ? 'Arama sonuçları' : safePage === 1 ? 'Son yazılar' : `Sayfa · ${safePage}`}</h1><p role="status">${query ? `<span class="search-term">“${security.escapeHtml(query)}”</span> için ${matches.length} yazı bulundu` : 'Yazılım, teknoloji ve hayata dair notlar.'}</p></div><form class="blog-search" role="search"><input type="search" name="q" aria-label="Blog yazılarında ara" placeholder="Yazılarda ara…" maxlength="120" value="${security.escapeHtml(query)}">${query ? '<button type="button" class="search-clear" aria-label="Aramayı temizle" title="Aramayı temizle">×</button>' : ''}<button type="submit" aria-label="Ara">Ara</button></form>${renderPagination(safePage, totalPages, page => {
                     const url = new URL(security.buildRoute('home', { page }), window.location.href);
                     if (query) url.searchParams.set('q', query);
                     return security.escapeHtml(`${url.pathname}${url.search}#posts`);
                 })}</header>
-                ${query ? `<div class="container search-summary" role="status">“${security.escapeHtml(query)}” için ${matches.length} yazı <button type="button" class="search-clear">Aramayı temizle</button></div>` : ''}
                 ${pagePosts.length ? `<div class="container posts__container">${pagePosts.map(renderPostCard).join('')}</div>` : `<div class="container content-empty"><h2>${query ? 'Sonuç bulunamadı' : 'Henüz yayınlanmış yazı yok'}</h2><p>${query ? 'Farklı bir kelimeyle tekrar arayın.' : 'Yeni yazılar burada yer alacak.'}</p></div>`}
             </section>
             ${renderCategoryButtons()}
