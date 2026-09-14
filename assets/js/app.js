@@ -2,7 +2,7 @@
     'use strict';
 
     const POSTS_PER_PAGE = 9;
-    const PAGINATION_CACHE_VERSION = '84';
+    const PAGINATION_CACHE_VERSION = '86';
     const MAX_CATEGORIES = 500;
     const MAX_AUTHORS = 2000;
     const MAX_POSTS = 2000;
@@ -400,7 +400,10 @@
             return '';
         }
 
-        const withCacheVersion = route => `${route}${route.includes('?') ? '&' : '?'}v=${PAGINATION_CACHE_VERSION}`;
+        const withCacheVersion = route => {
+            const [path, hash] = route.split('#');
+            return `${path}${path.includes('?') ? '&' : '?'}v=${PAGINATION_CACHE_VERSION}${hash ? `#${hash}` : ''}`;
+        };
         const previous = withCacheVersion(pageRoute(currentPage - 1));
         const next = withCacheVersion(pageRoute(currentPage + 1));
         return `
@@ -452,14 +455,24 @@
         }, remaining);
     };
 
+    const normalizeSearch = value => String(value).toLocaleLowerCase('tr-TR')
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ı/g, 'i');
+
     const renderHome = () => {
         renderFooterCategories();
-        const currentPage = requestedHomePage || 1;
-        const totalPages = Math.max(1, Math.ceil(state.posts.length / POSTS_PER_PAGE));
+        const query = (new URL(window.location.href).searchParams.get('q') || '').trim().slice(0, 120);
+        const terms = normalizeSearch(query).split(/\s+/).filter(Boolean);
+        const matches = terms.length ? state.posts.filter(post => {
+            const text = normalizeSearch(`${post.title} ${security.stripHtml(post.body)} ${categoryTitle(categoryById(post.category_id))}`);
+            return terms.every(term => text.includes(term));
+        }) : state.posts;
+        const currentPage = security.getQueryParam('page') || Number(window.location.pathname.match(/\/(\d+)\/$/)?.[1]) || 1;
+        const totalPages = Math.max(1, Math.ceil(matches.length / POSTS_PER_PAGE));
         const safePage = Math.min(currentPage, totalPages);
         const featured = safePage === 1 ? state.posts.find(post => post.is_featured) : null;
-        const pagePosts = state.posts.slice((safePage - 1) * POSTS_PER_PAGE, safePage * POSTS_PER_PAGE);
+        const pagePosts = matches.slice((safePage - 1) * POSTS_PER_PAGE, safePage * POSTS_PER_PAGE);
         const homeUrl = new URL(security.buildRoute('home', safePage > 1 ? { page: safePage } : {}), window.location.href);
+        if (query) homeUrl.searchParams.set('q', query);
         if (`${window.location.pathname}${window.location.search}` !== `${homeUrl.pathname}${homeUrl.search}`) {
             window.history.replaceState(null, '', `${homeUrl.pathname}${homeUrl.search}${window.location.hash}`);
         }
@@ -494,11 +507,30 @@
                     <span class="pagination__loading-spinner" aria-hidden="true"></span>
                     <span class="pagination__loading-copy"><span class="pagination__loading-title">Yazılar yükleniyor...</span><small>Gönderiler hazırlanıyor</small></span>
                 </div>
-                <header class="container editorial-heading"><div class="editorial-heading__copy"><h1>${safePage === 1 ? 'Son yazılar' : `Sayfa · ${safePage}`}</h1><p>Yazılım, teknoloji ve hayata dair notlar.</p></div>${renderPagination(safePage, totalPages)}</header>
-                ${pagePosts.length ? `<div class="container posts__container">${pagePosts.map(renderPostCard).join('')}</div>` : '<div class="container content-empty"><h2>Henüz yayınlanmış yazı yok</h2><p>Yeni yazılar burada yer alacak.</p></div>'}
+                <header class="container editorial-heading"><div class="editorial-heading__copy"><h1>${safePage === 1 ? 'Son yazılar' : `Sayfa · ${safePage}`}</h1><p>Yazılım, teknoloji ve hayata dair notlar.</p></div><form class="blog-search" role="search"><input type="search" name="q" aria-label="Blog yazılarında ara" placeholder="Yazılarda ara…" maxlength="120" value="${security.escapeHtml(query)}"><button type="submit" aria-label="Ara">Ara</button></form>${renderPagination(safePage, totalPages, page => {
+                    const url = new URL(security.buildRoute('home', { page }), window.location.href);
+                    if (query) url.searchParams.set('q', query);
+                    return security.escapeHtml(`${url.pathname}${url.search}#posts`);
+                })}</header>
+                ${query ? `<div class="container search-summary" role="status">“${security.escapeHtml(query)}” için ${matches.length} yazı <button type="button" class="search-clear">Aramayı temizle</button></div>` : ''}
+                ${pagePosts.length ? `<div class="container posts__container">${pagePosts.map(renderPostCard).join('')}</div>` : `<div class="container content-empty"><h2>${query ? 'Sonuç bulunamadı' : 'Henüz yayınlanmış yazı yok'}</h2><p>${query ? 'Farklı bir kelimeyle tekrar arayın.' : 'Yeni yazılar burada yer alacak.'}</p></div>`}
             </section>
             ${renderCategoryButtons()}
         `);
+        const search = app.querySelector('.blog-search');
+        const runSearch = value => {
+            const url = new URL(security.buildRoute('home'), window.location.href);
+            if (value.trim()) url.searchParams.set('q', value.trim().slice(0, 120));
+            url.hash = 'posts';
+            window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+            renderHome();
+            app.querySelector('.blog-search input')?.focus({ preventScroll: true });
+        };
+        search?.addEventListener('submit', event => {
+            event.preventDefault();
+            runSearch(search.querySelector('input').value);
+        });
+        app.querySelector('.search-clear')?.addEventListener('click', () => runSearch(''));
         finishPaginationLoading();
     };
 

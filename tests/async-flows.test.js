@@ -133,3 +133,12 @@ test('missing live data never falls back to the saved archive', async () => {
         }
     }
 });
+
+test('blog search matches Turkish letters and accent-free queries', () => {
+    const source = readFileSync('assets/js/app.js', 'utf8');
+    const helper = source.slice(source.indexOf('    const normalizeSearch'), source.indexOf('    const renderHome'));
+    const normalize = vm.runInNewContext(`${helper}\nnormalizeSearch;`);
+    assert.equal(normalize('IŞIK KİRLİLİĞİ'), normalize('isik kirliligi'));
+    assert.equal(normalize('Önbellek ve Sağlık'), normalize('onbellek ve saglik'));
+    assert.equal(normalize('<script>'), '<script>');
+});

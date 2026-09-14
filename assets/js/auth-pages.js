@@ -42,9 +42,7 @@
         messageBox.hidden = false;
         messageBox.className = `alert__message ${isSuccess ? 'success' : 'error'}`;
         messageBox.textContent = String(message).slice(0, 300);
-        if (isSuccess) {
-            messageDismissTimer = window.setTimeout(clearMessage, 8000);
-        }
+        messageDismissTimer = window.setTimeout(clearMessage, 2000);
     };
     const showEditPostMessage = message => {
         if (editPostMessage) {

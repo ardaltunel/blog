@@ -21,6 +21,8 @@
         const requestedPage = queryPage || renderedPage;
         const canonicalValues = requestedPage ? { page: requestedPage } : {};
         const canonicalUrl = new URL(security.buildRoute(canonicalRoute, canonicalValues), window.location.href);
+        const searchQuery = new URL(window.location.href).searchParams.get('q');
+        if (canonicalRoute === 'home' && searchQuery) canonicalUrl.searchParams.set('q', searchQuery.slice(0, 120));
         if (queryPage && canonicalUrl.pathname !== window.location.pathname) {
             window.location.replace(`${canonicalUrl.pathname}${canonicalUrl.search}${window.location.hash}`);
             return;

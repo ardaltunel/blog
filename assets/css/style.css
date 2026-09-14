@@ -4755,3 +4755,36 @@ html[data-content-pending="true"] body:is([data-page="home"], [data-page="catego
     text-align: center;
     color: var(--color-muted);
 }
+
+.blog-search { display: flex; flex-direction: row; gap: 0; align-items: center; flex: 1 1 18rem; max-width: 27rem; min-width: 0; margin: 0 1.5rem; padding: 0; border: 1px solid var(--color-border); border-radius: 14px; background: var(--color-surface); overflow: hidden; }
+.blog-search:focus-within { border-color: var(--color-primary); }
+.blog-search input { width: 100%; min-width: 0; border: 0; background: transparent; color: var(--color-text); padding: 0.8rem 1rem; outline: none; }
+.blog-search button { display: grid; place-items: center; padding: 0.8rem; background: transparent; color: var(--color-primary-strong); cursor: pointer; }
+.search-summary { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; margin-bottom: 1.5rem; color: var(--color-muted); }
+.search-clear { background: transparent; color: var(--color-primary-strong); cursor: pointer; text-decoration: underline; }
+@media screen and (max-width: 1050px) {
+    .posts--home .editorial-heading { flex-wrap: wrap; gap: 1.25rem; }
+    .blog-search { order: 3; flex: 1 1 100%; max-width: none; margin: 0; }
+}
+@media screen and (max-width: 640px) {
+    .blog-search { flex: auto; width: 100%; order: 0; }
+}
+
+/* Transient notifications sit above the page without moving its content. */
+#auth-message:not([hidden]) {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 5.5rem);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10000;
+    width: max-content;
+    max-width: min(30rem, calc(100vw - 2rem));
+    margin: 0;
+    padding: 0.9rem 1.25rem;
+    border-radius: 14px;
+    background: var(--color-surface);
+    box-shadow: 0 12px 36px rgb(0 0 0 / 22%);
+    overflow-wrap: anywhere;
+    pointer-events: none;
+}
+#auth-message[hidden] { display: none; }
