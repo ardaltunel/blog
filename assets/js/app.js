@@ -2,7 +2,7 @@
     'use strict';
 
     const POSTS_PER_PAGE = 9;
-    const PAGINATION_CACHE_VERSION = '90';
+    const PAGINATION_CACHE_VERSION = '91';
     const MAX_CATEGORIES = 500;
     const MAX_AUTHORS = 2000;
     const MAX_POSTS = 2000;
@@ -514,7 +514,6 @@
                 })}</header>
                 ${pagePosts.length ? `<div class="container posts__container">${pagePosts.map(renderPostCard).join('')}</div>` : `<div class="container content-empty"><h2>${query ? 'Sonuç bulunamadı' : 'Henüz yayınlanmış yazı yok'}</h2><p>${query ? 'Farklı bir kelimeyle tekrar arayın.' : 'Yeni yazılar burada yer alacak.'}</p></div>`}
             </section>
-            ${renderCategoryButtons()}
         `);
         const search = app.querySelector('.blog-search');
         const runSearch = value => {
@@ -678,7 +677,6 @@
             ` : `
                 <div class="container content-empty"><p>Bu kategoride henüz yazı bulunmuyor.</p><a href="${security.buildRoute('home')}">Diğer yazılara göz at →</a></div>
             `}
-            ${renderCategoryButtons()}
         `);
     };
 
